@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useStore } from './useStore';
-import { useProducts } from './useProducts';
-import StoreLayout from './StoreLayout';
-import Banner from './Banner';
-import ProductGrid from './ProductGrid';
+import React, { useState, useEffect } from 'react';
+import { useStore } from '../hooks/useStore';
+import { useProducts } from '../hooks/useProducts';
+import StoreLayout from '../layouts/StoreLayout';
+import Banner from '../components/Banner';
+import ProductGrid from '../components/ProductGrid';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
@@ -14,6 +14,48 @@ const StoreHome = () => {
   const handleAddToCart = (product) => {
     setCart((prev) => [...prev, product]);
   };
+
+  useEffect(() => {
+    if (store) {
+      // Update Document Title
+      document.title = store.websiteTitle || store.name || 'Storefront';
+
+      // Update Favicon
+      if (store.favicon) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = store.favicon;
+      }
+
+      // Update Meta Description
+      if (store.metaDescription) {
+        let meta = document.querySelector("meta[name='description']");
+        if (meta) {
+          meta.content = store.metaDescription;
+        }
+      }
+
+      // Inject dynamic Organization JSON-LD Schema
+      let script = document.querySelector('#store-schema');
+      if (!script) {
+        script = document.createElement('script');
+        script.id = 'store-schema';
+        script.type = 'application/ld+json';
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": store.name,
+        "url": store.subdomain ? `https://${store.subdomain}` : window.location.origin,
+        "logo": store.logo || ""
+      });
+    }
+  }, [store]);
 
   if (storeLoading) {
     return (
