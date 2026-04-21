@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStore } from './api';
+import { getStoreInfo } from './api';
 
 export const useStore = () => {
   const [store, setStore] = useState(null);
@@ -9,7 +9,7 @@ export const useStore = () => {
   useEffect(() => {
     const fetchStore = async () => {
       try {
-        const data = await getStore();
+        const data = await getStoreInfo();
         setStore(data);
       } catch (err) {
         setError(err.message);
