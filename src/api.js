@@ -1,13 +1,41 @@
-const API = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL;
 
-export const getStore = async () => {
-  const response = await fetch(`${API}/api/store/tenant/info`);
-  if (!response.ok) throw new Error('Store not available');
-  return response.json();
+// 🔥 Extract subdomain from URL
+const getSubdomain = () => {
+  const host = window.location.hostname; // sabjiwala.galibrand.cloud
+  const parts = host.split(".");
+
+  if (parts.length > 2) {
+    return parts[0].toLowerCase();
+  }
+
+  return null;
 };
 
-export const getProducts = async () => {
-  const response = await fetch(`${API}/api/store/tenant/products`);
-  if (!response.ok) throw new Error('Failed to fetch products');
-  return response.json();
+const subdomain = getSubdomain();
+
+// 🔹 Generic fetch wrapper
+const request = async (endpoint) => {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(subdomain && { "x-store": subdomain }),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("API request failed");
+  }
+
+  return res.json();
+};
+
+// ✅ Store API
+export const getStoreInfo = () => {
+  return request("/api/tenant/info");
+};
+
+// ✅ Products API
+export const getProducts = () => {
+  return request("/api/tenant/products");
 };
