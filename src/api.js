@@ -32,10 +32,10 @@ const request = async (endpoint) => {
 
 // ✅ Store API
 export const getStoreInfo = () => {
-  return request("/api/tenant/info");
+  return request("/api/store/tenant/info");
 };
 
 // ✅ Products API
 export const getProducts = () => {
-  return request("/api/tenant/products");
+  return request("/api/store/tenant/products");
 };
