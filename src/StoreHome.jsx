@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useStore } from '../hooks/useStore';
-import { useProducts } from '../hooks/useProducts';
-import StoreLayout from '../layouts/StoreLayout';
-import Banner from '../components/Banner';
-import ProductGrid from '../components/ProductGrid';
+import { useStore } from './useStore';
+import { useProducts } from './useProducts';
+import StoreLayout from './StoreLayout';
+import Banner from './Banner';
+import ProductGrid from './ProductGrid';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
