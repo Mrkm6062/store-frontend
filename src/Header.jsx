@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShoppingCart, Search, User, Menu } from 'lucide-react';
 
-const Header = ({ store, cartCount }) => {
+const Header = ({ store, cartCount, onCartClick }) => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,7 +34,7 @@ const Header = ({ store, cartCount }) => {
             <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full hidden sm:block transition">
               <User size={24} />
             </button>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative transition">
+            <button onClick={onCartClick} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative transition">
               <ShoppingCart size={24} />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-green-600 rounded-full">

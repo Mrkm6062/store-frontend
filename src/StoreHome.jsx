@@ -10,9 +10,24 @@ const StoreHome = () => {
   const { products, loading: productsLoading, error: productsError } = useProducts();
   
   const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const handleAddToCart = (product) => {
     setCart((prev) => [...prev, product]);
+    setIsCartOpen(true); // Automatically open the cart when an item is added
+  };
+
+  const handleRemoveFromCart = (indexToRemove) => {
+    setCart((prev) => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+
+  const handlePlaceOrder = () => {
+    // Placeholder for actual order submission API
+    alert('Order placed successfully! We will contact you soon.');
+    setCart([]);
+    setIsCartOpen(false);
   };
 
   useEffect(() => {
@@ -76,7 +91,7 @@ const StoreHome = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length}>
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       <Banner bannerUrl={store.banner} storeName={store.name} />
       
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
@@ -100,6 +115,64 @@ const StoreHome = () => {
           <ProductGrid products={products} onAddToCart={handleAddToCart} />
         )}
       </div>
+
+      {/* Cart Sidebar Overlay */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+            onClick={() => setIsCartOpen(false)}
+          ></div>
+          
+          {/* Sidebar */}
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
+              <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
+                &times;
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-5">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                  <div className="text-6xl mb-4">🛒</div>
+                  <p className="text-lg font-medium">Your cart is empty.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <p className="font-bold text-gray-800">{item.name}</p>
+                          <p className="text-green-600 font-semibold">₹{item.price}</p>
+                        </div>
+                      </div>
+                      <button onClick={() => handleRemoveFromCart(idx)} className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg transition">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <div className="p-5 border-t border-gray-100 bg-white">
+                <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800">
+                  <span>Total:</span>
+                  <span className="text-green-600">₹{cartTotal}</span>
+                </div>
+                <button onClick={handlePlaceOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
+                  Place Order
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </StoreLayout>
   );
 };
