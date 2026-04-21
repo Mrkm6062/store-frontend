@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStore } from '../services/api';
+import { getStore } from './api';
 
 export const useStore = () => {
   const [store, setStore] = useState(null);
