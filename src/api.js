@@ -15,11 +15,13 @@ const getSubdomain = () => {
 const subdomain = getSubdomain();
 
 // 🔹 Generic fetch wrapper
-const request = async (endpoint) => {
+const request = async (endpoint, options = {}) => {
   const res = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
       ...(subdomain && { "x-store": subdomain }),
+      ...(options.headers || {})
     },
   });
 
@@ -38,4 +40,12 @@ export const getStoreInfo = () => {
 // ✅ Products API
 export const getProducts = () => {
   return request("/api/store/tenant/products");
+};
+
+// ✅ Orders API
+export const placeOrder = (orderData) => {
+  return request("/api/orders", {
+    method: "POST",
+    body: JSON.stringify(orderData)
+  });
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from './useStore';
 import { useProducts } from './useProducts';
+import { placeOrder } from './api';
 import StoreLayout from './StoreLayout';
 import Banner from './Banner';
 import ProductGrid from './ProductGrid';
@@ -11,6 +12,11 @@ const StoreHome = () => {
   
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckout, setIsCheckout] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [formData, setFormData] = useState({
+    customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: ''
+  });
 
   const handleAddToCart = (product) => {
     setCart((prev) => [...prev, product]);
@@ -23,11 +29,44 @@ const StoreHome = () => {
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
-  const handlePlaceOrder = () => {
-    // Placeholder for actual order submission API
-    alert('Order placed successfully! We will contact you soon.');
-    setCart([]);
-    setIsCartOpen(false);
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    setIsPlacingOrder(true);
+    
+    try {
+      const orderItems = cart.map(item => ({
+        product: item._id,
+        name: item.name,
+        price: item.price,
+        qty: 1
+      }));
+
+      await placeOrder({
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        address: {
+          addressLine1: formData.addressLine1,
+          landmark: formData.landmark,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          mobileNumber: formData.customerPhone,
+          alternateNumber: formData.alternateNumber,
+        },
+        orderItems,
+        totalAmount: cartTotal
+      });
+
+      alert('Order placed successfully! We will contact you soon.');
+      setCart([]);
+      setIsCartOpen(false);
+      setIsCheckout(false);
+    } catch (error) {
+      alert('Failed to place order: ' + error.message);
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   useEffect(() => {
@@ -128,14 +167,39 @@ const StoreHome = () => {
           {/* Sidebar */}
           <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
-              <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
+              <h2 className="text-2xl font-bold text-gray-800">{isCheckout ? 'Checkout' : 'Your Cart'}</h2>
+              <button onClick={() => { setIsCartOpen(false); setIsCheckout(false); }} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
                 &times;
               </button>
             </div>
             
             <div className="flex-1 overflow-y-auto p-5">
-              {cart.length === 0 ? (
+              {isCheckout ? (
+                <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
+                  <h3 className="font-bold text-slate-800 mb-2 border-b pb-2">Contact Details</h3>
+                  <input type="text" required placeholder="Full Name" value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <input type="email" placeholder="Email Address (Optional)" value={formData.customerEmail} onChange={(e) => setFormData({...formData, customerEmail: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <input type="tel" required placeholder="Mobile Number" value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  
+                  <h3 className="font-bold text-slate-800 mt-6 mb-2 border-b pb-2">Delivery Address</h3>
+                  <input type="text" required placeholder="Address Line 1 (House No, Building, Street)" value={formData.addressLine1} onChange={(e) => setFormData({...formData, addressLine1: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <input type="text" placeholder="Landmark" value={formData.landmark} onChange={(e) => setFormData({...formData, landmark: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" required placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                    <input type="text" required placeholder="State" value={formData.state} onChange={(e) => setFormData({...formData, state: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" required placeholder="Pincode" value={formData.pincode} onChange={(e) => setFormData({...formData, pincode: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                    <input type="tel" placeholder="Alternate Mobile" value={formData.alternateNumber} onChange={(e) => setFormData({...formData, alternateNumber: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  </div>
+                  
+                  <div className="mt-4 pt-4 text-center">
+                    <button type="button" onClick={() => setIsCheckout(false)} className="text-sm font-bold text-slate-500 hover:text-slate-800">
+                      &larr; Back to Cart
+                    </button>
+                  </div>
+                </form>
+              ) : cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-400">
                   <div className="text-6xl mb-4">🛒</div>
                   <p className="text-lg font-medium">Your cart is empty.</p>
@@ -165,9 +229,15 @@ const StoreHome = () => {
                   <span>Total:</span>
                   <span className="text-green-600">₹{cartTotal}</span>
                 </div>
-                <button onClick={handlePlaceOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
-                  Place Order
-                </button>
+                {isCheckout ? (
+                  <button type="submit" form="checkout-form" disabled={isPlacingOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200 disabled:opacity-50">
+                    {isPlacingOrder ? 'Processing...' : 'Confirm & Place Order'}
+                  </button>
+                ) : (
+                  <button onClick={() => setIsCheckout(true)} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
+                    Proceed to Checkout
+                  </button>
+                )}
               </div>
             )}
           </div>
