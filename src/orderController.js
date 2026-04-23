@@ -6,9 +6,10 @@ export const createOrder = async (req, res) => {
   try {
     const { customerName, customerEmail, customerPhone, address, orderItems, totalAmount } = req.body;
 
-    const storeSlug = req.headers['x-store'];
+    // Prioritize subdomain from Origin header (via middleware), fallback to x-store header
+    const storeSlug = req.subdomain || req.headers['x-store'];
     if (!storeSlug) {
-      return res.status(400).json({ message: "Store context missing from headers" });
+      return res.status(400).json({ message: "Store context missing. Make sure you are ordering from a valid store domain." });
     }
 
     const store = await Store.findOne({ storeSlug });
