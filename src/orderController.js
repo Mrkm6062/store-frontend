@@ -6,8 +6,18 @@ export const createOrder = async (req, res) => {
   try {
     const { customerName, customerEmail, customerPhone, address, orderItems, totalAmount } = req.body;
 
+    const storeSlug = req.headers['x-store'];
+    if (!storeSlug) {
+      return res.status(400).json({ message: "Store context missing from headers" });
+    }
+
+    const store = await Store.findOne({ storeSlug });
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
     const order = await Order.create({
-      store: req.store._id, // Provided safely by the storeResolver middleware
+      store: store._id,
       customerName,
       customerEmail,
       customerPhone,
