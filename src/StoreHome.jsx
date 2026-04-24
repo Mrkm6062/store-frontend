@@ -33,7 +33,8 @@ const StoreHome = () => {
           item._id === product._id ? { ...item, qty: item.qty + 1 } : item
         );
       }
-      return [...prev, { ...product, qty: 1 }];
+      const resolvedPrice = product.basePrice || (product.variants?.length > 0 ? product.variants[0].price : product.price) || 0;
+      return [...prev, { ...product, price: resolvedPrice, qty: 1 }];
     });
   };
 
@@ -250,9 +251,16 @@ const StoreHome = () => {
                   {cart.map((item) => (
                     <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                       <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
+                          {(item.images?.length > 0 ? item.images[0] : item.image) ? (
+                            <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-medium">No Img</div>
+                          )}
+                        </div>
                         <div>
-                          <p className="font-bold text-gray-800">{item.name}</p>
-                          <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty}</span></p>
+                          <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
+                          <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty} {item.unitType || ''}</span></p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
