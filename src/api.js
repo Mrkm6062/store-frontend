@@ -53,3 +53,8 @@ export const placeOrder = (orderData) => {
     body: JSON.stringify(orderData)
   });
 };
+
+// ✅ Policies API
+export const getPublicPolicies = () => {
+  return request("/api/policies/public");
+};

@@ -5,6 +5,7 @@ import { placeOrder } from './api';
 import StoreLayout from './StoreLayout';
 import Banner from './Banner';
 import ProductGrid from './ProductGrid';
+import StorePolicy from './StorePolicy';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
@@ -154,6 +155,9 @@ const StoreHome = () => {
           <ProductGrid products={products} onAddToCart={handleAddToCart} />
         )}
       </div>
+
+      {/* Store Policies Section */}
+      <StorePolicy />
 
       {/* Cart Sidebar Overlay */}
       {isCartOpen && (
