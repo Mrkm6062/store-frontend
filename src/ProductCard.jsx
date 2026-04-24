@@ -12,11 +12,15 @@ const ProductCard = ({ product, onAddToCart }) => {
     : (product.basePrice || product.price || 0);
 
   const displayImage = product.images?.length > 0 ? product.images[0] : product.image;
+  
+  // Calculate stock based on selected variant or total product stock
+  const maxStock = selectedVariant ? selectedVariant.stock : (product.totalStock !== undefined ? product.totalStock : product.stock);
+  const isOutOfStock = maxStock <= 0;
 
   const handleAdd = () => {
     const itemToAdd = selectedVariant
-      ? { ...product, _id: `${product._id}-${selectedVariant._id}`, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [] }
-      : product;
+      ? { ...product, _id: `${product._id}-${selectedVariant._id}`, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock }
+      : { ...product, maxStock };
     onAddToCart(itemToAdd);
   };
 
@@ -60,10 +64,15 @@ const ProductCard = ({ product, onAddToCart }) => {
         </p>
         <button 
           onClick={handleAdd}
-          className="w-full flex items-center justify-center gap-2 bg-white border-2 border-green-500 text-green-600 py-2.5 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors"
+          disabled={isOutOfStock}
+          className={`w-full flex items-center justify-center gap-2 border-2 py-2.5 rounded-xl font-bold transition-colors ${
+            isOutOfStock 
+              ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-white border-green-500 text-green-600 hover:bg-green-500 hover:text-white'
+          }`}
         >
           <Plus size={18} />
-          Add to Cart
+          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
     </div>

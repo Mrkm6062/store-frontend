@@ -29,10 +29,17 @@ const StoreHome = () => {
     setCart((prev) => {
       const existing = prev.find(item => item._id === product._id);
       if (existing) {
+        if (existing.qty >= product.maxStock) {
+          alert(`Sorry, only ${product.maxStock} units available in stock.`);
+          return prev;
+        }
         return prev.map(item => 
           item._id === product._id ? { ...item, qty: item.qty + 1 } : item
         );
       }
+      
+      if (product.maxStock <= 0) return prev; // Fallback safeguard
+      
       const resolvedPrice = product.basePrice || (product.variants?.length > 0 ? product.variants[0].price : product.price) || 0;
       return [...prev, { ...product, price: resolvedPrice, qty: 1 }];
     });
@@ -40,7 +47,14 @@ const StoreHome = () => {
 
   const handleUpdateQuantity = (id, delta) => {
     setCart((prev) => prev.map(item => {
-      if (item._id === id) return { ...item, qty: Math.max(1, item.qty + delta) };
+      if (item._id === id) {
+        const newQty = item.qty + delta;
+        if (delta > 0 && newQty > item.maxStock) {
+          alert(`Sorry, only ${item.maxStock} units available in stock.`);
+          return item;
+        }
+        return { ...item, qty: Math.max(1, newQty) };
+      }
       return item;
     }));
   };
@@ -56,12 +70,16 @@ const StoreHome = () => {
     setIsPlacingOrder(true);
     
     try {
-      const orderItems = cart.map(item => ({
-        product: item._id,
-        name: item.name,
-        price: item.price,
-        qty: item.qty
-      }));
+      const orderItems = cart.map(item => {
+        const idParts = item._id.split('-');
+        return {
+          product: idParts[0], // Extract the real MongoDB ObjectId
+          variantId: idParts[1] || null, // Extract the variant ID if it exists
+          name: item.name,
+          price: item.price,
+          qty: item.qty
+        };
+      });
 
       await placeOrder({
         customerName: formData.customerName,
