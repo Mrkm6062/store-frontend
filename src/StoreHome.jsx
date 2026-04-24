@@ -5,13 +5,15 @@ import { placeOrder } from './api';
 import StoreLayout from './StoreLayout';
 import Banner from './Banner';
 import ProductGrid from './ProductGrid';
-import StorePolicy from './StorePolicy';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
   
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('gb_store_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckout, setIsCheckout] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -19,16 +21,34 @@ const StoreHome = () => {
     customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: ''
   });
 
+  useEffect(() => {
+    localStorage.setItem('gb_store_cart', JSON.stringify(cart));
+  }, [cart]);
+
   const handleAddToCart = (product) => {
-    setCart((prev) => [...prev, product]);
-    setIsCartOpen(true); // Automatically open the cart when an item is added
+    setCart((prev) => {
+      const existing = prev.find(item => item._id === product._id);
+      if (existing) {
+        return prev.map(item => 
+          item._id === product._id ? { ...item, qty: item.qty + 1 } : item
+        );
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
   };
 
-  const handleRemoveFromCart = (indexToRemove) => {
-    setCart((prev) => prev.filter((_, index) => index !== indexToRemove));
+  const handleUpdateQuantity = (id, delta) => {
+    setCart((prev) => prev.map(item => {
+      if (item._id === id) return { ...item, qty: Math.max(1, item.qty + delta) };
+      return item;
+    }));
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+  const handleRemoveFromCart = (id) => {
+    setCart((prev) => prev.filter((item) => item._id !== id));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -39,7 +59,7 @@ const StoreHome = () => {
         product: item._id,
         name: item.name,
         price: item.price,
-        qty: 1
+        qty: item.qty
       }));
 
       await placeOrder({
@@ -61,6 +81,7 @@ const StoreHome = () => {
 
       alert('Order placed successfully! We will contact you soon.');
       setCart([]);
+      localStorage.removeItem('gb_store_cart');
       setIsCartOpen(false);
       setIsCheckout(false);
     } catch (error) {
@@ -152,12 +173,28 @@ const StoreHome = () => {
         ) : productsError ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
         ) : (
-          <ProductGrid products={products} onAddToCart={handleAddToCart} />
+          <ProductGrid 
+            products={products} 
+            onAddToCart={handleAddToCart} 
+            cart={cart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveFromCart={handleRemoveFromCart}
+          />
         )}
       </div>
 
-      {/* Store Policies Section */}
-      <StorePolicy />
+      {/* Mobile Sticky Bottom Cart Bar */}
+      {cart.length > 0 && !isCartOpen && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex justify-between items-center pb-safe">
+          <div>
+            <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
+            <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
+          </div>
+          <button onClick={() => setIsCartOpen(true)} className="bg-[#76b900] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#659e00] shadow-lg shadow-green-200 transition">
+            View Cart &rarr;
+          </button>
+        </div>
+      )}
 
       {/* Cart Sidebar Overlay */}
       {isCartOpen && (
@@ -210,17 +247,24 @@ const StoreHome = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {cart.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                  {cart.map((item) => (
+                    <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                       <div className="flex items-center gap-4">
                         <div>
                           <p className="font-bold text-gray-800">{item.name}</p>
-                          <p className="text-green-600 font-semibold">₹{item.price}</p>
+                          <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty}</span></p>
                         </div>
                       </div>
-                      <button onClick={() => handleRemoveFromCart(idx)} className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg transition">
-                        Remove
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+                          <button type="button" onClick={() => handleUpdateQuantity(item._id, -1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">-</button>
+                          <span className="px-2 font-semibold text-sm">{item.qty}</span>
+                          <button type="button" onClick={() => handleUpdateQuantity(item._id, 1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">+</button>
+                        </div>
+                        <button onClick={() => handleRemoveFromCart(item._id)} className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg transition">
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
