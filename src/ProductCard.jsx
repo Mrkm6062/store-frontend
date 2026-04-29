@@ -11,7 +11,10 @@ const ProductCard = ({ product, onAddToCart }) => {
     ? selectedVariant.price 
     : (product.basePrice || product.price || 0);
 
-  const displayImage = product.images?.length > 0 ? product.images[0] : product.image;
+  // Safely extract the image whether it's an array (new GCS uploads), a direct string, or legacy image field
+  const displayImage = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images[0] 
+    : (typeof product.images === 'string' ? product.images : product.image);
   
   // Calculate stock based on selected variant or total product stock
   const maxStock = selectedVariant ? selectedVariant.stock : (product.totalStock !== undefined ? product.totalStock : product.stock);
@@ -19,8 +22,8 @@ const ProductCard = ({ product, onAddToCart }) => {
 
   const handleAdd = () => {
     const itemToAdd = selectedVariant
-      ? { ...product, _id: `${product._id}-${selectedVariant._id}`, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock }
-      : { ...product, maxStock };
+      ? { ...product, _id: `${product._id}-${selectedVariant._id}`, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: displayImage }
+      : { ...product, maxStock, image: displayImage };
     onAddToCart(itemToAdd);
   };
 
