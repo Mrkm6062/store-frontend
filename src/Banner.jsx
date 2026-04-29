@@ -4,17 +4,12 @@ const Banner = ({ bannerUrl, storeName }) => {
   if (!bannerUrl) return null;
 
   return (
-    <div className="w-full h-48 md:h-64 lg:h-80 relative overflow-hidden bg-gray-900">
+    <div className="w-full h-48 md:h-64 lg:h-80 relative overflow-hidden bg-gray-100 border-b border-gray-200">
       <img 
         src={bannerUrl} 
         alt={`${storeName} Banner`} 
-        className="w-full h-full object-cover opacity-80"
+        className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-        <h2 className="text-white text-3xl md:text-5xl font-extrabold shadow-sm px-4 text-center tracking-tight">
-          Welcome to {storeName}
-        </h2>
-      </div>
     </div>
   );
 };
