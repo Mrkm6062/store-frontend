@@ -58,3 +58,8 @@ export const placeOrder = (orderData) => {
 export const getPublicPolicies = () => {
   return request("/api/policies/public");
 };
+
+// ✅ Social Media API
+export const getPublicSocialMedia = () => {
+  return request("/api/social-media/public");
+};
