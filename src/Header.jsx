@@ -11,7 +11,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
               <Menu size={24} />
             </button>
             {store?.logo ? (
-              <img src={store?.logo} alt={store?.name} className="h-8 w-auto object-contain" />
+              <img src={store?.logo} alt={store?.name} className="h-10 sm:h-12 w-auto object-contain" />
             ) : (
               <h1 className="text-xl font-bold text-gray-900">{store?.name || 'Store'}</h1>
             )}
