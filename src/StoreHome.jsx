@@ -15,6 +15,7 @@ const StoreHome = () => {
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
+  const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
     return saved ? JSON.parse(saved) : [];
@@ -34,12 +35,17 @@ const StoreHome = () => {
     getPublicCategories().then(setCategories).catch(console.error);
   }, []);
 
+  const showToast = (message, type = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const handleAddToCart = (product) => {
     setCart((prev) => {
       const existing = prev.find(item => item._id === product._id);
       if (existing) {
         if (existing.qty >= product.maxStock) {
-          alert(`Sorry, only ${product.maxStock} units available in stock.`);
+          showToast(`Sorry, only ${product.maxStock} units available in stock.`);
           return prev;
         }
         return prev.map(item => 
@@ -59,7 +65,7 @@ const StoreHome = () => {
       if (item._id === id) {
         const newQty = item.qty + delta;
         if (delta > 0 && newQty > item.maxStock) {
-          alert(`Sorry, only ${item.maxStock} units available in stock.`);
+          showToast(`Sorry, only ${item.maxStock} units available in stock.`);
           return item;
         }
         return { ...item, qty: Math.max(1, newQty) };
@@ -107,13 +113,13 @@ const StoreHome = () => {
         totalAmount: cartTotal
       });
 
-      alert('Order placed successfully! We will contact you soon.');
+      showToast('Order placed successfully! We will contact you soon.', 'success');
       setCart([]);
       localStorage.removeItem('gb_store_cart');
       setIsCartOpen(false);
       setIsCheckout(false);
     } catch (error) {
-      alert('Failed to place order: ' + error.message);
+      showToast('Failed to place order: ' + error.message, 'error');
     } finally {
       setIsPlacingOrder(false);
     }
@@ -355,6 +361,14 @@ const StoreHome = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Custom Toast Notification */}
+      {toast && (
+        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 transition-all animate-fadeIn ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-[#76b900] text-white'}`}>
+          <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+          {toast.message}
         </div>
       )}
     </StoreLayout>
