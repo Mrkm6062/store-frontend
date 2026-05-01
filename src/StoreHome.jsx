@@ -13,6 +13,7 @@ const StoreHome = () => {
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const navigate = useNavigate();
   
+  const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -208,24 +209,36 @@ const StoreHome = () => {
         </div>
 
         {productsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
             {[...Array(10)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] animate-pulse">
-                <div className="w-full h-48 bg-gray-200"></div>
-                <div className="p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-10 bg-gray-200 rounded-xl w-full mt-4"></div></div>
+                <div className="w-full h-32 sm:h-48 bg-gray-200"></div>
+                <div className="p-3 sm:p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-8 sm:h-10 bg-gray-200 rounded-xl w-full mt-2 sm:mt-4"></div></div>
               </div>
             ))}
           </div>
         ) : productsError ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
         ) : (
-          <ProductGrid 
-            products={products} 
-            onAddToCart={handleAddToCart} 
-            cart={cart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveFromCart={handleRemoveFromCart}
-          />
+          <>
+            <ProductGrid 
+              products={products.slice(0, visibleCount)} 
+              onAddToCart={handleAddToCart} 
+              cart={cart}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveFromCart={handleRemoveFromCart}
+            />
+            {visibleCount < products.length && (
+              <div className="mt-10 text-center flex justify-center">
+                <button 
+                  onClick={() => setVisibleCount(prev => prev + 12)} 
+                  className="px-8 py-3 bg-white border-2 border-[#76b900] text-[#76b900] font-bold rounded-xl hover:bg-[#76b900] hover:text-white transition-colors shadow-sm hover:shadow-md"
+                >
+                  Load More Products
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

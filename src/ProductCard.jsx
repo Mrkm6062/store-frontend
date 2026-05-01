@@ -29,7 +29,7 @@ const ProductCard = ({ product, onAddToCart }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
-      <div className="h-48 bg-gray-50 relative w-full overflow-hidden flex-shrink-0">
+      <div className="h-32 sm:h-48 bg-gray-50 relative w-full overflow-hidden flex-shrink-0">
         {displayImage ? (
           <img 
             src={displayImage} 
@@ -42,17 +42,17 @@ const ProductCard = ({ product, onAddToCart }) => {
           </div>
         )}
       </div>
-      <div className="p-5 flex flex-col flex-grow">
-        <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2" title={product.name}>
+      <div className="p-3 sm:p-5 flex flex-col flex-grow">
+        <h3 className="text-sm sm:text-lg font-semibold text-gray-800 mb-1 line-clamp-2" title={product.name}>
           {product.name}
         </h3>
         
         {hasVariants && (
-          <div className="my-2">
+          <div className="my-1 sm:my-2">
             <select 
               value={selectedVariantId || ''} 
               onChange={(e) => setSelectedVariantId(e.target.value)}
-              className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-gray-700 bg-gray-50"
+              className="w-full text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-gray-700 bg-gray-50"
             >
               {product.variants.map(v => (
                 <option key={v._id} value={v._id}>{v.name}</option>
@@ -61,20 +61,20 @@ const ProductCard = ({ product, onAddToCart }) => {
           </div>
         )}
 
-        <p className="text-green-600 font-bold text-xl mb-4 mt-auto flex items-baseline gap-1">
+        <p className="text-green-600 font-bold text-base sm:text-xl mb-2 sm:mb-4 mt-auto flex items-baseline gap-1">
           ₹{displayPrice}
-          {!hasVariants && product.unitType && <span className="text-sm font-medium text-gray-400">/{product.unitType}</span>}
+          {!hasVariants && product.unitType && <span className="text-xs sm:text-sm font-medium text-gray-400">/{product.unitType}</span>}
         </p>
         <button 
           onClick={handleAdd}
           disabled={isOutOfStock}
-          className={`w-full flex items-center justify-center gap-2 border-2 py-2.5 rounded-xl font-bold transition-colors ${
+          className={`w-full flex items-center justify-center gap-1 sm:gap-2 border-2 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base transition-colors ${
             isOutOfStock 
               ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
               : 'bg-white border-green-500 text-green-600 hover:bg-green-500 hover:text-white'
           }`}
         >
-          <Plus size={18} />
+          <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
           {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>

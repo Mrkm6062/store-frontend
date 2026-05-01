@@ -12,6 +12,7 @@ const CategoryPage = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
   
+  const [visibleCount, setVisibleCount] = useState(12);
   const [category, setCategory] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -33,6 +34,10 @@ const CategoryPage = () => {
       const currentCategory = categories.find(c => c._id === categoryId);
       setCategory(currentCategory);
     }).catch(console.error);
+  }, [categoryId]);
+
+  useEffect(() => {
+    setVisibleCount(12);
   }, [categoryId]);
 
   const handleAddToCart = (product) => {
@@ -158,21 +163,33 @@ const CategoryPage = () => {
         </div>
 
         {productsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] animate-pulse">
-                <div className="w-full h-48 bg-gray-200"></div>
-                <div className="p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-10 bg-gray-200 rounded-xl w-full mt-4"></div></div>
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[260px] sm:h-[340px] animate-pulse">
+                <div className="w-full h-32 sm:h-48 bg-gray-200"></div>
+                <div className="p-3 sm:p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-8 sm:h-10 bg-gray-200 rounded-xl w-full mt-2 sm:mt-4"></div></div>
               </div>
             ))}
           </div>
         ) : productsError ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
         ) : (
-          <ProductGrid 
-            products={filteredProducts} 
-            onAddToCart={handleAddToCart} 
-          />
+          <>
+            <ProductGrid 
+              products={filteredProducts.slice(0, visibleCount)} 
+              onAddToCart={handleAddToCart} 
+            />
+            {visibleCount < filteredProducts.length && (
+              <div className="mt-10 text-center flex justify-center">
+                <button 
+                  onClick={() => setVisibleCount(prev => prev + 12)} 
+                  className="px-8 py-3 bg-white border-2 border-[#76b900] text-[#76b900] font-bold rounded-xl hover:bg-[#76b900] hover:text-white transition-colors shadow-sm hover:shadow-md"
+                >
+                  Load More Products
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
