@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPublicCategories } from '../api';
-import CategoryCard from '../CategoryCard';
-import StoreLayout from '../StoreLayout';
+import { getPublicCategories } from './api';
+import CategoryCard from './CategoryCard';
+import StoreLayout from './StoreLayout';
 
 const StoreCategory = ({ store, cartCount, onCartClick }) => {
   const [categories, setCategories] = useState([]);
