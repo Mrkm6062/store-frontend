@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from './useStore';
 import { useProducts } from './useProducts';
 import { placeOrder, getPublicCategories } from './api';
 import StoreLayout from './StoreLayout';
-import Banner from './Banner';
 import ProductGrid from './ProductGrid';
-import CategoryCard from './CategoryCard';
 
-const StoreHome = () => {
+const CategoryPage = () => {
+  const { categoryId } = useParams();
+  const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
-  const navigate = useNavigate();
   
-  const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
     return saved ? JSON.parse(saved) : [];
@@ -30,8 +29,11 @@ const StoreHome = () => {
   }, [cart]);
 
   useEffect(() => {
-    getPublicCategories().then(setCategories).catch(console.error);
-  }, []);
+    getPublicCategories().then(categories => {
+      const currentCategory = categories.find(c => c._id === categoryId);
+      setCategory(currentCategory);
+    }).catch(console.error);
+  }, [categoryId]);
 
   const handleAddToCart = (product) => {
     setCart((prev) => {
@@ -46,7 +48,7 @@ const StoreHome = () => {
         );
       }
       
-      if (product.maxStock <= 0) return prev; // Fallback safeguard
+      if (product.maxStock <= 0) return prev;
       
       const resolvedPrice = product.basePrice || (product.variants?.length > 0 ? product.variants[0].price : product.price) || 0;
       return [...prev, { ...product, price: resolvedPrice, qty: 1 }];
@@ -81,8 +83,8 @@ const StoreHome = () => {
       const orderItems = cart.map(item => {
         const idParts = item._id.split('-');
         return {
-          product: idParts[0], // Extract the real MongoDB ObjectId
-          variantId: idParts[1] || null, // Extract the variant ID if it exists
+          product: idParts[0],
+          variantId: idParts[1] || null,
           name: item.name,
           price: item.price,
           qty: item.qty
@@ -119,46 +121,12 @@ const StoreHome = () => {
   };
 
   useEffect(() => {
-    if (store) {
-      // Update Document Title
-      document.title = store.websiteTitle || store.name || 'Storefront';
-
-      // Update Favicon
-      if (store.favicon) {
-        let link = document.querySelector("link[rel~='icon']");
-        if (!link) {
-          link = document.createElement('link');
-          link.rel = 'icon';
-          document.head.appendChild(link);
-        }
-        link.href = store.favicon;
-      }
-
-      // Update Meta Description
-      if (store.metaDescription) {
-        let meta = document.querySelector("meta[name='description']");
-        if (meta) {
-          meta.content = store.metaDescription;
-        }
-      }
-
-      // Inject dynamic Organization JSON-LD Schema
-      let script = document.querySelector('#store-schema');
-      if (!script) {
-        script = document.createElement('script');
-        script.id = 'store-schema';
-        script.type = 'application/ld+json';
-        document.head.appendChild(script);
-      }
-      script.textContent = JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": store.name,
-        "url": store.subdomain ? `https://${store.subdomain}` : window.location.origin,
-        "logo": store.logo || ""
-      });
+    if (store && category) {
+      document.title = `${category.name} - ${store.websiteTitle || store.name}`;
     }
-  }, [store]);
+  }, [store, category]);
+
+  const filteredProducts = products.filter(p => p.category === categoryId);
 
   if (storeLoading) {
     return (
@@ -180,36 +148,18 @@ const StoreHome = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
-      <Banner bannerUrl={store.banner} storeName={store.name} />
-
-      {categories.length > 0 && (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-12">
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Shop by Category</h2>
-            <button onClick={() => navigate('/categories')} className="text-sm font-bold text-[#76b900] hover:text-green-700 transition whitespace-nowrap">
-              Show All &rarr;
-            </button>
-          </div>
-          
-          <div className="flex overflow-x-auto pb-4 gap-6 scrollbar-hide snap-x">
-            {categories.slice(0, 10).map(c => (
-              <div key={c._id} className="snap-start">
-                <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat._id}`)} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Featured Products</h2>
-          <p className="text-gray-500 mt-2 text-lg">Fresh and featured items from {store.name}</p>
+          <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800 mb-4">&larr; Back to All Products</button>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            {category ? `Products in ${category.name}` : 'Loading Category...'}
+          </h2>
+          {category?.description && <p className="text-gray-500 mt-2 text-lg">{category.description}</p>}
         </div>
 
         {productsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {[...Array(10)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] animate-pulse">
                 <div className="w-full h-48 bg-gray-200"></div>
                 <div className="p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-10 bg-gray-200 rounded-xl w-full mt-4"></div></div>
@@ -220,11 +170,8 @@ const StoreHome = () => {
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
         ) : (
           <ProductGrid 
-            products={products} 
+            products={filteredProducts} 
             onAddToCart={handleAddToCart} 
-            cart={cart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveFromCart={handleRemoveFromCart}
           />
         )}
       </div>
@@ -245,13 +192,11 @@ const StoreHome = () => {
       {/* Cart Sidebar Overlay */}
       {isCartOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
             onClick={() => setIsCartOpen(false)}
           ></div>
           
-          {/* Sidebar */}
           <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h2 className="text-2xl font-bold text-gray-800">{isCheckout ? 'Checkout' : 'Your Cart'}</h2>
@@ -348,4 +293,4 @@ const StoreHome = () => {
   );
 };
 
-export default StoreHome;
+export default CategoryPage;
