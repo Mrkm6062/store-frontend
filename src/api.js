@@ -63,3 +63,8 @@ export const getPublicPolicies = () => {
 export const getPublicSocialMedia = () => {
   return request("/api/social-media/public");
 };
+
+// ✅ Categories API
+export const getPublicCategories = () => {
+  return request("/api/categories/public");
+};
