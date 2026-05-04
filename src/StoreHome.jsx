@@ -26,6 +26,11 @@ const StoreHome = () => {
   const [formData, setFormData] = useState({
     customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: ''
   });
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponMessage, setCouponMessage] = useState({ text: '', type: '' });
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
@@ -79,6 +84,47 @@ const StoreHome = () => {
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const finalTotal = cartTotal - discountAmount;
+
+  // Clear applied coupon if the cart contents/total change
+  useEffect(() => {
+    if (appliedCoupon) {
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      setCouponCode('');
+      setCouponMessage({ text: 'Cart changed. Please re-apply your coupon.', type: 'error' });
+    }
+  }, [cartTotal]);
+
+  const handleApplyCoupon = async (e) => {
+    if (e) e.preventDefault();
+    if (!couponCode.trim()) return;
+    setIsValidatingCoupon(true);
+    setCouponMessage({ text: '', type: '' });
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const response = await fetch(`${API_BASE_URL}/api/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-store-id': store._id },
+        body: JSON.stringify({ code: couponCode, cartTotal })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setAppliedCoupon(data.coupon);
+        setDiscountAmount(data.calculatedDiscount);
+        setCouponMessage({ text: data.message, type: 'success' });
+      } else {
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        setCouponMessage({ text: data.message, type: 'error' });
+      }
+    } catch (error) {
+      setCouponMessage({ text: 'Failed to validate coupon', type: 'error' });
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -110,7 +156,9 @@ const StoreHome = () => {
           alternateNumber: formData.alternateNumber,
         },
         orderItems,
-        totalAmount: cartTotal
+        totalAmount: finalTotal,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        discountAmount: discountAmount
       });
 
       showToast('Order placed successfully! We will contact you soon.', 'success');
@@ -118,6 +166,10 @@ const StoreHome = () => {
       localStorage.removeItem('gb_store_cart');
       setIsCartOpen(false);
       setIsCheckout(false);
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      setCouponCode('');
+      setCouponMessage({ text: '', type: '' });
     } catch (error) {
       showToast('Failed to place order: ' + error.message, 'error');
     } finally {
@@ -253,7 +305,7 @@ const StoreHome = () => {
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex justify-between items-center pb-safe">
           <div>
             <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
-            <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
+            <p className="text-xl font-extrabold text-green-600">₹{finalTotal}</p>
           </div>
           <button onClick={() => setIsCartOpen(true)} className="bg-[#76b900] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#659e00] shadow-lg shadow-green-200 transition">
             View Cart &rarr;
@@ -345,9 +397,46 @@ const StoreHome = () => {
             
             {cart.length > 0 && (
               <div className="p-5 border-t border-gray-100 bg-white">
+                {isCheckout && (
+                  <div className="mb-4">
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Enter Coupon Code" 
+                        value={couponCode} 
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        disabled={appliedCoupon}
+                        className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] font-mono uppercase text-sm"
+                      />
+                      {appliedCoupon ? (
+                        <button onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponMessage({text: '', type: ''}); }} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition text-sm">
+                          Remove
+                        </button>
+                      ) : (
+                        <button onClick={handleApplyCoupon} disabled={isValidatingCoupon || !couponCode} className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition disabled:opacity-50 text-sm">
+                          {isValidatingCoupon ? '...' : 'Apply'}
+                        </button>
+                      )}
+                    </div>
+                    {couponMessage.text && <p className={`text-xs font-bold mt-2 ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>{couponMessage.text}</p>}
+                  </div>
+                )}
+
+                {appliedCoupon && (
+                  <>
+                    <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
+                      <span>Subtotal:</span>
+                      <span>₹{cartTotal}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm mb-2 text-green-600 font-bold">
+                      <span>Discount ({appliedCoupon.code}):</span>
+                      <span>-₹{discountAmount}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800">
                   <span>Total:</span>
-                  <span className="text-green-600">₹{cartTotal}</span>
+                  <span className="text-green-600">₹{finalTotal}</span>
                 </div>
                 {isCheckout ? (
                   <button type="submit" form="checkout-form" disabled={isPlacingOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200 disabled:opacity-50">
