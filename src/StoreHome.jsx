@@ -31,6 +31,7 @@ const StoreHome = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponMessage, setCouponMessage] = useState({ text: '', type: '' });
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [deliverySettings, setDeliverySettings] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
@@ -39,6 +40,26 @@ const StoreHome = () => {
   useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
   }, []);
+
+  // Fetch public delivery settings for this store
+  useEffect(() => {
+    if (store && store._id) {
+      const fetchDeliverySettings = async () => {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+            headers: { 'x-store-id': store._id }
+          });
+          if (response.ok) {
+            setDeliverySettings(await response.json());
+          }
+        } catch (error) {
+          console.error('Failed to fetch delivery settings', error);
+        }
+      };
+      fetchDeliverySettings();
+    }
+  }, [store]);
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
@@ -84,7 +105,15 @@ const StoreHome = () => {
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const finalTotal = cartTotal - discountAmount;
+  const discountedTotal = cartTotal - discountAmount;
+
+  let shippingCharge = 0;
+  if (deliverySettings && deliverySettings.baseCharge > 0) {
+    if (deliverySettings.freeShippingThreshold === 0 || discountedTotal < deliverySettings.freeShippingThreshold) {
+      shippingCharge = deliverySettings.baseCharge;
+    }
+  }
+  const finalTotal = discountedTotal + shippingCharge;
 
   // Clear applied coupon if the cart contents/total change
   useEffect(() => {
@@ -130,6 +159,24 @@ const StoreHome = () => {
     e.preventDefault();
     setIsPlacingOrder(true);
     
+    // Validate Delivery Rules
+    if (deliverySettings) {
+      if (deliverySettings.deliveryMode === 'state') {
+        const allowed = deliverySettings.allowedStates.map(s => s.toLowerCase());
+        if (!allowed.includes((formData.state || '').toLowerCase().trim())) {
+          showToast(`Sorry, we do not deliver to ${formData.state} at the moment.`);
+          setIsPlacingOrder(false);
+          return;
+        }
+      } else if (deliverySettings.deliveryMode === 'pincode') {
+        if (!deliverySettings.allowedPincodes.includes((formData.pincode || '').trim())) {
+          showToast(`Sorry, we do not deliver to pincode ${formData.pincode} at the moment.`);
+          setIsPlacingOrder(false);
+          return;
+        }
+      }
+    }
+
     try {
       const orderItems = cart.map(item => {
         const idParts = item._id.split('-');
@@ -158,7 +205,8 @@ const StoreHome = () => {
         orderItems,
         totalAmount: finalTotal,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
-        discountAmount: discountAmount
+        discountAmount: discountAmount,
+        shippingCharge: shippingCharge
       });
 
       showToast('Order placed successfully! We will contact you soon.', 'success');
@@ -422,18 +470,20 @@ const StoreHome = () => {
                   </div>
                 )}
 
+                <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
+                  <span>Subtotal:</span>
+                  <span>₹{cartTotal}</span>
+                </div>
                 {appliedCoupon && (
-                  <>
-                    <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-                      <span>Subtotal:</span>
-                      <span>₹{cartTotal}</span>
-                    </div>
                     <div className="flex justify-between items-center text-sm mb-2 text-green-600 font-bold">
                       <span>Discount ({appliedCoupon.code}):</span>
                       <span>-₹{discountAmount}</span>
                     </div>
-                  </>
                 )}
+                <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
+                  <span>Shipping:</span>
+                  <span>{shippingCharge > 0 ? `₹${shippingCharge}` : 'Free'}</span>
+                </div>
                 <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800">
                   <span>Total:</span>
                   <span className="text-green-600">₹{finalTotal}</span>
