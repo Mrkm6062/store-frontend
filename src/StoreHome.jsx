@@ -35,6 +35,8 @@ const StoreHome = () => {
   const [couponMessage, setCouponMessage] = useState({ text: '', type: '' });
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(null);
+  const [checkoutSettings, setCheckoutSettings] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
@@ -50,14 +52,21 @@ const StoreHome = () => {
       const fetchDeliverySettings = async () => {
         try {
           const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
-          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
-            headers: { 'x-store-id': store._id }
-          });
-          if (response.ok) {
-            setDeliverySettings(await response.json());
+          const [delRes, chkRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/delivery-settings/public`, { headers: { 'x-store-id': store._id } }),
+            fetch(`${API_BASE_URL}/api/checkout-settings/public`, { headers: { 'x-store-id': store._id } })
+          ]);
+          if (delRes.ok) {
+            setDeliverySettings(await delRes.json());
+          }
+          if (chkRes.ok) {
+            const chkData = await chkRes.json();
+            setCheckoutSettings(chkData);
+            if (!chkData.codEnabled && chkData.whatsappEnabled) setPaymentMethod('whatsapp');
+            else if (!chkData.codEnabled && !chkData.whatsappEnabled && chkData.razorpayEnabled) setPaymentMethod('razorpay');
           }
         } catch (error) {
-          console.error('Failed to fetch delivery settings', error);
+          console.error('Failed to fetch store settings', error);
         }
       };
       fetchDeliverySettings();
@@ -238,7 +247,7 @@ const StoreHome = () => {
         };
       });
 
-      await placeOrder({
+      const createdOrder = await placeOrder({
         customerName: formData.customerName,
         customerEmail: formData.customerEmail,
         customerPhone: formData.customerPhone,
@@ -258,7 +267,23 @@ const StoreHome = () => {
         shippingCharge: shippingCharge
       });
 
-      showToast('Order placed successfully! We will contact you soon.', 'success');
+      if (paymentMethod === 'whatsapp' && checkoutSettings?.whatsappNumber) {
+        let itemsText = cart.map(item => `- ${item.qty}x ${item.name} (₹${item.price})`).join('%0A');
+        let trackingLink = `${window.location.origin}/track/${createdOrder._id}`;
+        let text = `Hello! I have placed an order (ID: ${createdOrder._id.slice(-6).toUpperCase()}).%0A%0A*Order Details:*%0A${itemsText}%0A%0ASubtotal: ₹${cartTotal}%0ADiscount: -₹${discountAmount}%0AShipping: ₹${shippingCharge}%0A*Total Amount: ₹${finalTotal}*%0A%0A*Customer Info:*%0AName: ${formData.customerName}%0APhone: ${formData.customerPhone}%0AAddress: ${formData.addressLine1}, ${formData.city}, ${formData.state} - ${formData.pincode}%0A%0A*Track Order Status:* ${trackingLink}`;
+        
+        let num = checkoutSettings.whatsappNumber.replace(/[^0-9]/g, '');
+        if (num.length === 10) num = '91' + num;
+        
+        window.open(`https://wa.me/${num}?text=${text}`, '_blank');
+        showToast('Order saved. Redirecting to WhatsApp...', 'success');
+      } else if (paymentMethod === 'razorpay') {
+        showToast('Order saved! (Razorpay modal would load here)', 'success');
+        // Note: Actual Razorpay requires <script> injection and order creation from the server
+      } else {
+        showToast('Order placed successfully! We will contact you soon.', 'success');
+      }
+
       localStorage.setItem('gb_customer_info', JSON.stringify(formData));
       setCart([]);
       localStorage.removeItem('gb_store_cart');
@@ -449,6 +474,19 @@ const StoreHome = () => {
                     <input type="tel" placeholder="Alternate Mobile" maxLength="10" value={formData.alternateNumber} onChange={(e) => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   </div>
                   
+                  <h3 className="font-bold text-slate-800 mt-6 mb-2 border-b pb-2">Payment Method</h3>
+                  <div className="flex flex-col gap-3">
+                    {checkoutSettings?.codEnabled !== false && (
+                      <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition ${paymentMethod === 'cod' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-4 h-4 text-[#76b900]" /><span className="font-bold text-slate-700">Cash on Delivery (COD)</span></label>
+                    )}
+                    {checkoutSettings?.whatsappEnabled && (
+                      <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition ${paymentMethod === 'whatsapp' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="whatsapp" checked={paymentMethod === 'whatsapp'} onChange={() => setPaymentMethod('whatsapp')} className="w-4 h-4 text-[#76b900]" /><span className="font-bold text-slate-700">Order via WhatsApp</span></label>
+                    )}
+                    {checkoutSettings?.razorpayEnabled && (
+                      <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition ${paymentMethod === 'razorpay' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-4 h-4 text-[#76b900]" /><span className="font-bold text-slate-700">Pay Online (Razorpay)</span></label>
+                    )}
+                  </div>
+
                   <div className="mt-4 pt-4 text-center">
                     <button type="button" onClick={() => setIsCheckout(false)} className="text-sm font-bold text-slate-500 hover:text-slate-800">
                       &larr; Back to Cart
