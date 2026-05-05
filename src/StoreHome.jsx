@@ -546,11 +546,11 @@ const StoreHome = () => {
                         className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] font-mono uppercase text-sm"
                       />
                       {appliedCoupon ? (
-                        <button onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponMessage({text: '', type: ''}); }} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition text-sm">
+                        <button type="button" onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponMessage({text: '', type: ''}); }} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition text-sm">
                           Remove
                         </button>
                       ) : (
-                        <button onClick={handleApplyCoupon} disabled={isValidatingCoupon || !couponCode} className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition disabled:opacity-50 text-sm">
+                        <button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon || !couponCode} className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition disabled:opacity-50 text-sm">
                           {isValidatingCoupon ? '...' : 'Apply'}
                         </button>
                       )}
@@ -578,11 +578,11 @@ const StoreHome = () => {
                   <span className="text-green-600">₹{finalTotal}</span>
                 </div>
                 {isCheckout ? (
-                  <button type="submit" form="checkout-form" disabled={isPlacingOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200 disabled:opacity-50">
+                  <button key="btn-confirm" type="submit" form="checkout-form" disabled={isPlacingOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200 disabled:opacity-50">
                     {isPlacingOrder ? 'Processing...' : 'Confirm & Place Order'}
                   </button>
                 ) : (
-                  <button onClick={() => setIsCheckout(true)} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
+                  <button key="btn-proceed" type="button" onClick={() => setIsCheckout(true)} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
                     Proceed to Checkout
                   </button>
                 )}
