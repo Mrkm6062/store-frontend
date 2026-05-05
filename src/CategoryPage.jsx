@@ -22,8 +22,11 @@ const CategoryPage = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckout, setIsCheckout] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [formData, setFormData] = useState({
-    customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: ''
+  const [formData, setFormData] = useState(() => {
+    const savedInfo = localStorage.getItem('gb_customer_info');
+    return savedInfo ? JSON.parse(savedInfo) : {
+      customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: ''
+    };
   });
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -66,6 +69,25 @@ const CategoryPage = () => {
       fetchDeliverySettings();
     }
   }, [store]);
+
+  // Auto-fill City and State when a 6-digit Pincode is entered
+  useEffect(() => {
+    const fetchPincodeDetails = async () => {
+      if (formData.pincode && formData.pincode.trim().length === 6) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${formData.pincode.trim()}`);
+          if (response.ok) {
+            const data = await response.json();
+            setFormData(prev => ({ ...prev, city: data.city || prev.city, state: data.state || prev.state }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch pincode details', error);
+        }
+      }
+    };
+    fetchPincodeDetails();
+  }, [formData.pincode]);
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
@@ -165,6 +187,33 @@ const CategoryPage = () => {
     e.preventDefault();
     setIsPlacingOrder(true);
     
+    if (formData.pincode && formData.pincode.trim().length < 6) {
+      showToast('Pincode must be exactly 6 digits.');
+      setIsPlacingOrder(false);
+      return;
+    }
+
+    if (formData.customerPhone && formData.customerPhone.trim().length < 10) {
+      showToast('Mobile Number must be exactly 10 digits.');
+      setIsPlacingOrder(false);
+      return;
+    }
+
+    if (formData.alternateNumber && formData.alternateNumber.trim().length > 0 && formData.alternateNumber.trim().length < 10) {
+      showToast('Alternate Mobile Number must be exactly 10 digits.');
+      setIsPlacingOrder(false);
+      return;
+    }
+
+    if (formData.customerEmail && formData.customerEmail.trim().length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.customerEmail.trim())) {
+        showToast('Please enter a valid email address.');
+        setIsPlacingOrder(false);
+        return;
+      }
+    }
+
     // Validate Delivery Rules
     if (deliverySettings) {
       if (deliverySettings.deliveryMode === 'state') {
@@ -216,6 +265,7 @@ const CategoryPage = () => {
       });
 
       showToast('Order placed successfully! We will contact you soon.', 'success');
+      localStorage.setItem('gb_customer_info', JSON.stringify(formData));
       setCart([]);
       localStorage.removeItem('gb_store_cart');
       setIsCartOpen(false);
@@ -334,7 +384,7 @@ const CategoryPage = () => {
                   <h3 className="font-bold text-slate-800 mb-2 border-b pb-2">Contact Details</h3>
                   <input type="text" required placeholder="Full Name" value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   <input type="email" placeholder="Email Address (Optional)" value={formData.customerEmail} onChange={(e) => setFormData({...formData, customerEmail: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                  <input type="tel" required placeholder="Mobile Number" value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <input type="tel" required placeholder="Mobile Number" maxLength="10" value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   
                   <h3 className="font-bold text-slate-800 mt-6 mb-2 border-b pb-2">Delivery Address</h3>
                   <input type="text" required placeholder="Address Line 1 (House No, Building, Street)" value={formData.addressLine1} onChange={(e) => setFormData({...formData, addressLine1: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
@@ -344,8 +394,8 @@ const CategoryPage = () => {
                     <input type="text" required placeholder="State" value={formData.state} onChange={(e) => setFormData({...formData, state: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <input type="text" required placeholder="Pincode" value={formData.pincode} onChange={(e) => setFormData({...formData, pincode: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                    <input type="tel" placeholder="Alternate Mobile" value={formData.alternateNumber} onChange={(e) => setFormData({...formData, alternateNumber: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                    <input type="text" required placeholder="Pincode" maxLength="6" value={formData.pincode} onChange={(e) => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                    <input type="tel" placeholder="Alternate Mobile" maxLength="10" value={formData.alternateNumber} onChange={(e) => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   </div>
                   
                   <div className="mt-4 pt-4 text-center">
