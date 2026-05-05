@@ -326,6 +326,10 @@ const TrackOrder = () => {
                             <span>Shipping</span>
                             <span className="font-bold text-slate-800">{selectedOrder.shippingCharge > 0 ? `₹${selectedOrder.shippingCharge}` : 'Free'}</span>
                           </div>
+                          <div className="flex justify-between text-sm text-slate-600 mt-2 border-t border-slate-200 pt-2">
+                            <span>Payment Method</span>
+                            <span className="font-bold text-slate-800 uppercase">{selectedOrder.paymentMethod === 'whatsapp' ? 'WhatsApp' : selectedOrder.paymentMethod === 'razorpay' ? 'Online' : 'COD'}</span>
+                          </div>
                         </div>
                       </div>
 

@@ -270,7 +270,8 @@ const CategoryPage = () => {
         totalAmount: finalTotal,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         discountAmount: discountAmount,
-        shippingCharge: shippingCharge
+        shippingCharge: shippingCharge,
+        paymentMethod: paymentMethod
       });
 
       if (paymentMethod === 'whatsapp' && checkoutSettings?.whatsappNumber) {
