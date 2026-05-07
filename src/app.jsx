@@ -5,6 +5,7 @@ import PolicyPage from './PolicyPage.jsx';
 import CategoryPage from './CategoryPage.jsx';
 import StoreCategory from './StoreCategory.jsx';
 import TrackOrder from './TrackOrder.jsx';
+import CheckoutPage from './CheckoutPage.jsx';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/policy/:slug" element={<PolicyPage />} />
         <Route path="/track" element={<TrackOrder />} />
         <Route path="/track/:orderId" element={<TrackOrder />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="*" element={<Navigate to="/" />} />
 
       </Routes>
