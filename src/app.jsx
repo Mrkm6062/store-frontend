@@ -5,7 +5,7 @@ import PolicyPage from './PolicyPage.jsx';
 import CategoryPage from './CategoryPage.jsx';
 import StoreCategory from './StoreCategory.jsx';
 import TrackOrder from './TrackOrder.jsx';
-import CheckoutPage from './CheckoutPage.jsx';
+import CheckoutPage from './Checkoutpage.jsx';
 
 function App() {
   return (
