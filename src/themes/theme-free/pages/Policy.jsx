@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Navigate } from 'react-router-dom';
-import { useStore } from './useStore';
+import { useStore } from '../../../services/useStore';
 import StoreLayout from './StoreLayout';
-import { getPublicPolicies } from './api';
+import { getPublicPolicies } from '../../../services/api';
 
 const PolicyPage = () => {
   const { slug } = useParams();

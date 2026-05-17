@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Package, Truck, CheckCircle, XCircle, ArrowLeft, RefreshCcw, Key, LogOut } from 'lucide-react';
-import { useStore } from './useStore';
+import { useStore } from '../../../services/useStore';
 
 const TrackOrder = () => {
   const { orderId } = useParams();

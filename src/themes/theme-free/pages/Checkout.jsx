@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useStore } from './useStore';
-import { placeOrder } from './api';
-import StoreLayout from './StoreLayout';
+import { useStore } from '../../../services/useStore';
+import { placeOrder } from '../../../services/api';
+import StoreLayout from '../../../services/StoreLayout';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 
 // Helper to dynamically load razorpay
