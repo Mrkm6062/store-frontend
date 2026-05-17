@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Navigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
-import StoreLayout from './StoreLayout';
+import StoreLayout from '../Layout';
 import { getPublicPolicies } from '../../../services/api';
 
 const PolicyPage = () => {
