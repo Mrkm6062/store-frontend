@@ -135,6 +135,9 @@ const CategoryPage = () => {
             <ProductGrid 
               products={filteredProducts.slice(0, visibleCount)} 
               onAddToCart={handleAddToCart} 
+              cart={cart}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveFromCart={handleRemoveFromCart}
             />
             {visibleCount < filteredProducts.length && (
               <div className="mt-10 text-center flex justify-center">

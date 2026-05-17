@@ -1,7 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ products, onAddToCart }) => {
+const ProductGrid = ({ products, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart }) => {
   if (!products || products.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
@@ -17,6 +17,9 @@ const ProductGrid = ({ products, onAddToCart }) => {
           key={product._id || product.id} 
           product={product} 
           onAddToCart={onAddToCart} 
+          cart={cart}
+          onUpdateQuantity={onUpdateQuantity}
+          onRemoveFromCart={onRemoveFromCart}
         />
       ))}
     </div>
