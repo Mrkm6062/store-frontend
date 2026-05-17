@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPublicPolicies } from './api';
+import { getPublicPolicies } from '../../../services/api';
 
 const Footer = ({ storeName }) => {
   const [policies, setPolicies] = useState([]);

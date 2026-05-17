@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
-import { getPublicCategories } from './api';
+import { getPublicCategories } from '../../../services/api';
 
 const Header = ({ store, cartCount, onCartClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
