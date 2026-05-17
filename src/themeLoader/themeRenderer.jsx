@@ -1,17 +1,24 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 
-import Theme1 from "../themes/theme1/Layout";
-import Theme2 from "../themes/theme2/Layout";
-
-const themes = {
-  theme1: Theme1,
-  theme2: Theme2,
+// Define a map of lazy-loaded themes. This ensures Vite creates separate chunks
+// for each theme, and the browser only downloads the CSS/JS for the active theme.
+const themeMap = {
+  'default': lazy(() => import('../themes/theme1/Layout')), // Adjust to your actual default layout path
+  'theme-free': lazy(() => import('../themes/theme-free/Layout')),
+  'minimal': lazy(() => import('../themes/minimal/Layout')),
+  'modern': lazy(() => import('../themes/modern/Layout')),
+  'premium': lazy(() => import('../themes/premium/Layout')),
 };
 
 const ThemeRenderer = ({ theme, storeData }) => {
-  const SelectedTheme = themes[theme] || Theme1;
+  // Fallback to the 'default' theme if the requested theme doesn't exist
+  const SelectedTheme = themeMap[theme] || themeMap['default'];
 
-  return <SelectedTheme storeData={storeData} />;
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#666', fontFamily: 'sans-serif' }}>Loading store...</div>}>
+      <SelectedTheme storeData={storeData} />
+    </Suspense>
+  );
 };
 
 export default ThemeRenderer;
