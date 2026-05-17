@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPublicPolicies } from '../../../services/api';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, Send, ChevronRight } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, ChevronRight } from 'lucide-react';
+import { FiFacebook, FiInstagram, FiTwitter } from 'react-icons/fi';
 
 const Footer = ({ storeName }) => {
   const [policies, setPolicies] = useState([]);
@@ -34,13 +35,13 @@ const Footer = ({ storeName }) => {
             
             <div className="flex items-center gap-3">
               <a href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-gray-100">
-                <Facebook size={18} />
+                <FiFacebook size={18} />
               </a>
               <a href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-gray-100">
-                <Instagram size={18} />
+                <FiInstagram size={18} />
               </a>
               <a href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-gray-100">
-                <Twitter size={18} />
+                <FiTwitter size={18} />
               </a>
             </div>
           </div>
