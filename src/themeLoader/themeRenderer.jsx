@@ -11,8 +11,14 @@ const themeMap = {
 };
 
 const ThemeRenderer = ({ theme, storeData }) => {
+  // Check if there is a preview theme in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const previewTheme = urlParams.get('preview_theme');
+
+  const activeThemeId = previewTheme || theme;
+
   // Fallback to the 'default' theme if the requested theme doesn't exist
-  const SelectedTheme = themeMap[theme] || themeMap['default'];
+  const SelectedTheme = themeMap[activeThemeId] || themeMap['default'];
 
   return (
     <Suspense fallback={<div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#666', fontFamily: 'sans-serif' }}>Loading store...</div>}>
