@@ -1,29 +1,29 @@
-import React, { Suspense, lazy } from "react";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Define a map of lazy-loaded themes. This ensures Vite creates separate chunks
-// for each theme, and the browser only downloads the CSS/JS for the active theme.
-const themeMap = {
-  'default': lazy(() => import('../themes/theme1/Layout')), // Adjust to your actual default layout path
-  'theme-free': lazy(() => import('../themes/theme-free/Layout')),
-  'minimal': lazy(() => import('../themes/minimal/Layout')),
-  'modern': lazy(() => import('../themes/modern/Layout')),
-  'premium': lazy(() => import('../themes/premium/Layout')),
-};
+// These point to the newly restructured "theme-free" directory
+import Home from '../themes/theme-free/pages/Home.jsx';
+import Category from '../themes/theme-free/pages/Category.jsx';
+import Categories from '../themes/theme-free/pages/Categories.jsx';
+import Policy from '../themes/theme-free/pages/Policy.jsx';
+import TrackOrder from '../themes/theme-free/pages/TrackOrder.jsx';
+import Checkout from '../themes/theme-free/pages/Checkout.jsx';
 
-const ThemeRenderer = ({ theme, storeData }) => {
-  // Check if there is a preview theme in the URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const previewTheme = urlParams.get('preview_theme');
-
-  const activeThemeId = previewTheme || theme;
-
-  // Fallback to the 'default' theme if the requested theme doesn't exist
-  const SelectedTheme = themeMap[activeThemeId] || themeMap['default'];
-
+const ThemeRenderer = () => {
+  // In the future, you can conditionally switch between themes here
   return (
-    <Suspense fallback={<div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#666', fontFamily: 'sans-serif' }}>Loading store...</div>}>
-      <SelectedTheme storeData={storeData} />
-    </Suspense>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/category/:categoryId" element={<Category />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/policy/:slug" element={<Policy />} />
+        <Route path="/track" element={<TrackOrder />} />
+        <Route path="/track/:orderId" element={<TrackOrder />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 };
 

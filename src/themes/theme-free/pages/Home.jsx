@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from './useStore';
-import { useProducts } from './useProducts';
-import { getPublicCategories } from './api';
-import StoreLayout from './StoreLayout';
-import Banner from './Banner';
-import ProductGrid from './ProductGrid';
-import CategoryCard from './CategoryCard';
+import { useStore } from '../../../hooks/useStore';
+import { useProducts } from '../../../hooks/useProducts';
+import { getPublicCategories } from '../../../services/api';
+import StoreLayout from '../Layout';
+import Banner from '../components/Banner';
+import ProductGrid from '../components/ProductGrid';
+import CategoryCard from '../components/CategoryCard';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
