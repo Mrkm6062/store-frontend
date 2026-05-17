@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useStore } from './useStore';
-import { useProducts } from './useProducts';
+import { useStore } from '../../../services/useStore';
+import { useProducts } from '../../../services/useProducts';
 import { getPublicCategories } from './api';
 import StoreLayout from './StoreLayout';
 import ProductGrid from './ProductGrid';
