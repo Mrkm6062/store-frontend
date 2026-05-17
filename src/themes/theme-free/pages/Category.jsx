@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import { getPublicCategories } from '../../../services/api';
-import StoreLayout from '..Layout/Layout';
+import StoreLayout from '../Layout';
 import ProductGrid from './ProductGrid';
 
 const CategoryPage = () => {
