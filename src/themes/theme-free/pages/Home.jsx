@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../../../hooks/useStore';
-import { useProducts } from '../../../hooks/useProducts';
+import { useStore } from '../../../services/useStore';
+import { useProducts } from '../../../services/useProducts';
 import { getPublicCategories } from '../../../services/api';
 import StoreLayout from '../Layout';
 import Banner from '../components/Banner';

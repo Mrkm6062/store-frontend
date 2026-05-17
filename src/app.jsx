@@ -1,5 +1,5 @@
 import React from 'react';
-import ThemeRenderer from './themeLoader/ThemeRenderer.jsx';
+import ThemeRenderer from './themeLoader/themeRenderer.jsx';
 
 function App() {
   return (
