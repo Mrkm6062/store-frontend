@@ -99,7 +99,7 @@ const Footer = ({ storeName }) => {
               <a href="#" className="flex items-center gap-3 text-sm text-gray-500 hover:text-[#76b900] transition-colors w-fit"><Phone size={16} className="text-[#76b900]" /> +91 98765 43210</a>
               <a href="#" className="flex items-center gap-3 text-sm text-gray-500 hover:text-[#76b900] transition-colors w-fit"><Mail size={16} className="text-[#76b900]" /> support@{storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com</a>
               <div className="flex items-start gap-3 text-sm text-gray-500 w-fit"><MapPin size={16} className="text-[#76b900] shrink-0 mt-0.5" /> <span>123 Fresh Market Street,<br />Grocery City, 400001</span></div>
-            </p>
+            </div>
           </div>
 
         </div>
