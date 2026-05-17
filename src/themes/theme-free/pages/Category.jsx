@@ -4,7 +4,8 @@ import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import { getPublicCategories } from '../../../services/api';
 import StoreLayout from '../Layout';
-import ProductGrid from './ProductGrid';
+import ProductGrid from '../components/ProductGrid';
+import CategoryCard from '../components/CategoryCard';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
