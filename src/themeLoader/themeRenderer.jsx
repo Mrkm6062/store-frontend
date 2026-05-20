@@ -51,23 +51,33 @@ const ThemeRenderer = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const previewTheme = urlParams.get('preview_theme') || urlParams.get('theme');
         
+        let resolvedTheme = 'theme-free';
+
         if (previewTheme) {
-          setThemeFolder(previewTheme);
+          // Smart fallback: supports both "theme-modern" and just "modern"
+          resolvedTheme = themesMap[previewTheme] ? previewTheme : (themesMap[`theme-${previewTheme}`] ? `theme-${previewTheme}` : 'theme-free');
+          setThemeFolder(resolvedTheme);
           setLoading(false);
           return;
         }
 
         // 2. Fetch the active theme from the resolved store context
         const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${API_URL}/api/store/data`); 
+        const res = await fetch(`${API_URL}/api/store/data`, {
+          headers: {
+            'x-store-domain': window.location.hostname,
+            'x-forwarded-host': window.location.hostname
+          }
+        }); 
         
         if (res.ok) {
           const storeData = await res.json();
-          // Sets the active theme folder name (e.g. 'theme-modern')
           if (storeData.theme) {
-            setThemeFolder(storeData.theme);
+            resolvedTheme = themesMap[storeData.theme] ? storeData.theme : (themesMap[`theme-${storeData.theme}`] ? `theme-${storeData.theme}` : 'theme-free');
           }
         }
+        
+        setThemeFolder(resolvedTheme);
       } catch (err) {
         console.error("Failed to load store theme. Falling back to theme-free.", err);
       } finally {
@@ -78,8 +88,9 @@ const ThemeRenderer = () => {
     fetchTheme();
   }, []);
 
+  // Show a clean blank screen instead of text while resolving the store
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center font-bold text-gray-500">Loading Store...</div>;
+    return <div className="min-h-screen bg-white"></div>;
   }
 
   // Fallback to theme-free if the active theme folder isn't in our map
@@ -87,7 +98,7 @@ const ThemeRenderer = () => {
 
   return (
     <Router>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-gray-500">Loading Theme...</div>}>
+      <Suspense fallback={<div className="min-h-screen bg-white"></div>}>
         <Routes>
           <Route path="/" element={<ActiveTheme.Home />} />
           <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
