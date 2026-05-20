@@ -1,28 +1,104 @@
-import React from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// These point to the newly restructured "theme-free" directory
-import Home from '../themes/theme-free/pages/Home.jsx';
-import Category from '../themes/theme-free/pages/Category.jsx';
-import Categories from '../themes/theme-free/pages/Categories.jsx';
-import Policy from '../themes/theme-free/pages/Policy.jsx';
-import TrackOrder from '../themes/theme-free/pages/TrackOrder.jsx';
-import Checkout from '../themes/theme-free/pages/Checkout.jsx';
+// Lazy load theme-free components
+const FreeHome = lazy(() => import('../themes/theme-free/pages/Home.jsx'));
+const FreeCategory = lazy(() => import('../themes/theme-free/pages/Category.jsx'));
+const FreeCategories = lazy(() => import('../themes/theme-free/pages/Categories.jsx'));
+const FreePolicy = lazy(() => import('../themes/theme-free/pages/Policy.jsx'));
+const FreeTrackOrder = lazy(() => import('../themes/theme-free/pages/TrackOrder.jsx'));
+const FreeCheckout = lazy(() => import('../themes/theme-free/pages/Checkout.jsx'));
+
+// Lazy load theme-modern components
+const ModernHome = lazy(() => import('../themes/theme-modern/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
+const ModernCategory = lazy(() => import('../themes/theme-modern/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
+const ModernCategories = lazy(() => import('../themes/theme-modern/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
+const ModernPolicy = lazy(() => import('../themes/theme-modern/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
+const ModernTrackOrder = lazy(() => import('../themes/theme-modern/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
+const ModernCheckout = lazy(() => import('../themes/theme-modern/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+
+// Lazy load theme-premium components
+const PremiumHome = lazy(() => import('../themes/theme-premium/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
+const PremiumCategory = lazy(() => import('../themes/theme-premium/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
+const PremiumCategories = lazy(() => import('../themes/theme-premium/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
+const PremiumPolicy = lazy(() => import('../themes/theme-premium/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
+const PremiumTrackOrder = lazy(() => import('../themes/theme-premium/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
+const PremiumCheckout = lazy(() => import('../themes/theme-premium/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+
+// Lazy load theme-minimal components
+const MinimalHome = lazy(() => import('../themes/theme-minimal/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
+const MinimalCategory = lazy(() => import('../themes/theme-minimal/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
+const MinimalCategories = lazy(() => import('../themes/theme-minimal/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
+const MinimalPolicy = lazy(() => import('../themes/theme-minimal/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
+const MinimalTrackOrder = lazy(() => import('../themes/theme-minimal/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
+const MinimalCheckout = lazy(() => import('../themes/theme-minimal/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+
+const themesMap = {
+  'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout },
+  'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout },
+  'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout },
+  'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout },
+};
 
 const ThemeRenderer = () => {
-  // In the future, you can conditionally switch between themes here
+  const [themeFolder, setThemeFolder] = useState('theme-free');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTheme = async () => {
+      try {
+        // 1. Support for Superadmin Live Preview (via URL query param)
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewTheme = urlParams.get('preview_theme') || urlParams.get('theme');
+        
+        if (previewTheme) {
+          setThemeFolder(previewTheme);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Fetch the active theme from the resolved store context
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${API_URL}/api/store/data`); 
+        
+        if (res.ok) {
+          const storeData = await res.json();
+          // Sets the active theme folder name (e.g. 'theme-modern')
+          if (storeData.theme) {
+            setThemeFolder(storeData.theme);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load store theme. Falling back to theme-free.", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTheme();
+  }, []);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center font-bold text-gray-500">Loading Store...</div>;
+  }
+
+  // Fallback to theme-free if the active theme folder isn't in our map
+  const ActiveTheme = themesMap[themeFolder] || themesMap['theme-free'];
+
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/category/:categoryId" element={<Category />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/policy/:slug" element={<Policy />} />
-        <Route path="/track" element={<TrackOrder />} />
-        <Route path="/track/:orderId" element={<TrackOrder />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-gray-500">Loading Theme...</div>}>
+        <Routes>
+          <Route path="/" element={<ActiveTheme.Home />} />
+          <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
+          <Route path="/categories" element={<ActiveTheme.Categories />} />
+          <Route path="/policy/:slug" element={<ActiveTheme.Policy />} />
+          <Route path="/track" element={<ActiveTheme.TrackOrder />} />
+          <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
+          <Route path="/checkout" element={<ActiveTheme.Checkout />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 };
