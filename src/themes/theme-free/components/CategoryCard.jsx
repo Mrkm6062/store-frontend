@@ -11,7 +11,7 @@ const CategoryCard = ({ category, onClick }) => {
   return (
     <div onClick={() => onClick(category)} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[90px] shrink-0">
       <div 
-        className="w-144 h-144 md:w-24 md:h-24 rounded-full border border-gray-200 group-hover:border-[#76b900] flex items-center justify-center overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-lg"
+        className="w-48 h-48 md:w-24 md:h-24 rounded-full border border-gray-200 group-hover:border-[#76b900] flex items-center justify-center overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-lg"
         style={{ backgroundColor: categorySettings.bgColor || '#f0fdf4' }}
       >
         {category.image?.url ? (
