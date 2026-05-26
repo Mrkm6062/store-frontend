@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import { getPublicCategories } from '../../../services/api';
 import StoreLayout from '../Layout';
-import Banner from '../components/Banner';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
- import Story from '../components/story';
 
-const StoreHome = () => {
+const CategoryPage = () => {
+  const { categoryId } = useParams();
+  const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
-  const navigate = useNavigate();
   
   const [visibleCount, setVisibleCount] = useState(12);
-  const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState(null);
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -28,8 +27,15 @@ const StoreHome = () => {
   }, [cart]);
 
   useEffect(() => {
-    getPublicCategories().then(setCategories).catch(console.error);
-  }, []);
+    getPublicCategories().then(categories => {
+      const currentCategory = categories.find(c => c._id === categoryId);
+      setCategory(currentCategory);
+    }).catch(console.error);
+  }, [categoryId]);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [categoryId]);
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
@@ -49,7 +55,7 @@ const StoreHome = () => {
         );
       }
       
-      if (product.maxStock <= 0) return prev; // Fallback safeguard
+      if (product.maxStock <= 0) return prev;
       
       const resolvedPrice = product.basePrice || (product.variants?.length > 0 ? product.variants[0].price : product.price) || 0;
       return [...prev, { ...product, price: resolvedPrice, qty: 1 }];
@@ -77,46 +83,12 @@ const StoreHome = () => {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   useEffect(() => {
-    if (store) {
-      // Update Document Title
-      document.title = store.websiteTitle || store.name || 'Storefront';
-
-      // Update Favicon
-      if (store.favicon) {
-        let link = document.querySelector("link[rel~='icon']");
-        if (!link) {
-          link = document.createElement('link');
-          link.rel = 'icon';
-          document.head.appendChild(link);
-        }
-        link.href = store.favicon;
-      }
-
-      // Update Meta Description
-      if (store.metaDescription) {
-        let meta = document.querySelector("meta[name='description']");
-        if (meta) {
-          meta.content = store.metaDescription;
-        }
-      }
-
-      // Inject dynamic Organization JSON-LD Schema
-      let script = document.querySelector('#store-schema');
-      if (!script) {
-        script = document.createElement('script');
-        script.id = 'store-schema';
-        script.type = 'application/ld+json';
-        document.head.appendChild(script);
-      }
-      script.textContent = JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": store.name,
-        "url": store.subdomain ? `https://${store.subdomain}` : window.location.origin,
-        "logo": store.logo || ""
-      });
+    if (store && category) {
+      document.title = `${category.name} - ${store.websiteTitle || store.name}`;
     }
-  }, [store]);
+  }, [store, category]);
+
+  const filteredProducts = products.filter(p => p.category === categoryId);
 
   if (storeLoading) {
     return (
@@ -138,36 +110,19 @@ const StoreHome = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
-      <Banner bannerUrl={store.banner} storeName={store.name} />
-
-      {categories.length > 0 && (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-12">
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">BROWSE OUR COLLECTIONS</h2>
-            <button onClick={() => navigate('/categories')} className="text-sm font-bold text-[#76b900] hover:text-green-700 transition whitespace-nowrap">
-              Show All &rarr;
-            </button>
-          </div>
-          
-          <div className="flex overflow-x-auto pb-4 gap-6 scrollbar-hide snap-x">
-            {categories.slice(0, 10).map(c => (
-              <div key={c._id} className="snap-start">
-                <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat._id}`)} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Latest Products</h2>
+          <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800 mb-4">&larr; Back to All Products</button>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            {category ? `Products in ${category.name}` : 'Loading Category...'}
+          </h2>
+          {category?.description && <p className="text-gray-500 mt-2 text-lg">{category.description}</p>}
         </div>
 
         {productsLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[260px] sm:h-[340px] animate-pulse">
                 <div className="w-full h-32 sm:h-48 bg-gray-200"></div>
                 <div className="p-3 sm:p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-8 sm:h-10 bg-gray-200 rounded-xl w-full mt-2 sm:mt-4"></div></div>
               </div>
@@ -178,13 +133,13 @@ const StoreHome = () => {
         ) : (
           <>
             <ProductGrid 
-              products={products.slice(0, visibleCount)} 
+              products={filteredProducts.slice(0, visibleCount)} 
               onAddToCart={handleAddToCart} 
               cart={cart}
               onUpdateQuantity={handleUpdateQuantity}
               onRemoveFromCart={handleRemoveFromCart}
             />
-            {visibleCount < products.length && (
+            {visibleCount < filteredProducts.length && (
               <div className="mt-10 text-center flex justify-center">
                 <button 
                   onClick={() => setVisibleCount(prev => prev + 12)} 
@@ -197,9 +152,6 @@ const StoreHome = () => {
           </>
         )}
       </div>
-
-      {/* Why Choose Us Section */}
-      <Story />
 
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
@@ -217,13 +169,11 @@ const StoreHome = () => {
       {/* Cart Sidebar Overlay */}
       {isCartOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
             onClick={() => setIsCartOpen(false)}
           ></div>
           
-          {/* Sidebar */}
           <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
@@ -305,4 +255,4 @@ const StoreHome = () => {
   );
 };
 
-export default StoreHome;
+export default CategoryPage;
