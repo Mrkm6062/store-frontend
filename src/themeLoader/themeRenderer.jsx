@@ -47,6 +47,7 @@ const themesMap = {
   'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout },
   'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout },
   'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout },
+  'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout },
 };
 
 export const ThemeCustomizationContext = createContext(null);
@@ -59,37 +60,43 @@ const ThemeRenderer = () => {
   useEffect(() => {
     const fetchTheme = async () => {
       try {
-        // 1. Support for Superadmin Live Preview (via URL query param)
-        const urlParams = new URLSearchParams(window.location.search);
-        const previewTheme = urlParams.get('preview_theme') || urlParams.get('theme');
-        
-        let resolvedTheme = 'theme-free';
         const API_URL = import.meta.env.VITE_API_URL || '';
         const headers = {
           'x-store-domain': window.location.hostname,
           'x-forwarded-host': window.location.hostname
         };
 
-        if (previewTheme) {
-          // Smart fallback: supports both "theme-modern" and just "modern"
-          resolvedTheme = themesMap[previewTheme] ? previewTheme : (themesMap[`theme-${previewTheme}`] ? `theme-${previewTheme}` : 'theme-free');
+        // 1. Fetch the active theme from the resolved store context
+        const res = await fetch(`${API_URL}/api/store/data`, { headers }); 
+        let storeData = null;
+        if (res.ok) {
+          storeData = await res.json();
         }
-        else {
-          // 2. Fetch the active theme from the resolved store context
-          const res = await fetch(`${API_URL}/api/store/data`, { headers }); 
-          
-          if (res.ok) {
-            const storeData = await res.json();
-            if (storeData.theme) {
-              resolvedTheme = themesMap[storeData.theme] ? storeData.theme : (themesMap[`theme-${storeData.theme}`] ? `theme-${storeData.theme}` : 'theme-free');
-            }
+
+        // 2. Support for Superadmin Live Preview (via URL query param)
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewThemeFolder = urlParams.get('preview_theme');
+        const previewThemeId = urlParams.get('preview_id');
+        
+        let resolvedTheme = 'theme-free';
+        let actualThemeId = 'default';
+
+        if (previewThemeFolder) {
+          resolvedTheme = themesMap[previewThemeFolder] ? previewThemeFolder : (themesMap[`theme-${previewThemeFolder}`] ? `theme-${previewThemeFolder}` : 'theme-free');
+          actualThemeId = previewThemeId || previewThemeFolder.replace('theme-', '');
+        } else if (storeData) {
+          if (storeData.themeFolder && themesMap[storeData.themeFolder]) {
+            resolvedTheme = storeData.themeFolder;
+          } else if (storeData.theme) {
+            resolvedTheme = themesMap[storeData.theme] ? storeData.theme : (themesMap[`theme-${storeData.theme}`] ? `theme-${storeData.theme}` : 'theme-free');
           }
+          actualThemeId = storeData.theme || 'default';
         }
         
         setThemeFolder(resolvedTheme);
 
         // 3. Fetch Theme Customizations
-        const customRes = await fetch(`${API_URL}/api/theme-customization/public`, { headers });
+        const customRes = await fetch(`${API_URL}/api/theme-customization/public?themeId=${actualThemeId}`, { headers });
         if (customRes.ok) {
           const customData = await customRes.json();
           if (customData && Object.keys(customData).length > 0) {
