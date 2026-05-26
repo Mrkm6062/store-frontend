@@ -57,10 +57,9 @@ const Footer = ({ storeName }) => {
   }, [store?._id]);
 
   // Safely clean up and fallback store details to avoid rendering empty blanks if saved improperly
-  const validPhones = (store?.supportPhoneNumbers || []).filter(phone => phone && phone.trim() !== '');
-  const displayPhones = validPhones.length > 0 ? validPhones : ['+91 98765 43210'];
-  const displayEmail = store?.supportEmail && store.supportEmail.trim() !== '' ? store.supportEmail.trim() : `support@${storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com`;
-  const displayAddress = store?.locationAddress && store.locationAddress.trim() !== '' ? store.locationAddress.trim() : '123 Fresh Market Street,\nGrocery City, 400001';
+  const displayPhones = (store?.supportPhoneNumbers || []).filter(phone => phone && phone.trim() !== '');
+  const displayEmail = store?.supportEmail && store.supportEmail.trim() !== '' ? store.supportEmail.trim() : null;
+  const displayAddress = store?.locationAddress && store.locationAddress.trim() !== '' ? store.locationAddress.trim() : null;
   const validMapLink = store?.mapLocation && store.mapLocation.trim() !== '' ? store.mapLocation.trim() : null;
 
   return (
@@ -144,15 +143,19 @@ const Footer = ({ storeName }) => {
                   <Phone size={16} className="opacity-80" /> {phone}
                 </a>
               ))}
-              <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
-                <Mail size={16} className="opacity-80" /> {displayEmail}
-              </a>
-              {validMapLink ? (
-                <a href={validMapLink} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
-                  <MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{displayAddress}</span>
+              {displayEmail && (
+                <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
+                  <Mail size={16} className="opacity-80" /> {displayEmail}
                 </a>
-              ) : (
-                <div className="flex items-start gap-3 text-sm opacity-80 w-fit"><MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{displayAddress}</span></div>
+              )}
+              {displayAddress && (
+                validMapLink ? (
+                  <a href={validMapLink} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
+                    <MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{displayAddress}</span>
+                  </a>
+                ) : (
+                  <div className="flex items-start gap-3 text-sm opacity-80 w-fit"><MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{displayAddress}</span></div>
+                )
               )}
               <MapEmbed mapLocation={validMapLink} />
             </div>
