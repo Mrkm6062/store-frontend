@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { getPublicPolicies } from '../../../services/api';
 import { Mail, Phone, MapPin, Send, ChevronRight } from 'lucide-react';
 import { FiFacebook, FiInstagram, FiTwitter } from 'react-icons/fi';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const Footer = ({ storeName }) => {
   const [policies, setPolicies] = useState([]);
+  const customization = useContext(ThemeCustomizationContext);
+  const footerSettings = customization?.footer || {};
 
   useEffect(() => {
     const fetchPolicies = async () => {
@@ -20,27 +23,27 @@ const Footer = ({ storeName }) => {
   }, []);
 
   return (
-    <footer className="bg-gradient-to-b from-white to-green-50/40 border-t border-gray-100 mt-auto pt-16 pb-8">
+    <footer className="border-t border-gray-100 mt-auto pt-16 pb-8 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
           
           {/* Brand & Social Section */}
           <div className="flex flex-col space-y-6">
             <div>
-              <h2 className="text-2xl font-extrabold text-[#76b900] mb-2">{storeName}</h2>
-              <p className="text-gray-500 text-sm leading-relaxed pr-4">
+              <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || '#76b900' }}>{storeName}</h2>
+              <p className="text-sm leading-relaxed pr-4 opacity-80">
                 Fresh groceries and daily essentials delivered right to your doorstep. We guarantee quality and freshness in every single order.
               </p>
             </div>
             
             <div className="flex items-center gap-3">
-              <a href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-gray-100">
+              <a href="#" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
                 <FiFacebook size={18} />
               </a>
-              <a href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-gray-100">
+              <a href="#" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
                 <FiInstagram size={18} />
               </a>
-              <a href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-gray-100">
+              <a href="#" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
                 <FiTwitter size={18} />
               </a>
             </div>
@@ -48,12 +51,12 @@ const Footer = ({ storeName }) => {
 
           {/* Quick Links Section */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-5">Quick Links</h3>
+            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Quick Links</h3>
             <ul className="space-y-3">
               {['Home', 'Shop Categories', 'Today\'s Offers', 'Track Order', 'Contact Us'].map((link, idx) => (
                 <li key={idx}>
-                  <Link to={link === 'Home' ? '/' : link === 'Shop Categories' ? '/categories' : link === 'Track Order' ? '/track' : '#'} className="text-sm text-gray-500 hover:text-[#76b900] transition font-medium flex items-center gap-2 group w-fit">
-                    <ChevronRight size={14} className="text-gray-300 group-hover:text-[#76b900] transition-colors" />
+                  <Link to={link === 'Home' ? '/' : link === 'Shop Categories' ? '/categories' : link === 'Track Order' ? '/track' : '#'} className="text-sm opacity-80 hover:opacity-100 transition font-medium flex items-center gap-2 group w-fit">
+                    <ChevronRight size={14} className="opacity-50 group-hover:opacity-100 transition-colors" />
                     {link}
                   </Link>
                 </li>
@@ -63,28 +66,28 @@ const Footer = ({ storeName }) => {
 
           {/* Customer Support (Policies) */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-5">Customer Support</h3>
+            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Customer Support</h3>
             <ul className="space-y-3">
               {policies.length > 0 ? policies.map(policy => {
                 const slug = policy.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                 return (
                   <li key={policy._id}>
-                    <Link to={`/policy/${slug}`} state={{ policy }} className="text-sm text-gray-500 hover:text-[#76b900] transition font-medium flex items-center gap-2 group w-fit">
-                      <ChevronRight size={14} className="text-gray-300 group-hover:text-[#76b900] transition-colors" />
+                    <Link to={`/policy/${slug}`} state={{ policy }} className="text-sm opacity-80 hover:opacity-100 transition font-medium flex items-center gap-2 group w-fit">
+                      <ChevronRight size={14} className="opacity-50 group-hover:opacity-100 transition-colors" />
                       {policy.title}
                     </Link>
                   </li>
                 );
               }) : (
-                <li className="text-sm text-gray-400 italic">No policies available.</li>
+                <li className="text-sm opacity-60 italic">No policies available.</li>
               )}
             </ul>
           </div>
 
           {/* Newsletter & Contact Section */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-5">Stay Updated</h3>
-            <p className="text-sm text-gray-500 mb-4">Get updates on fresh deals and exclusive offers straight to your inbox.</p>
+            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Stay Updated</h3>
+            <p className="text-sm opacity-80 mb-4">Get updates on fresh deals and exclusive offers straight to your inbox.</p>
             <form className="flex mb-6 shadow-sm" onSubmit={(e) => e.preventDefault()}>
               <input 
                 type="email" 
@@ -97,20 +100,20 @@ const Footer = ({ storeName }) => {
               </button>
             </form>
             <div className="space-y-3">
-              <a href="#" className="flex items-center gap-3 text-sm text-gray-500 hover:text-[#76b900] transition-colors w-fit"><Phone size={16} className="text-[#76b900]" /> +91 98765 43210</a>
-              <a href="#" className="flex items-center gap-3 text-sm text-gray-500 hover:text-[#76b900] transition-colors w-fit"><Mail size={16} className="text-[#76b900]" /> support@{storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com</a>
-              <div className="flex items-start gap-3 text-sm text-gray-500 w-fit"><MapPin size={16} className="text-[#76b900] shrink-0 mt-0.5" /> <span>123 Fresh Market Street,<br />Grocery City, 400001</span></div>
+              <a href="#" className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit"><Phone size={16} className="opacity-80" /> +91 98765 43210</a>
+              <a href="#" className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit"><Mail size={16} className="opacity-80" /> support@{storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com</a>
+              <div className="flex items-start gap-3 text-sm opacity-80 w-fit"><MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span>123 Fresh Market Street,<br />Grocery City, 400001</span></div>
             </div>
           </div>
 
         </div>
         
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-center md:text-left text-gray-500 text-sm font-medium">
+        <div className="border-t border-black/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-center md:text-left opacity-80 text-sm font-medium">
             &copy; {new Date().getFullYear()} {storeName}. All rights reserved.
           </div>
-          <div className="text-center text-gray-400 text-xs font-mono tracking-widest uppercase">
+          <div className="text-center opacity-60 text-xs font-mono tracking-widest uppercase">
             POWERED BY GALIBRAND
           </div>
         </div>

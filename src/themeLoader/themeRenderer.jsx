@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Lazy load theme-free components
@@ -40,9 +40,12 @@ const themesMap = {
   'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout },
 };
 
+export const ThemeCustomizationContext = createContext(null);
+
 const ThemeRenderer = () => {
   const [themeFolder, setThemeFolder] = useState('theme-free');
   const [loading, setLoading] = useState(true);
+  const [customization, setCustomization] = useState(null);
 
   useEffect(() => {
     const fetchTheme = async () => {
@@ -52,32 +55,39 @@ const ThemeRenderer = () => {
         const previewTheme = urlParams.get('preview_theme') || urlParams.get('theme');
         
         let resolvedTheme = 'theme-free';
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const headers = {
+          'x-store-domain': window.location.hostname,
+          'x-forwarded-host': window.location.hostname
+        };
 
         if (previewTheme) {
           // Smart fallback: supports both "theme-modern" and just "modern"
           resolvedTheme = themesMap[previewTheme] ? previewTheme : (themesMap[`theme-${previewTheme}`] ? `theme-${previewTheme}` : 'theme-free');
-          setThemeFolder(resolvedTheme);
-          setLoading(false);
-          return;
         }
-
-        // 2. Fetch the active theme from the resolved store context
-        const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${API_URL}/api/store/data`, {
-          headers: {
-            'x-store-domain': window.location.hostname,
-            'x-forwarded-host': window.location.hostname
-          }
-        }); 
-        
-        if (res.ok) {
-          const storeData = await res.json();
-          if (storeData.theme) {
-            resolvedTheme = themesMap[storeData.theme] ? storeData.theme : (themesMap[`theme-${storeData.theme}`] ? `theme-${storeData.theme}` : 'theme-free');
+        else {
+          // 2. Fetch the active theme from the resolved store context
+          const res = await fetch(`${API_URL}/api/store/data`, { headers }); 
+          
+          if (res.ok) {
+            const storeData = await res.json();
+            if (storeData.theme) {
+              resolvedTheme = themesMap[storeData.theme] ? storeData.theme : (themesMap[`theme-${storeData.theme}`] ? `theme-${storeData.theme}` : 'theme-free');
+            }
           }
         }
         
         setThemeFolder(resolvedTheme);
+
+        // 3. Fetch Theme Customizations
+        const customRes = await fetch(`${API_URL}/api/theme-customization/public`, { headers });
+        if (customRes.ok) {
+          const customData = await customRes.json();
+          if (customData && Object.keys(customData).length > 0) {
+            setCustomization(customData);
+            applyThemeStyles(customData);
+          }
+        }
       } catch (err) {
         console.error("Failed to load store theme. Falling back to theme-free.", err);
       } finally {
@@ -88,6 +98,27 @@ const ThemeRenderer = () => {
     fetchTheme();
   }, []);
 
+  // Dynamically inject CSS variables to the document root
+  const applyThemeStyles = (data) => {
+    const root = document.documentElement;
+    if (data.global) {
+      if (data.global.primaryColor) root.style.setProperty('--color-primary', data.global.primaryColor);
+      if (data.global.secondaryColor) root.style.setProperty('--color-secondary', data.global.secondaryColor);
+      if (data.global.borderRadius) root.style.setProperty('--border-radius', data.global.borderRadius);
+      if (data.global.fontFamily) document.body.style.fontFamily = data.global.fontFamily;
+      
+      if (data.global.officialfaviconimage) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = data.global.officialfaviconimage;
+      }
+    }
+  };
+
   // Show a clean blank screen instead of text while resolving the store
   if (loading) {
     return <div className="min-h-screen bg-white"></div>;
@@ -97,20 +128,22 @@ const ThemeRenderer = () => {
   const ActiveTheme = themesMap[themeFolder] || themesMap['theme-free'];
 
   return (
-    <Router>
-      <Suspense fallback={<div className="min-h-screen bg-white"></div>}>
-        <Routes>
-          <Route path="/" element={<ActiveTheme.Home />} />
-          <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
-          <Route path="/categories" element={<ActiveTheme.Categories />} />
-          <Route path="/policy/:slug" element={<ActiveTheme.Policy />} />
-          <Route path="/track" element={<ActiveTheme.TrackOrder />} />
-          <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
-          <Route path="/checkout" element={<ActiveTheme.Checkout />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Suspense>
-    </Router>
+    <ThemeCustomizationContext.Provider value={customization}>
+      <Router>
+        <Suspense fallback={<div className="min-h-screen bg-white"></div>}>
+          <Routes>
+            <Route path="/" element={<ActiveTheme.Home />} />
+            <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
+            <Route path="/categories" element={<ActiveTheme.Categories />} />
+            <Route path="/policy/:slug" element={<ActiveTheme.Policy />} />
+            <Route path="/track" element={<ActiveTheme.TrackOrder />} />
+            <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
+            <Route path="/checkout" element={<ActiveTheme.Checkout />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </ThemeCustomizationContext.Provider>
   );
 };
 

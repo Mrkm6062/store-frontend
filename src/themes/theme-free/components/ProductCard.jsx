@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Plus, Minus, Heart } from 'lucide-react';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart }) => {
+  const customization = useContext(ThemeCustomizationContext);
+  const cardSettings = customization?.productCard || {};
+
   const hasVariants = product.variants && product.variants.length > 0;
   const [selectedVariantId, setSelectedVariantId] = useState(hasVariants ? product.variants[0]._id : null);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -53,7 +57,10 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const categoryName = product.categoryName || (typeof product.category === 'string' && product.category.length < 20 ? product.category : 'Fresh Item');
 
   return (
-    <div className="relative bg-white rounded-2xl sm:rounded-[20px] border border-gray-100/80 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(34,197,94,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col group overflow-hidden">
+    <div 
+      className="relative rounded-2xl sm:rounded-[20px] border shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(34,197,94,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col group overflow-hidden"
+      style={{ backgroundColor: cardSettings.bgColor || '#ffffff', borderColor: cardSettings.borderColor || '#f3f4f6' }}
+    >
       
       {/* Badges */}
       <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1.5">
@@ -100,7 +107,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       </div>
 
       {/* Content Area */}
-      <div className="p-3 sm:p-4 flex flex-col flex-grow bg-white z-20">
+      <div className="p-3 sm:p-4 flex flex-col flex-grow z-20" style={{ backgroundColor: cardSettings.bgColor || '#ffffff' }}>
         <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">
           {categoryName}
         </span>

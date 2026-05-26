@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
 import { getPublicCategories } from '../../../services/api';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const Header = ({ store, cartCount, onCartClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,6 +10,10 @@ const Header = ({ store, cartCount, onCartClick }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState([]);
+
+  const customization = useContext(ThemeCustomizationContext);
+  const headerSettings = customization?.header || {};
+  const offerBanner = headerSettings.offerBanner || { Enabled: true, text: store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!', bgColor: '#76b900', textColor: '#ffffff' };
 
   useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
@@ -44,37 +49,45 @@ const Header = ({ store, cartCount, onCartClick }) => {
   }, [searchQuery]);
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="shadow-sm sticky top-0 z-50 transition-colors duration-300" style={{ backgroundColor: headerSettings.bgColor || '#ffffff', color: headerSettings.textColor || '#000000' }}>
       {/* Offer Header */}
-      <div className="bg-[#76b900] text-white px-4 py-1.5 sm:py-2 text-center text-xs sm:text-sm font-medium w-full">
-        <p className="truncate max-w-7xl mx-auto">
-          {store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!'}
-        </p>
-      </div>
+      {offerBanner.Enabled !== false && (
+        <div 
+          className="px-4 py-1.5 sm:py-2 text-center text-xs sm:text-sm font-medium w-full transition-colors duration-300"
+          style={{ backgroundColor: offerBanner.bgColor, color: offerBanner.textColor }}
+        >
+          <p className="truncate max-w-7xl mx-auto">
+            {offerBanner.text}
+          </p>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex-1 flex justify-start items-center">
-            <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-md md:hidden">
+            <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-black/5 rounded-md md:hidden transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Menu size={24} />
             </button>
           </div>
 
           <div className="flex-1 flex justify-center items-center">
-            {store?.logo ? (
-              <img src={store?.logo} alt={store?.name} className="h-10 sm:h-12 w-auto object-contain" />
+            {(headerSettings.officialdesktopLogo || headerSettings.officialmobileLogo || store?.logo) ? (
+              <>
+                <img src={headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} className="h-10 w-auto object-contain md:hidden" />
+                <img src={headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} className="h-12 w-auto object-contain hidden md:block" />
+              </>
             ) : (
-              <h1 className="text-xl font-bold text-gray-900">{store?.name || 'Store'}</h1>
+              <h1 className="text-xl font-bold" style={{ color: headerSettings.textColor || '#111827' }}>{store?.name || 'Store'}</h1>
             )}
           </div>
 
           <div className="flex-1 flex justify-end items-center gap-2 sm:gap-4">
-            <button onClick={() => setIsSearchOpen(true)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition">
+            <button onClick={() => setIsSearchOpen(true)} className="p-2 hover:bg-black/5 rounded-full transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Search size={24} />
             </button>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full hidden sm:block transition">
+            <button className="p-2 hover:bg-black/5 rounded-full hidden sm:block transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <User size={24} />
             </button>
-            <button onClick={onCartClick} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative transition">
+            <button onClick={onCartClick} className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <ShoppingCart size={24} />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-green-600 rounded-full">
