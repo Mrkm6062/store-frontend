@@ -56,6 +56,13 @@ const Footer = ({ storeName }) => {
     fetchSocialLinks();
   }, [store?._id]);
 
+  // Safely clean up and fallback store details to avoid rendering empty blanks if saved improperly
+  const validPhones = (store?.supportPhoneNumbers || []).filter(phone => phone && phone.trim() !== '');
+  const displayPhones = validPhones.length > 0 ? validPhones : ['+91 98765 43210'];
+  const displayEmail = store?.supportEmail && store.supportEmail.trim() !== '' ? store.supportEmail.trim() : `support@${storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com`;
+  const displayAddress = store?.locationAddress && store.locationAddress.trim() !== '' ? store.locationAddress.trim() : '123 Fresh Market Street,\nGrocery City, 400001';
+  const validMapLink = store?.mapLocation && store.mapLocation.trim() !== '' ? store.mapLocation.trim() : null;
+
   return (
     <footer className="border-t border-gray-100 mt-auto pt-16 pb-8 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -132,22 +139,22 @@ const Footer = ({ storeName }) => {
               </button>
             </form>
             <div className="space-y-3">
-              {(store?.supportPhoneNumbers?.length > 0 ? store.supportPhoneNumbers : ['+91 98765 43210']).map((phone, idx) => (
+              {displayPhones.map((phone, idx) => (
                 <a key={idx} href={`tel:${phone}`} className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
                   <Phone size={16} className="opacity-80" /> {phone}
                 </a>
               ))}
-              <a href={`mailto:${store?.supportEmail || `support@${storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com`}`} className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
-                <Mail size={16} className="opacity-80" /> {store?.supportEmail || `support@${storeName?.replace(/\s+/g, '').toLowerCase() || 'store'}.com`}
+              <a href={`mailto:${displayEmail}`} className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
+                <Mail size={16} className="opacity-80" /> {displayEmail}
               </a>
-              {store?.mapLocation ? (
-                <a href={store.mapLocation} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
-                  <MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{store?.locationAddress || '123 Fresh Market Street,\nGrocery City, 400001'}</span>
+              {validMapLink ? (
+                <a href={validMapLink} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
+                  <MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{displayAddress}</span>
                 </a>
               ) : (
-                <div className="flex items-start gap-3 text-sm opacity-80 w-fit"><MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{store?.locationAddress || '123 Fresh Market Street,\nGrocery City, 400001'}</span></div>
+                <div className="flex items-start gap-3 text-sm opacity-80 w-fit"><MapPin size={16} className="shrink-0 mt-0.5 opacity-80" /> <span className="whitespace-pre-wrap">{displayAddress}</span></div>
               )}
-              <MapEmbed mapLocation={store?.mapLocation} />
+              <MapEmbed mapLocation={validMapLink} />
             </div>
           </div>
 
