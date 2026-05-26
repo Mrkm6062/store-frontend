@@ -33,11 +33,20 @@ const MinimalPolicy = lazy(() => import('../themes/theme-minimal/pages/Policy.js
 const MinimalTrackOrder = lazy(() => import('../themes/theme-minimal/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
 const MinimalCheckout = lazy(() => import('../themes/theme-minimal/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
 
+// Lazy load theme-giftshop components
+const GiftshopHome = lazy(() => import('../themes/theme-giftshop/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
+const GiftshopCategory = lazy(() => import('../themes/theme-giftshop/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
+const GiftshopCategories = lazy(() => import('../themes/theme-giftshop/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
+const GiftshopPolicy = lazy(() => import('../themes/theme-giftshop/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
+const GiftshopTrackOrder = lazy(() => import('../themes/theme-giftshop/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
+const GiftshopCheckout = lazy(() => import('../themes/theme-giftshop/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+
 const themesMap = {
   'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout },
   'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout },
   'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout },
   'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout },
+  'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout },
 };
 
 export const ThemeCustomizationContext = createContext(null);
