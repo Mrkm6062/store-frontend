@@ -17,10 +17,10 @@ const CategoryCard = ({ category, onClick }) => {
         {category.image?.url ? (
           <img src={category.image.url} alt={category.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
         ) : (
-          <span className="text-2xl font-black text-[#76b900] tracking-wider transform group-hover:scale-110 transition-transform duration-500">{initials}</span>
+          <span className="text-2xl uppercase font-black text-[#76b900] tracking-wider transform group-hover:scale-110 transition-transform duration-500">{initials}</span>
         )}
       </div>
-      <span className="text-[11px] uppercase font-bold text-gray-700 group-hover:text-[#76b900] text-center text-balance line-clamp-2 leading-tight transition-colors w-full px-1">
+      <span className="text-sm uppercase font-bold text-gray-700 group-hover:text-[#76b900] text-center text-balance line-clamp-2 leading-tight transition-colors w-full px-1">
         {category.name}
       </span>
     </div>
