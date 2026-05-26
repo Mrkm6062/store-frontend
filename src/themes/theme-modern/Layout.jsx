@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { getPublicSocialMedia } from '../../services/api';
 import { Link as LinkIcon } from 'lucide-react';
+import BottomNav from './components/BottomNav';
 
 const SocialIcon = ({ platform, size = 26, className }) => {
   const getPath = () => {
@@ -55,6 +56,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
       )}
 
       <Footer storeName={store?.name || 'Store'} />
+      <BottomNav cartCount={cartCount} onCartClick={onCartClick} />
     </div>
   );
 };

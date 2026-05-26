@@ -7,6 +7,7 @@ import StoreLayout from '../Layout';
 import Banner from '../components/Banner';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
+ import Story from '../components/story';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
@@ -142,7 +143,7 @@ const StoreHome = () => {
       {categories.length > 0 && (
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-12">
           <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Shop by Category</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">BROWSE OUR COLLECTIONS</h2>
             <button onClick={() => navigate('/categories')} className="text-sm font-bold text-[#76b900] hover:text-green-700 transition whitespace-nowrap">
               Show All &rarr;
             </button>
@@ -160,8 +161,7 @@ const StoreHome = () => {
 
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Featured Products</h2>
-          <p className="text-gray-500 mt-2 text-lg">Fresh and featured items from {store.name}</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Latest Products</h2>
         </div>
 
         {productsLoading ? (
@@ -198,9 +198,12 @@ const StoreHome = () => {
         )}
       </div>
 
+      {/* Why Choose Us Section */}
+      <Story />
+
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex justify-between items-center pb-safe">
+        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex justify-between items-center pb-safe">
           <div>
             <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
             <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
