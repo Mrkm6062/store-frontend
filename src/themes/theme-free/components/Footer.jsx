@@ -63,7 +63,7 @@ const Footer = ({ storeName }) => {
   const validMapLink = store?.mapLocation && store.mapLocation.trim() !== '' ? store.mapLocation.trim() : null;
 
   return (
-    <footer className="border-t border-gray-100 mt-auto pt-16 pb-8 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
+    <footer className="border-t border-gray-100 mt-auto pt-16 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
           
@@ -124,19 +124,6 @@ const Footer = ({ storeName }) => {
 
           {/* Newsletter & Contact Section */}
           <div>
-            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Stay Updated</h3>
-            <p className="text-sm opacity-80 mb-4">Get updates on fresh deals and exclusive offers straight to your inbox.</p>
-            <form className="flex mb-6 shadow-sm" onSubmit={(e) => e.preventDefault()}>
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-l-xl focus:outline-none focus:border-[#76b900] transition-colors"
-                required
-              />
-              <button type="submit" className="bg-[#76b900] text-white px-4 rounded-r-xl hover:bg-[#659e00] transition-colors flex items-center justify-center border border-[#76b900]">
-                <Send size={18} />
-              </button>
-            </form>
             <div className="space-y-3">
               {displayPhones.map((phone, idx) => (
                 <a key={idx} href={`tel:${phone}`} className="flex items-center gap-3 text-sm opacity-80 hover:opacity-100 transition-colors w-fit">
@@ -162,9 +149,11 @@ const Footer = ({ storeName }) => {
           </div>
 
         </div>
-        
-        {/* Bottom Bar */}
-        <div className="border-t border-black/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      </div>
+      
+      {/* Bottom Bar */}
+      <div className="bg-black/5 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left opacity-80 text-sm font-medium">
             &copy; {new Date().getFullYear()} {storeName}. All rights reserved.
           </div>
