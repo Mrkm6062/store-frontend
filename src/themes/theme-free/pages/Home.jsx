@@ -143,7 +143,7 @@ const StoreHome = () => {
       {categories.length > 0 && (
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-12">
           <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">All Categories</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">BROWSE OUR COLLECTIONS</h2>
             <button onClick={() => navigate('/categories')} className="text-sm font-bold text-[#76b900] hover:text-green-700 transition whitespace-nowrap">
               Show All &rarr;
             </button>
