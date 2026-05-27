@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, CheckCircle, Package } from 'lucide-react';
+import { Star, CheckCircle, Package, UploadCloud, X } from 'lucide-react';
 import { useStore } from '../../../services/useStore';
 import StoreLayout from '../Layout';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
@@ -19,6 +19,9 @@ const WriteReview = () => {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
+  const [media, setMedia] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [status, setStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -67,6 +70,41 @@ const WriteReview = () => {
     }
   }, [orderId, productId, store, API_BASE_URL]);
 
+  const handleMediaUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const uploadData = new FormData();
+    uploadData.append('storeId', store._id);
+    files.forEach(file => uploadData.append('images', file));
+
+    setUploading(true);
+    setUploadProgress(0);
+    setStatus('');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_BASE_URL}/api/upload/public`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        setUploadProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const data = JSON.parse(xhr.responseText);
+        if (data.urls) setMedia(prev => [...prev, ...data.urls]);
+      } else {
+        setStatus('Failed to upload media. Ensure files are images or valid videos.');
+      }
+      setUploading(false);
+      if (e.target) e.target.value = '';
+    };
+    xhr.onerror = () => { setStatus('Upload failed due to network error.'); setUploading(false); };
+    xhr.send(uploadData);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!rating) return setStatus('Please select a rating.');
@@ -87,6 +125,7 @@ const WriteReview = () => {
           rating,
           review: reviewText,
           customerName: order?.customerName || 'Anonymous',
+          reviewImages: media
         })
       });
       const data = await res.json();
@@ -174,9 +213,29 @@ const WriteReview = () => {
                 ></textarea>
               </div>
 
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Attach Photos or Videos (Optional)</label>
+                <div className="flex flex-wrap gap-4">
+                  {media.map((url, idx) => {
+                    const isVideo = url.match(/\.(mp4|webm|mov|ogg|mkv)(\?.*)?$/i);
+                    return (
+                      <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group">
+                        {isVideo ? <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline /> : <img src={url} className="w-full h-full object-cover" alt="Review Media" />}
+                        <button type="button" onClick={() => setMedia(media.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14}/></button>
+                      </div>
+                    );
+                  })}
+                  <label className={`w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-[#76b900] hover:text-[#76b900] transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <UploadCloud size={24} className="mb-1" />
+                    <span className="text-xs font-bold">{uploading ? `${uploadProgress}%` : 'Upload'}</span>
+                    <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleMediaUpload} disabled={uploading} />
+                  </label>
+                </div>
+              </div>
+
               <button 
                 type="submit" 
-                disabled={submitting || !rating}
+                disabled={submitting || uploading || !rating}
                 className="w-full py-3.5 text-white font-bold rounded-xl transition shadow-lg disabled:opacity-50"
                 style={{ backgroundColor: primaryColor }}
               >
