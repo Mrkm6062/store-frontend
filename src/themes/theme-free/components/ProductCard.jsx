@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Plus, Minus, Heart } from 'lucide-react';
+import { Plus, Minus, Heart, Star } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart }) => {
@@ -28,6 +28,10 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   // Calculate stock based on selected variant or total product stock
   const maxStock = selectedVariant ? selectedVariant.stock : (product.totalStock !== undefined ? product.totalStock : product.stock);
   const isOutOfStock = maxStock <= 0;
+
+  // Extract rating data (assumes backend populates averageRating and totalReviews)
+  const averageRating = product.averageRating || product.rating || 0;
+  const totalReviews = product.totalReviews || product.reviewCount || product.numReviews || 0;
 
   const targetId = selectedVariant ? `${product._id}-${selectedVariant._id}` : product._id;
   const cartItem = cart.find(item => item._id === targetId);
@@ -115,6 +119,14 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
         <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 line-clamp-2 leading-snug group-hover:text-green-600 transition-colors" title={product.name}>
           {product.name}
         </h3>
+        
+        {averageRating > 0 && (
+          <div className="flex items-center gap-1 mb-2">
+            <Star size={14} className="fill-amber-400 text-amber-400" />
+            <span className="text-[11px] sm:text-xs font-bold text-gray-700">{Number(averageRating).toFixed(1)}</span>
+            <span className="text-[11px] sm:text-xs text-gray-400">({totalReviews})</span>
+          </div>
+        )}
         
         {hasVariants && (
           <div className="mb-3">
