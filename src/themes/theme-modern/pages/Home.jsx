@@ -7,7 +7,7 @@ import StoreLayout from '../Layout';
 import Banner from '../components/Banner';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
-import Story from '../components/story';
+import Story from '../components/Story';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
