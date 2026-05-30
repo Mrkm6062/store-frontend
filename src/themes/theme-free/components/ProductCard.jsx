@@ -1,8 +1,10 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Minus, Heart, Star } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart }) => {
+  const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
   const cardSettings = customization?.productCard || {};
 
@@ -62,7 +64,8 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
 
   return (
     <div 
-      className="relative rounded-2xl sm:rounded-[20px] border shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(34,197,94,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col group overflow-hidden"
+      onClick={() => navigate(`/product/${product._id}`)}
+      className="relative rounded-2xl sm:rounded-[20px] border shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(34,197,94,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col group overflow-hidden cursor-pointer"
       style={{ backgroundColor: cardSettings.bgColor || '#ffffff', borderColor: cardSettings.borderColor || '#f3f4f6' }}
     >
       
@@ -133,6 +136,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             <select 
               value={selectedVariantId || ''} 
               onChange={(e) => setSelectedVariantId(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               className="w-full text-xs sm:text-sm px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-gray-700 bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition-colors"
             >
               {product.variants.map(v => (

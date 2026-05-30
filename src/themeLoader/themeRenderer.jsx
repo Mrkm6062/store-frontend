@@ -9,6 +9,7 @@ const FreePolicy = lazy(() => import('../themes/theme-free/pages/Policy.jsx'));
 const FreeTrackOrder = lazy(() => import('../themes/theme-free/pages/TrackOrder.jsx'));
 const FreeCheckout = lazy(() => import('../themes/theme-free/pages/Checkout.jsx'));
 const FreeWriteReview = lazy(() => import('../themes/theme-free/pages/WriteReview.jsx'));
+const FreeProductDetails = lazy(() => import('../themes/theme-free/pages/ProductDetails.jsx'));
 
 // Lazy load theme-modern components
 const ModernHome = lazy(() => import('../themes/theme-modern/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
@@ -43,12 +44,12 @@ const GiftshopTrackOrder = lazy(() => import('../themes/theme-giftshop/pages/Tra
 const GiftshopCheckout = lazy(() => import('../themes/theme-giftshop/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
 
 const themesMap = {
-  'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview },
-  'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: FreeWriteReview },
-  'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout, WriteReview: FreeWriteReview },
-  'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout, WriteReview: FreeWriteReview },
-  'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview },
-  'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview },
+  'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
+  'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
+  'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
+  'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
+  'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
+  'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
 };
 
 export const ThemeCustomizationContext = createContext(null);
@@ -157,6 +158,7 @@ const ThemeRenderer = () => {
             <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
             <Route path="/checkout" element={<ActiveTheme.Checkout />} />
             <Route path="/review/:orderId/:productId" element={<ActiveTheme.WriteReview />} />
+            <Route path="/product/:productId" element={<ActiveTheme.ProductDetails />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
