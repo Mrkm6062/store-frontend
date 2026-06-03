@@ -181,7 +181,8 @@ const CheckoutPage = () => {
       const response = await placeOrder({
         customerName: formData.customerName, customerEmail: formData.customerEmail, customerPhone: formData.customerPhone,
         address: { addressLine1: formData.addressLine1, landmark: formData.landmark, city: formData.city, state: formData.state, pincode: formData.pincode, mobileNumber: formData.customerPhone, alternateNumber: formData.alternateNumber },
-        orderItems, totalAmount: finalTotal, couponCode: appliedCoupon ? appliedCoupon.code : null, discountAmount, shippingCharge, paymentMethod
+        orderItems, totalAmount: finalTotal, couponCode: appliedCoupon ? appliedCoupon.code : null, discountAmount, shippingCharge, paymentMethod,
+        WhasAppOrder: paymentMethod === 'whatsapp'
       });
       
       const createdOrder = response.order || response;
