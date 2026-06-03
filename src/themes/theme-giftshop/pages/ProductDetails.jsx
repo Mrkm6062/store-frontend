@@ -5,6 +5,7 @@ import { useProducts } from '../../../services/useProducts';
 import StoreLayout from '../Layout';
 import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { getPublicCategories } from '../../../services/api';
 
 const ProductDetails = () => {
   const { productId } = useParams();
@@ -17,6 +18,7 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [categoryName, setCategoryName] = useState('');
   
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -28,6 +30,15 @@ const ProductDetails = () => {
     const saved = localStorage.getItem('gb_store_cart');
     return saved ? JSON.parse(saved) : [];
   });
+
+  useEffect(() => {
+    if (product && product.category) {
+      getPublicCategories().then(categories => {
+        const cat = categories.find(c => c._id === product.category);
+        if (cat) setCategoryName(cat.name);
+      }).catch(console.error);
+    }
+  }, [product]);
 
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
@@ -182,7 +193,7 @@ const ProductDetails = () => {
 
             {/* Right: Product Details */}
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{product.categoryName || product.category || 'Product'}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{categoryName || product.categoryName || 'Product'}</span>
               <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">{product.name}</h1>
               
               <div className="flex items-center gap-3 mb-6">
