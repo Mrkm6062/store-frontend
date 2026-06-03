@@ -151,7 +151,7 @@ const StoreHome = () => {
           
           <div className="flex overflow-x-auto pb-4 gap-6 scrollbar-hide snap-x">
             {categories.slice(0, 10).map(c => (
-              <div key={c._id} className="snap-start">
+              <div key={c._id} className="snap-start w-32 sm:w-40 md:w-48 lg:w-56 shrink-0">
                 <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat._id}`)} />
               </div>
             ))}
