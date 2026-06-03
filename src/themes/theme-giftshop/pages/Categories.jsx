@@ -29,7 +29,7 @@ const StoreCategory = ({ store, cartCount, onCartClick }) => {
         ) : categories.length === 0 ? (
           <div className="text-center py-20 text-gray-500 font-medium bg-white rounded-2xl border border-gray-100">No categories found.</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-12">
             {categories.map(c => (
               <CategoryCard key={c._id} category={c} onClick={handleCategoryClick} />
             ))}
