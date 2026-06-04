@@ -28,7 +28,7 @@ const CategoryPage = () => {
 
   useEffect(() => {
     getPublicCategories().then(categories => {
-      const currentCategory = categories.find(c => c._id === categoryId);
+      const currentCategory = categories.find(c => c.slug === categoryId || c._id === categoryId);
       setCategory(currentCategory);
     }).catch(console.error);
   }, [categoryId]);
@@ -88,7 +88,7 @@ const CategoryPage = () => {
     }
   }, [store, category]);
 
-  const filteredProducts = products.filter(p => p.category === categoryId);
+  const filteredProducts = category ? products.filter(p => p.category === category._id) : [];
 
   if (storeLoading) {
     return (

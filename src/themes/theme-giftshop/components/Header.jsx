@@ -114,7 +114,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
                   All Products <ChevronRight size={18} className="text-[#76b900]"/>
                 </a>
                 {categories.map(c => (
-                  <a key={c._id} href={`/?category=${c._id}`} className="block py-3 px-3 hover:bg-gray-50 rounded-xl font-semibold text-gray-700 flex justify-between items-center transition-colors">
+                  <a key={c._id} href={`/category/${c.slug || c._id}`} className="block py-3 px-3 hover:bg-gray-50 rounded-xl font-semibold text-gray-700 flex justify-between items-center transition-colors">
                     {c.name} <ChevronRight size={18} className="text-gray-400"/>
                   </a>
                 ))}

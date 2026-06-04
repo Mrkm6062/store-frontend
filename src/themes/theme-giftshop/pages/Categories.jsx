@@ -16,7 +16,7 @@ const StoreCategory = ({ store, cartCount, onCartClick }) => {
   }, []);
 
   const handleCategoryClick = (category) => {
-    navigate(`/?category=${category._id}`);
+    navigate(`/category/${category.slug || category._id}`);
   };
 
   return (

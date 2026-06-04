@@ -152,7 +152,7 @@ const StoreHome = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
             {categories.slice(0, 10).map(c => (
               <div key={c._id} className="w-full">
-                <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat._id}`)} />
+                <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
               </div>
             ))}
           </div>

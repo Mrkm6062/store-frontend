@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import StoreLayout from '../Layout';
-import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX } from 'lucide-react';
+import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, ChevronRight } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { getPublicCategories } from '../../../services/api';
 
@@ -19,6 +19,7 @@ const ProductDetails = () => {
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [categoryName, setCategoryName] = useState('');
+  const [categoryData, setCategoryData] = useState(null);
   
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -35,7 +36,10 @@ const ProductDetails = () => {
     if (product && product.category) {
       getPublicCategories().then(categories => {
         const cat = categories.find(c => c._id === product.category);
-        if (cat) setCategoryName(cat.name);
+        if (cat) {
+          setCategoryName(cat.name);
+          setCategoryData(cat);
+        }
       }).catch(console.error);
     }
   }, [product]);
@@ -46,7 +50,7 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (!productsLoading && products.length > 0) {
-      const found = products.find(p => p._id === productId);
+      const found = products.find(p => p.slug === productId || p._id === productId);
       if (found) {
         setProduct(found);
         if (found.variants?.length > 0) {
@@ -59,9 +63,10 @@ const ProductDetails = () => {
 
   useEffect(() => {
     const fetchReviews = async () => {
+      if (!product?._id) return;
       try {
         const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${API_BASE_URL}/api/reviews/public/${productId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/reviews/public/${product._id}`, {
           headers: {
             'x-store-domain': window.location.hostname,
             'x-forwarded-host': window.location.hostname
@@ -77,7 +82,7 @@ const ProductDetails = () => {
       }
     };
     fetchReviews();
-  }, [productId]);
+  }, [product?._id]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -159,9 +164,23 @@ const ProductDetails = () => {
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors mb-6">
-          <ArrowLeft size={16} className="mr-1" /> Back to Shop
-        </Link>
+        <nav className="flex items-center text-sm font-medium text-slate-500 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+          <Link to="/" className="hover:text-slate-800 transition-colors flex items-center gap-1.5 shrink-0">
+            <Home size={16} /> Home
+          </Link>
+          <ChevronRight size={14} className="mx-2 shrink-0 opacity-40" />
+          {(categoryData || product.categoryName) && (
+            <>
+              {categoryData ? (
+                <Link to={`/category/${categoryData.slug || categoryData._id}`} className="hover:text-slate-800 transition-colors truncate max-w-[150px] sm:max-w-xs shrink-0">{categoryData.name}</Link>
+              ) : (
+                <span className="truncate max-w-[150px] sm:max-w-xs shrink-0">{product.categoryName}</span>
+              )}
+              <ChevronRight size={14} className="mx-2 shrink-0 opacity-40" />
+            </>
+          )}
+          <span className="text-slate-800 font-bold truncate max-w-[200px] sm:max-w-md shrink-0">{product.name}</span>
+        </nav>
 
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 p-6 md:p-10">

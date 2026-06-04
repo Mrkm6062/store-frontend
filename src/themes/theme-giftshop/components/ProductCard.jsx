@@ -64,7 +64,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
 
   return (
     <div 
-      onClick={() => navigate(`/product/${product._id}`)}
+      onClick={() => navigate(`/product/${product.slug || product._id}`)}
       className="relative rounded-2xl sm:rounded-[20px] border shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(34,197,94,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col group overflow-hidden cursor-pointer"
       style={{ backgroundColor: cardSettings.bgColor || '#ffffff', borderColor: cardSettings.borderColor || '#f3f4f6' }}
     >
