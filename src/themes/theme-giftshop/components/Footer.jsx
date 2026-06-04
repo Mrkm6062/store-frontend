@@ -78,6 +78,7 @@ const Footer = ({ storeName }) => {
             
             {socialLinks.length > 0 && (
               <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor}}>Follow Us</h2>
                 {socialLinks.map(link => (
                   <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
                     <SocialIcon platform={link.platform} />
