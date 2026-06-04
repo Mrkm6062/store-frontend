@@ -76,9 +76,6 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             {discountPercent}% OFF
           </span>
         )}
-        <span className="bg-emerald-500/95 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold tracking-wide shadow-sm w-fit">
-          Fresh
-        </span>
       </div>
 
       {/* Wishlist Button */}
