@@ -42,14 +42,15 @@ const GiftshopCategories = lazy(() => import('../themes/theme-giftshop/pages/Cat
 const GiftshopPolicy = lazy(() => import('../themes/theme-giftshop/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
 const GiftshopTrackOrder = lazy(() => import('../themes/theme-giftshop/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
 const GiftshopCheckout = lazy(() => import('../themes/theme-giftshop/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+const GiftshopProductDetails = lazy(() => import('../themes/theme-giftshop/pages/ProductDetails.jsx').catch(() => import('../themes/theme-free/pages/ProductDetails.jsx')));
 
 const themesMap = {
   'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
   'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
   'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
   'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
-  'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
-  'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
+  'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails },
+  'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails },
 };
 
 export const ThemeCustomizationContext = createContext(null);
@@ -83,14 +84,24 @@ const ThemeRenderer = () => {
         let resolvedTheme = 'theme-free';
         let actualThemeId = 'default';
 
-        if (previewThemeFolder) {
-          resolvedTheme = themesMap[previewThemeFolder] ? previewThemeFolder : (themesMap[`theme-${previewThemeFolder}`] ? `theme-${previewThemeFolder}` : 'theme-free');
-          actualThemeId = previewThemeId || previewThemeFolder.replace('theme-', '');
+        // Helper to strip "themes/" or slashes from the folder name
+        const sanitizeFolder = (folder) => {
+          if (!folder) return null;
+          return folder.includes('/') ? folder.split('/').pop() : folder;
+        };
+
+        const cleanPreviewFolder = sanitizeFolder(previewThemeFolder);
+        const cleanStoreFolder = sanitizeFolder(storeData?.themeFolder);
+        const cleanStoreTheme = sanitizeFolder(storeData?.theme);
+
+        if (cleanPreviewFolder) {
+          resolvedTheme = themesMap[cleanPreviewFolder] ? cleanPreviewFolder : (themesMap[`theme-${cleanPreviewFolder}`] ? `theme-${cleanPreviewFolder}` : 'theme-free');
+          actualThemeId = previewThemeId || cleanPreviewFolder.replace('theme-', '');
         } else if (storeData) {
-          if (storeData.themeFolder && themesMap[storeData.themeFolder]) {
-            resolvedTheme = storeData.themeFolder;
-          } else if (storeData.theme) {
-            resolvedTheme = themesMap[storeData.theme] ? storeData.theme : (themesMap[`theme-${storeData.theme}`] ? `theme-${storeData.theme}` : 'theme-free');
+          if (cleanStoreFolder && themesMap[cleanStoreFolder]) {
+            resolvedTheme = cleanStoreFolder;
+          } else if (cleanStoreTheme) {
+            resolvedTheme = themesMap[cleanStoreTheme] ? cleanStoreTheme : (themesMap[`theme-${cleanStoreTheme}`] ? `theme-${cleanStoreTheme}` : 'theme-free');
           }
           actualThemeId = storeData.theme || 'default';
         }
