@@ -1,48 +1,48 @@
-import React, { useState, useEffect, Suspense, lazy, createContext } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Lazy load theme-free components
-const FreeHome = lazy(() => import('../themes/theme-free/pages/Home.jsx'));
-const FreeCategory = lazy(() => import('../themes/theme-free/pages/Category.jsx'));
-const FreeCategories = lazy(() => import('../themes/theme-free/pages/Categories.jsx'));
-const FreePolicy = lazy(() => import('../themes/theme-free/pages/Policy.jsx'));
-const FreeTrackOrder = lazy(() => import('../themes/theme-free/pages/TrackOrder.jsx'));
-const FreeCheckout = lazy(() => import('../themes/theme-free/pages/Checkout.jsx'));
-const FreeWriteReview = lazy(() => import('../themes/theme-free/pages/WriteReview.jsx'));
-const FreeProductDetails = lazy(() => import('../themes/theme-free/pages/ProductDetails.jsx'));
+// Import theme-free components
+import FreeHome from '../themes/theme-free/pages/Home.jsx';
+import FreeCategory from '../themes/theme-free/pages/Category.jsx';
+import FreeCategories from '../themes/theme-free/pages/Categories.jsx';
+import FreePolicy from '../themes/theme-free/pages/Policy.jsx';
+import FreeTrackOrder from '../themes/theme-free/pages/TrackOrder.jsx';
+import FreeCheckout from '../themes/theme-free/pages/Checkout.jsx';
+import FreeWriteReview from '../themes/theme-free/pages/WriteReview.jsx';
+import FreeProductDetails from '../themes/theme-free/pages/ProductDetails.jsx';
 
-// Lazy load theme-modern components
-const ModernHome = lazy(() => import('../themes/theme-modern/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
-const ModernCategory = lazy(() => import('../themes/theme-modern/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
-const ModernCategories = lazy(() => import('../themes/theme-modern/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
-const ModernPolicy = lazy(() => import('../themes/theme-modern/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
-const ModernTrackOrder = lazy(() => import('../themes/theme-modern/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
-const ModernCheckout = lazy(() => import('../themes/theme-modern/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+// Import theme-modern components
+import ModernHome from '../themes/theme-modern/pages/Home.jsx';
+import ModernCategory from '../themes/theme-modern/pages/Category.jsx';
+import ModernCategories from '../themes/theme-modern/pages/Categories.jsx';
+import ModernPolicy from '../themes/theme-modern/pages/Policy.jsx';
+import ModernTrackOrder from '../themes/theme-modern/pages/TrackOrder.jsx';
+import ModernCheckout from '../themes/theme-modern/pages/Checkout.jsx';
 
-// Lazy load theme-premium components
-const PremiumHome = lazy(() => import('../themes/theme-premium/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
-const PremiumCategory = lazy(() => import('../themes/theme-premium/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
-const PremiumCategories = lazy(() => import('../themes/theme-premium/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
-const PremiumPolicy = lazy(() => import('../themes/theme-premium/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
-const PremiumTrackOrder = lazy(() => import('../themes/theme-premium/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
-const PremiumCheckout = lazy(() => import('../themes/theme-premium/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+// Import theme-premium components
+import PremiumHome from '../themes/theme-premium/pages/Home.jsx';
+import PremiumCategory from '../themes/theme-premium/pages/Category.jsx';
+import PremiumCategories from '../themes/theme-premium/pages/Categories.jsx';
+import PremiumPolicy from '../themes/theme-premium/pages/Policy.jsx';
+import PremiumTrackOrder from '../themes/theme-premium/pages/TrackOrder.jsx';
+import PremiumCheckout from '../themes/theme-premium/pages/Checkout.jsx';
 
-// Lazy load theme-minimal components
-const MinimalHome = lazy(() => import('../themes/theme-minimal/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
-const MinimalCategory = lazy(() => import('../themes/theme-minimal/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
-const MinimalCategories = lazy(() => import('../themes/theme-minimal/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
-const MinimalPolicy = lazy(() => import('../themes/theme-minimal/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
-const MinimalTrackOrder = lazy(() => import('../themes/theme-minimal/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
-const MinimalCheckout = lazy(() => import('../themes/theme-minimal/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
+// Import theme-minimal components
+import MinimalHome from '../themes/theme-minimal/pages/Home.jsx';
+import MinimalCategory from '../themes/theme-minimal/pages/Category.jsx';
+import MinimalCategories from '../themes/theme-minimal/pages/Categories.jsx';
+import MinimalPolicy from '../themes/theme-minimal/pages/Policy.jsx';
+import MinimalTrackOrder from '../themes/theme-minimal/pages/TrackOrder.jsx';
+import MinimalCheckout from '../themes/theme-minimal/pages/Checkout.jsx';
 
-// Lazy load theme-giftshop components
-const GiftshopHome = lazy(() => import('../themes/theme-giftshop/pages/Home.jsx').catch(() => import('../themes/theme-free/pages/Home.jsx')));
-const GiftshopCategory = lazy(() => import('../themes/theme-giftshop/pages/Category.jsx').catch(() => import('../themes/theme-free/pages/Category.jsx')));
-const GiftshopCategories = lazy(() => import('../themes/theme-giftshop/pages/Categories.jsx').catch(() => import('../themes/theme-free/pages/Categories.jsx')));
-const GiftshopPolicy = lazy(() => import('../themes/theme-giftshop/pages/Policy.jsx').catch(() => import('../themes/theme-free/pages/Policy.jsx')));
-const GiftshopTrackOrder = lazy(() => import('../themes/theme-giftshop/pages/TrackOrder.jsx').catch(() => import('../themes/theme-free/pages/TrackOrder.jsx')));
-const GiftshopCheckout = lazy(() => import('../themes/theme-giftshop/pages/Checkout.jsx').catch(() => import('../themes/theme-free/pages/Checkout.jsx')));
-const GiftshopProductDetails = lazy(() => import('../themes/theme-giftshop/pages/ProductDetails.jsx').catch(() => import('../themes/theme-free/pages/ProductDetails.jsx')));
+// Import theme-giftshop components
+import GiftshopHome from '../themes/theme-giftshop/pages/Home.jsx';
+import GiftshopCategory from '../themes/theme-giftshop/pages/Category.jsx';
+import GiftshopCategories from '../themes/theme-giftshop/pages/Categories.jsx';
+import GiftshopPolicy from '../themes/theme-giftshop/pages/Policy.jsx';
+import GiftshopTrackOrder from '../themes/theme-giftshop/pages/TrackOrder.jsx';
+import GiftshopCheckout from '../themes/theme-giftshop/pages/Checkout.jsx';
+import GiftshopProductDetails from '../themes/theme-giftshop/pages/ProductDetails.jsx';
 
 const themesMap = {
   'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
@@ -159,7 +159,6 @@ const ThemeRenderer = () => {
   return (
     <ThemeCustomizationContext.Provider value={customization}>
       <Router>
-        <Suspense fallback={<div className="min-h-screen bg-white"></div>}>
           <Routes>
             <Route path="/" element={<ActiveTheme.Home />} />
             <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
@@ -172,7 +171,6 @@ const ThemeRenderer = () => {
             <Route path="/product/:productId" element={<ActiveTheme.ProductDetails />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
-        </Suspense>
       </Router>
     </ThemeCustomizationContext.Provider>
   );
