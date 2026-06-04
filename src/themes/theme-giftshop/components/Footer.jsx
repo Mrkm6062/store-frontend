@@ -62,6 +62,9 @@ const Footer = ({ storeName }) => {
   const displayAddress = store?.locationAddress && store.locationAddress.trim() !== '' ? store.locationAddress.trim() : null;
   const validMapLink = store?.mapLocation && store.mapLocation.trim() !== '' ? store.mapLocation.trim() : null;
 
+  // Check if the store is running on a custom domain
+  const isCustomDomain = !window.location.hostname.includes('galibrand.cloud') && !window.location.hostname.includes('localhost');
+
   return (
     <footer className="border-t border-gray-100 mt-auto pt-16 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -77,13 +80,15 @@ const Footer = ({ storeName }) => {
             </div>
             
             {socialLinks.length > 0 && (
-              <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor}}>Follow Us</h2>
-                {socialLinks.map(link => (
-                  <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
-                    <SocialIcon platform={link.platform} />
-                  </a>
-                ))}
+              <div>
+                <h2 className="text-2xl font-extrabold mb-3" style={{ color: footerSettings.textColor}}>Follow Us</h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {socialLinks.map(link => (
+                    <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
+                      <SocialIcon platform={link.platform} />
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -158,9 +163,11 @@ const Footer = ({ storeName }) => {
           <div className="text-center md:text-left opacity-80 text-sm font-medium">
             &copy; {new Date().getFullYear()} {storeName}. All rights reserved.
           </div>
-          <div className="text-center opacity-60 text-xs font-mono tracking-widest uppercase">
-            POWERED BY GALIBRAND
-          </div>
+          {!isCustomDomain && (
+            <div className="text-center opacity-60 text-xs font-mono tracking-widest uppercase">
+              POWERED BY GALIBRAND
+            </div>
+          )}
         </div>
       </div>
     </footer>
