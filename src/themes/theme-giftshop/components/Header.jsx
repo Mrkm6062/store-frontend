@@ -53,12 +53,20 @@ const Header = ({ store, cartCount, onCartClick }) => {
       {/* Offer Header */}
       {offerBanner.Enabled !== false && (
         <div 
-          className="px-4 py-1.5 sm:py-2 text-center text-xs sm:text-sm font-medium w-full transition-colors duration-300"
+          className="py-1.5 sm:py-2 text-xs sm:text-sm font-medium w-full overflow-hidden transition-colors duration-300 flex"
           style={{ backgroundColor: offerBanner.bgColor, color: offerBanner.textColor }}
         >
-          <p className="truncate max-w-7xl mx-auto">
+          <style>
+            {`
+              @keyframes scrolling-text {
+                0% { transform: translateX(100vw); }
+                100% { transform: translateX(-100%); }
+              }
+            `}
+          </style>
+          <div className="whitespace-nowrap" style={{ animation: 'scrolling-text 20s linear infinite' }}>
             {offerBanner.text}
-          </p>
+          </div>
         </div>
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
