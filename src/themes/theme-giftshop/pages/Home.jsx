@@ -141,17 +141,14 @@ const StoreHome = () => {
       <Banner bannerUrl={store.banner} storeName={store.name} />
 
       {categories.length > 0 && (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-12">
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">BROWSE OUR COLLECTIONS</h2>
-            <button onClick={() => navigate('/categories')} className="text-sm font-bold text-[#76b900] hover:text-green-700 transition whitespace-nowrap">
-              Show All &rarr;
-            </button>
+        <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 pt-16">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Collections</h2>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
-            {categories.slice(0, 10).map(c => (
-              <div key={c._id} className="w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 justify-items-center">
+            {categories.slice(0, 12).map(c => (
+              <div key={c._id} className="w-full max-w-[220px]">
                 <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
               </div>
             ))}
@@ -159,15 +156,15 @@ const StoreHome = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Latest Products</h2>
+      <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 py-12">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Products</h2>
         </div>
 
         {productsLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] animate-pulse">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] w-full max-w-[260px] animate-pulse">
                 <div className="w-full h-32 sm:h-48 bg-gray-200"></div>
                 <div className="p-3 sm:p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-8 sm:h-10 bg-gray-200 rounded-xl w-full mt-2 sm:mt-4"></div></div>
               </div>

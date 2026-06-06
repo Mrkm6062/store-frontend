@@ -110,19 +110,19 @@ const CategoryPage = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10">
+      <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 py-12">
+        <div className="mb-10 text-center">
           <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800 mb-4">&larr; Back to All Products</button>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">
             {category ? `Products in ${category.name}` : 'Loading Category...'}
           </h2>
           {category?.description && <p className="text-gray-500 mt-2 text-lg">{category.description}</p>}
         </div>
 
         {productsLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[260px] sm:h-[340px] animate-pulse">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[260px] sm:h-[340px] w-full max-w-[260px] animate-pulse">
                 <div className="w-full h-32 sm:h-48 bg-gray-200"></div>
                 <div className="p-3 sm:p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-8 sm:h-10 bg-gray-200 rounded-xl w-full mt-2 sm:mt-4"></div></div>
               </div>
