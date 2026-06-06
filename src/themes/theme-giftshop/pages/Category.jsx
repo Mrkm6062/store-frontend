@@ -6,6 +6,7 @@ import { getPublicCategories } from '../../../services/api';
 import StoreLayout from '../Layout';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
+import CartSidebar from '../components/CartSidebar';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
@@ -166,83 +167,14 @@ const CategoryPage = () => {
         </div>
       )}
 
-      {/* Cart Sidebar Overlay */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
-            onClick={() => setIsCartOpen(false)}
-          ></div>
-          
-          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
-              <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
-                &times;
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-5">
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                  <div className="text-6xl mb-4">🛒</div>
-                  <p className="text-lg font-medium">Your cart is empty.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cart.map((item) => (
-                    <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
-                          {(item.images?.length > 0 ? item.images[0] : item.image) ? (
-                            <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-medium">No Img</div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
-                          <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty} {item.unitType || ''}</span></p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
-                          <button type="button" onClick={() => handleUpdateQuantity(item._id, -1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">-</button>
-                          <span className="px-2 font-semibold text-sm">{item.qty}</span>
-                          <button type="button" onClick={() => handleUpdateQuantity(item._id, 1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">+</button>
-                        </div>
-                        <button onClick={() => handleRemoveFromCart(item._id)} className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg transition">
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {cart.length > 0 && (
-              <div className="p-5 border-t border-gray-100 bg-white">
-                <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-                  <span>Subtotal:</span>
-                  <span>₹{cartTotal}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-                  <span>Shipping & Discounts:</span>
-                  <span>Calculated at checkout</span>
-                </div>
-                <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800">
-                  <span>Estimated Total:</span>
-                  <span className="text-green-600">₹{cartTotal}</span>
-                </div>
-                <button key="btn-proceed" type="button" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
-                  Proceed to Checkout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <CartSidebar 
+        isCartOpen={isCartOpen}
+        setIsCartOpen={setIsCartOpen}
+        cart={cart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveFromCart={handleRemoveFromCart}
+        cartTotal={cartTotal}
+      />
 
       {/* Custom Toast Notification */}
       {toast && (

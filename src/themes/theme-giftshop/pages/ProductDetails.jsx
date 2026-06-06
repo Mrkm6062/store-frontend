@@ -6,6 +6,7 @@ import StoreLayout from '../Layout';
 import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, ChevronRight, Share2, Heart, Maximize2 } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { getPublicCategories } from '../../../services/api';
+import CartSidebar from '../components/CartSidebar';
 
 const ProductDetails = () => {
   const { productId } = useParams();
@@ -165,6 +166,26 @@ const ProductDetails = () => {
     localStorage.setItem('gb_store_cart', JSON.stringify(newCart));
     navigate('/checkout');
   };
+
+  const handleUpdateQuantity = (id, delta) => {
+    setCart((prev) => prev.map(item => {
+      if (item._id === id) {
+        const newQty = item.qty + delta;
+        if (delta > 0 && newQty > item.maxStock) {
+          showToast(`Sorry, only ${item.maxStock} units available in stock.`, 'error');
+          return item;
+        }
+        return { ...item, qty: Math.max(1, newQty) };
+      }
+      return item;
+    }));
+  };
+
+  const handleRemoveFromCart = (id) => {
+    setCart((prev) => prev.filter((item) => item._id !== id));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
@@ -422,6 +443,16 @@ const ProductDetails = () => {
           )}
         </div>
       )}
+
+      <CartSidebar 
+        isCartOpen={isCartOpen}
+        setIsCartOpen={setIsCartOpen}
+        cart={cart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveFromCart={handleRemoveFromCart}
+        cartTotal={cartTotal}
+        primaryColor={primaryColor}
+      />
 
       {/* Custom Toast Notification */}
       {toast && (
