@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
 import { getPublicCategories } from '../../../services/api';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { useProducts } from '../../../services/useProducts';
 
 const Header = ({ store, cartCount, onCartClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +13,8 @@ const Header = ({ store, cartCount, onCartClick }) => {
   const [categories, setCategories] = useState([]);
 
   const customization = useContext(ThemeCustomizationContext);
+  const { products } = useProducts();
+
   const headerSettings = customization?.header || {};
   const offerBanner = headerSettings.offerBanner || { Enabled: true, text: store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!', bgColor: '#76b900', textColor: '#ffffff' };
 
@@ -20,32 +23,20 @@ const Header = ({ store, cartCount, onCartClick }) => {
   }, []);
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchQuery.trim()) {
-        setIsSearching(true);
-        try {
-          const API_URL = import.meta.env.VITE_API_URL || '';
-          const res = await fetch(`${API_URL}/api/store/products?search=${encodeURIComponent(searchQuery.trim())}`, {
-            headers: {
-              'x-store-domain': window.location.hostname,
-              'x-forwarded-host': window.location.hostname
-            }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setSearchResults(data.products || data || []);
-          }
-        } catch (error) {
-          console.error("Search failed:", error);
-        } finally {
-          setIsSearching(false);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    }, 400); // 400ms debounce
-
-    return () => clearTimeout(delayDebounceFn);
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      
+      // Fast local filtering using the products already loaded in context
+      const results = products.filter(product => 
+        product.name?.toLowerCase().includes(query) ||
+        product.categoryName?.toLowerCase().includes(query) ||
+        (product.tags && product.tags.some(tag => tag.toLowerCase().includes(query)))
+      );
+      
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
   }, [searchQuery]);
 
   return (
