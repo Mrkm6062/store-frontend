@@ -169,9 +169,9 @@ const Header = ({ store, cartCount, onCartClick }) => {
                     return (
                       <a 
                         key={product._id} 
-                        href={`/?search=${searchQuery}`} 
+                        href={`/product/${product.slug || product._id}`} 
                         onClick={() => setIsSearchOpen(false)}
-                        className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-xl transition-colors"
+                        className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 group"
                       >
                         <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                           {displayImage ? (
@@ -180,12 +180,15 @@ const Header = ({ store, cartCount, onCartClick }) => {
                             <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs text-center leading-none">No img</div>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <h4 className="text-sm font-bold text-gray-800 truncate">{product.name}</h4>
-                          <p className="text-xs text-gray-500 truncate">{product.categoryName || product.category || 'Product'}</p>
+                          <p className="text-[11px] sm:text-xs text-gray-500 truncate">{product.categoryName || product.category || 'Product'}</p>
+                          <p className="text-xs sm:text-sm font-bold text-[#76b900] mt-0.5">₹{displayPrice}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-[#76b900]">₹{displayPrice}</p>
+                        <div className="flex-shrink-0">
+                          <span className="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg group-hover:bg-[#76b900] group-hover:text-white transition-colors">
+                            View
+                          </span>
                         </div>
                       </a>
                     );
