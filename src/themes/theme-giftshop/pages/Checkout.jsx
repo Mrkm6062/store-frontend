@@ -149,15 +149,15 @@ const CheckoutPage = () => {
     e.preventDefault();
     setIsPlacingOrder(true);
     
-    if (formData.pincode.trim().length < 6) return showToast('Pincode must be exactly 6 digits.'), setIsPlacingOrder(false);
-    if (formData.customerPhone.trim().length < 10) return showToast('Mobile Number must be exactly 10 digits.'), setIsPlacingOrder(false);
-    if (formData.alternateNumber && formData.alternateNumber.trim().length < 10) return showToast('Alternate Mobile Number must be exactly 10 digits.'), setIsPlacingOrder(false);
-    
-    if (formData.customerEmail && formData.customerEmail.trim().length > 0) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail.trim())) {
-        return showToast('Please enter a valid email address.'), setIsPlacingOrder(false);
-      }
-    }
+    if (!formData.customerName || !formData.customerName.trim()) return showToast('Full Name is required.'), setIsPlacingOrder(false);
+    if (!formData.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail.trim())) return showToast('Please enter a valid email address.'), setIsPlacingOrder(false);
+    if (!formData.customerPhone || formData.customerPhone.trim().length < 10) return showToast('Mobile Number must be exactly 10 digits.'), setIsPlacingOrder(false);
+    if (!formData.addressLine1 || !formData.addressLine1.trim()) return showToast('Address is required.'), setIsPlacingOrder(false);
+    if (!formData.landmark || !formData.landmark.trim()) return showToast('Landmark is required.'), setIsPlacingOrder(false);
+    if (!formData.city || !formData.city.trim()) return showToast('City is required.'), setIsPlacingOrder(false);
+    if (!formData.state || !formData.state.trim()) return showToast('State is required.'), setIsPlacingOrder(false);
+    if (!formData.pincode || formData.pincode.trim().length < 6) return showToast('Pincode must be exactly 6 digits.'), setIsPlacingOrder(false);
+    if (!formData.alternateNumber || formData.alternateNumber.trim().length < 10) return showToast('Alternate Mobile Number must be exactly 10 digits.'), setIsPlacingOrder(false);
 
     if (deliverySettings) {
       if (deliverySettings.deliveryMode === 'state') {
@@ -309,7 +309,7 @@ const CheckoutPage = () => {
                   <input type="text" required placeholder="Full Name" value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="tel" required placeholder="Mobile Number" maxLength="10" value={formData.customerPhone} onChange={e => setFormData({...formData, customerPhone: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                    <input type="email" placeholder="Email Address (Optional)" value={formData.customerEmail} onChange={e => setFormData({...formData, customerEmail: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                    <input type="email" required placeholder="Email Address" value={formData.customerEmail} onChange={e => setFormData({...formData, customerEmail: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
                   </div>
                 </div>
               </div>
@@ -318,8 +318,8 @@ const CheckoutPage = () => {
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Delivery Address</h3>
                 <div className="space-y-4">
                   <input type="text" required placeholder="Address Line 1 (House No, Building, Street)" value={formData.addressLine1} onChange={e => setFormData({...formData, addressLine1: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                  <input type="text" placeholder="Landmark" value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                  <div className="grid grid-cols-2 gap-4"><input type="text" required placeholder="Pincode" maxLength="6" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /><input type="tel" placeholder="Alternate Mobile" maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /></div>
+                  <input type="text" required placeholder="Landmark" value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <div className="grid grid-cols-2 gap-4"><input type="text" required placeholder="Pincode" maxLength="6" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /><input type="tel" required placeholder="Alternate Mobile" maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /></div>
                   <div className="grid grid-cols-2 gap-4"><input type="text" required placeholder="City" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /><input type="text" required placeholder="State" value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /></div>
                 </div>
               </div>
