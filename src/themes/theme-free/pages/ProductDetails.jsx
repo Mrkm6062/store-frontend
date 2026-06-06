@@ -320,7 +320,8 @@ const ProductDetails = () => {
               <p className="text-slate-500 font-medium">No reviews yet. Check back later after customers receive their orders!</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <>
+              <div className="space-y-6">
           {paginatedReviews.map(review => (
                 <div key={review._id} className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:shadow-sm transition">
                   <div className="flex justify-between items-start mb-4">
@@ -352,28 +353,29 @@ const ProductDetails = () => {
               ))}
             </div>
 
-        {/* Pagination Controls */}
-        {totalReviewPages > 1 && (
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
-            <button 
-              onClick={() => setCurrentReviewPage(p => Math.max(1, p - 1))}
-              disabled={currentReviewPage === 1}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
-            >
-              &larr; Previous
-            </button>
-            <span className="text-sm font-bold text-slate-500">
-              Page {currentReviewPage} of {totalReviewPages}
-            </span>
-            <button 
-              onClick={() => setCurrentReviewPage(p => Math.min(totalReviewPages, p + 1))}
-              disabled={currentReviewPage === totalReviewPages}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
-            >
-              Next &rarr;
-            </button>
-          </div>
-        )}
+              {/* Pagination Controls */}
+              {totalReviewPages > 1 && (
+                <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+                  <button 
+                    onClick={() => setCurrentReviewPage(p => Math.max(1, p - 1))}
+                    disabled={currentReviewPage === 1}
+                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
+                  >
+                    &larr; Previous
+                  </button>
+                  <span className="text-sm font-bold text-slate-500">
+                    Page {currentReviewPage} of {totalReviewPages}
+                  </span>
+                  <button 
+                    onClick={() => setCurrentReviewPage(p => Math.min(totalReviewPages, p + 1))}
+                    disabled={currentReviewPage === totalReviewPages}
+                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
