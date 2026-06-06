@@ -18,6 +18,8 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [currentReviewPage, setCurrentReviewPage] = useState(1);
+  const REVIEWS_PER_PAGE = 10;
   const [categoryName, setCategoryName] = useState('');
   const [categoryData, setCategoryData] = useState(null);
   
@@ -116,6 +118,9 @@ const ProductDetails = () => {
   const targetId = selectedVariant ? `${product._id}-${selectedVariant._id}` : product._id;
 
   const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image ? [product.image] : []);
+
+  const totalReviewPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
+  const paginatedReviews = reviews.slice((currentReviewPage - 1) * REVIEWS_PER_PAGE, currentReviewPage * REVIEWS_PER_PAGE);
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -316,7 +321,7 @@ const ProductDetails = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {reviews.slice(0, 5).map(review => (
+          {paginatedReviews.map(review => (
                 <div key={review._id} className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:shadow-sm transition">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -346,6 +351,29 @@ const ProductDetails = () => {
                 </div>
               ))}
             </div>
+
+        {/* Pagination Controls */}
+        {totalReviewPages > 1 && (
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+            <button 
+              onClick={() => setCurrentReviewPage(p => Math.max(1, p - 1))}
+              disabled={currentReviewPage === 1}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
+            >
+              &larr; Previous
+            </button>
+            <span className="text-sm font-bold text-slate-500">
+              Page {currentReviewPage} of {totalReviewPages}
+            </span>
+            <button 
+              onClick={() => setCurrentReviewPage(p => Math.min(totalReviewPages, p + 1))}
+              disabled={currentReviewPage === totalReviewPages}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 transition-colors"
+            >
+              Next &rarr;
+            </button>
+          </div>
+        )}
           )}
         </div>
       </div>
