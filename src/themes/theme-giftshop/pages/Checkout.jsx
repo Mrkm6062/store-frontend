@@ -23,6 +23,45 @@ const loadRazorpay = () => {
   });
 };
 
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) return resolve(file);
+    if (file.size <= maxSizeMB * 1024 * 1024) return resolve(file);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        const MAX_DIMENSION = 1600;
+        if (width > height && width > MAX_DIMENSION) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else if (height > MAX_DIMENSION) {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        let quality = 0.8;
+        const attemptCompression = () => {
+          canvas.toBlob((blob) => {
+            if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.2) resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg', lastModified: Date.now() }));
+            else { quality -= 0.1; attemptCompression(); }
+          }, 'image/jpeg', quality);
+        };
+        attemptCompression();
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
@@ -50,6 +89,7 @@ const CheckoutPage = () => {
   const [deliverySettings, setDeliverySettings] = useState(null);
   const [checkoutSettings, setCheckoutSettings] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [customFiles, setCustomFiles] = useState({});
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const discountedTotal = cartTotal - discountAmount;
@@ -173,9 +213,43 @@ const CheckoutPage = () => {
     }
 
     try {
+      const uploadedImages = {};
+      const customizableItems = cart.filter(item => item.isCustomizable);
+      
+      for (const item of customizableItems) {
+        if (!customFiles[item._id]) {
+          showToast(`Please upload a custom image for ${item.name}`);
+          setIsPlacingOrder(false);
+          return;
+        }
+      }
+
+      if (customizableItems.length > 0) {
+        showToast('Processing custom images...', 'success');
+        for (const item of customizableItems) {
+          const file = customFiles[item._id];
+          if (file) {
+            const compressed = await compressImage(file, 1);
+            const uploadData = new FormData();
+            uploadData.append('storeId', store._id);
+            uploadData.append('images', compressed);
+
+            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+            const uploadRes = await fetch(`${API_BASE_URL}/api/upload/public`, { method: 'POST', body: uploadData });
+
+            if (uploadRes.ok) {
+              const uploadJson = await uploadRes.json();
+              if (uploadJson.urls && uploadJson.urls.length > 0) uploadedImages[item._id] = uploadJson.urls[0];
+            } else {
+              throw new Error(`Image upload failed for ${item.name}`);
+            }
+          }
+        }
+      }
+
       const orderItems = cart.map(item => {
         const idParts = item._id.split('-');
-        return { product: idParts[0], variantId: idParts[1] || null, name: item.name, price: item.price, qty: item.qty };
+        return { product: idParts[0], variantId: idParts[1] || null, name: item.name, price: item.price, qty: item.qty, customImage: uploadedImages[item._id] || null };
       });
 
       const response = await placeOrder({
@@ -341,14 +415,28 @@ const CheckoutPage = () => {
               <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Order Summary</h3>
               <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {cart.map((item) => (
-                  <div key={item._id} className="flex justify-between items-center text-sm border-b border-gray-50 pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
-                        {(item.images?.length > 0 ? item.images[0] : item.image) ? <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">Img</div>}
+                  <div key={item._id} className="flex flex-col text-sm border-b border-gray-50 pb-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
+                          {(item.images?.length > 0 ? item.images[0] : item.image) ? <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">Img</div>}
+                        </div>
+                        <div><p className="font-bold text-gray-800 line-clamp-1">{item.name}</p><p className="text-gray-500">Qty: {item.qty}</p></div>
                       </div>
-                      <div><p className="font-bold text-gray-800 line-clamp-1">{item.name}</p><p className="text-gray-500">Qty: {item.qty}</p></div>
+                      <div className="font-bold text-gray-800">₹{item.price * item.qty}</div>
                     </div>
-                    <div className="font-bold text-gray-800">₹{item.price * item.qty}</div>
+                    {item.isCustomizable && (
+                      <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <label className="block text-xs font-bold text-gray-700 mb-2">Upload image to print on this product <span className="text-red-500">*</span></label>
+                        <input type="file" accept="image/*" required={!customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#76b900] file:text-white hover:file:bg-[#659e00] transition-colors cursor-pointer" />
+                        {customFiles[item._id] && (
+                          <div className="mt-2 relative inline-block">
+                            <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
+                            <button type="button" onClick={() => { const newFiles = {...customFiles}; delete newFiles[item._id]; setCustomFiles(newFiles); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
