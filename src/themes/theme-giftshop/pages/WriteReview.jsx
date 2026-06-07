@@ -5,49 +5,6 @@ import { useStore } from '../../../services/useStore';
 import StoreLayout from '../Layout';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
-const compressImage = (file, maxSizeMB = 1) => {
-  return new Promise((resolve) => {
-    if (!file.type.startsWith('image/')) return resolve(file);
-    if (file.size <= maxSizeMB * 1024 * 1024) return resolve(file); // Already under max size
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        const MAX_DIMENSION = 1600; // Resize heavily if the image is massive
-        
-        if (width > height && width > MAX_DIMENSION) {
-          height = Math.round((height * MAX_DIMENSION) / width);
-          width = MAX_DIMENSION;
-        } else if (height > MAX_DIMENSION) {
-          width = Math.round((width * MAX_DIMENSION) / height);
-          height = MAX_DIMENSION;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        let quality = 0.8;
-        const attemptCompression = () => {
-          canvas.toBlob((blob) => {
-            if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.2) resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg', lastModified: Date.now() }));
-            else { quality -= 0.1; attemptCompression(); }
-          }, 'image/jpeg', quality);
-        };
-        attemptCompression();
-      };
-      img.onerror = () => resolve(file);
-    };
-    reader.onerror = () => resolve(file);
-  });
-};
-
 const WriteReview = () => {
   const { orderId, productId } = useParams();
   const { store, loading: storeLoading } = useStore();
@@ -113,21 +70,17 @@ const WriteReview = () => {
     }
   }, [orderId, productId, store, API_BASE_URL]);
 
-  const handleMediaUpload = async (e) => {
+  const handleMediaUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    setUploading(true);
-    setUploadProgress(0);
-    setStatus('Compressing images...');
-
-    const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1))); // Target 1MB
-
     const uploadData = new FormData();
     uploadData.append('storeId', store._id);
-    compressedFiles.forEach(file => uploadData.append('images', file));
+    files.forEach(file => uploadData.append('images', file));
 
-    setStatus('Uploading...');
+    setUploading(true);
+    setUploadProgress(0);
+    setStatus('');
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${API_BASE_URL}/api/upload/public`);
@@ -142,9 +95,8 @@ const WriteReview = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         const data = JSON.parse(xhr.responseText);
         if (data.urls) setMedia(prev => [...prev, ...data.urls]);
-        setStatus('');
       } else {
-        setStatus('Failed to upload images. Ensure files are valid.');
+        setStatus('Failed to upload media. Ensure files are images or valid videos.');
       }
       setUploading(false);
       if (e.target) e.target.value = '';
@@ -264,16 +216,19 @@ const WriteReview = () => {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Attach Photos</label>
                 <div className="flex flex-wrap gap-4">
-                  {media.map((url, idx) => (
-                      <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group shrink-0">
-                        <img src={url} className="w-full h-full object-cover" alt="Review Media" />
+                  {media.map((url, idx) => {
+                    const isVideo = url.match(/\.(mp4|webm|mov|ogg|mkv)(\?.*)?$/i);
+                    return (
+                      <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group">
+                        {isVideo ? <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline /> : <img src={url} className="w-full h-full object-cover" alt="Review Media" />}
                         <button type="button" onClick={() => setMedia(media.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14}/></button>
                       </div>
-                  ))}
+                    );
+                  })}
                   <label className={`w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-[#76b900] hover:text-[#76b900] transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                     <UploadCloud size={24} className="mb-1" />
                     <span className="text-xs font-bold">{uploading ? `${uploadProgress}%` : 'Upload'}</span>
-                    <input type="file" multiple accept="image/*" className="hidden" onChange={handleMediaUpload} disabled={uploading} />
+                    <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleMediaUpload} disabled={uploading} />
                   </label>
                 </div>
               </div>
