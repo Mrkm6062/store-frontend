@@ -9,14 +9,13 @@ const Banner = ({ bannerUrl, storeName }) => {
 
   const scrollRef = useRef(null);
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
 
   // Convert to array in case backend returns a single string, and apply the limit
   const banners = bannerUrl ? (Array.isArray(bannerUrl) ? bannerUrl : [bannerUrl]).slice(0, limit) : [];
 
   // Auto-scroll effect
   useEffect(() => {
-    if (banners.length <= 1 || isHovered) return;
+    if (banners.length <= 1) return;
 
     const interval = setInterval(() => {
       if (scrollRef.current) {
@@ -33,7 +32,7 @@ const Banner = ({ bannerUrl, storeName }) => {
     }, 3000); // 3 seconds
 
     return () => clearInterval(interval);
-  }, [banners.length, isHovered]);
+  }, [banners.length]);
 
   // Observer to update active dot on any scroll (auto, manual, click)
   useEffect(() => {
@@ -88,8 +87,6 @@ const Banner = ({ bannerUrl, storeName }) => {
     <div 
       className="w-full relative group border-b transition-colors duration-300"
       style={{ backgroundColor: bannerSettings.bgColor || '#f3f4f6', borderColor: bannerSettings.bgColor || '#e5e7eb' }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <div ref={scrollRef} className="w-full flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {banners.map((url, index) => (
