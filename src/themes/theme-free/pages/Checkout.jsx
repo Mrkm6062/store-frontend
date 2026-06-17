@@ -226,16 +226,18 @@ const CheckoutPage = () => {
       const customizableItems = cart.filter(item => item.isCustomizable);
       
       for (const item of customizableItems) {
-        if (!item.customImageBase64 && !customFiles[item._id]) {
-          showToast(`Please upload a custom image for ${item.name} in your cart.`);
+        if (!item.customImageBase64 && !customFiles[item._id] && !item.customText) {
+          showToast(`Please upload an image or enter text for ${item.name}.`);
           setIsPlacingOrder(false);
           return;
         }
       }
 
-      if (customizableItems.length > 0) {
+      const itemsToUpload = customizableItems.filter(item => item.customImageBase64 || customFiles[item._id]);
+
+      if (itemsToUpload.length > 0) {
         showToast('Processing custom images...', 'success');
-        for (const item of customizableItems) {
+        for (const item of itemsToUpload) {
           let fileToUpload = null;
           if (item.customImageBase64) {
              fileToUpload = dataURLtoBlob(item.customImageBase64);
@@ -450,8 +452,11 @@ const CheckoutPage = () => {
                           </>
                         ) : (
                            <div className="w-full">
-                            <label className="block text-xs font-bold text-gray-700 mb-2">Upload image to print on this product <span className="text-red-500">*</span></label>
-                            <input type="file" accept="image/*" required={!customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#76b900] file:text-white hover:file:bg-[#659e00] transition-colors cursor-pointer" />
+                            <label className="block text-xs font-bold text-gray-700 mb-2">
+                              Upload image to print on this product {!item.customText && <span className="text-red-500">*</span>}
+                              {item.customText && <span className="text-gray-400 font-normal ml-1">(Optional)</span>}
+                            </label>
+                            <input type="file" accept="image/*" required={!item.customText && !customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#76b900] file:text-white hover:file:bg-[#659e00] transition-colors cursor-pointer" />
                             {customFiles[item._id] && (
                               <div className="mt-2 relative inline-block">
                                 <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
