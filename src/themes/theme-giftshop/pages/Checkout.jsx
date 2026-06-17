@@ -256,7 +256,7 @@ const CheckoutPage = () => {
 
       const orderItems = cart.map(item => {
         const idParts = item._id.split('-');
-        return { product: idParts[0], variantId: idParts[1] || null, name: item.name, price: item.price, qty: item.qty, customImage: uploadedImages[item._id] || null };
+        return { product: idParts[0], variantId: idParts[1] || null, name: item.name, price: item.price, qty: item.qty, customImage: uploadedImages[item._id] || null, customText: item.customText || null };
       });
 
       const response = await placeOrder({
@@ -428,7 +428,11 @@ const CheckoutPage = () => {
                         <div className="h-12 w-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
                           {(item.images?.length > 0 ? item.images[0] : item.image) ? <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">Img</div>}
                         </div>
-                        <div><p className="font-bold text-gray-800 line-clamp-1">{item.name}</p><p className="text-gray-500">Qty: {item.qty}</p></div>
+                        <div>
+                          <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
+                          <p className="text-gray-500">Qty: {item.qty}</p>
+                          {item.customText && <p className="text-xs text-gray-500 mt-0.5"><span className="font-semibold text-gray-700">Text:</span> {item.customText}</p>}
+                        </div>
                       </div>
                       <div className="font-bold text-gray-800">₹{item.price * item.qty}</div>
                     </div>
