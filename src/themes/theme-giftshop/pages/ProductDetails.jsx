@@ -70,6 +70,7 @@ const ProductDetails = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [customImageBase64, setCustomImageBase64] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [customText, setCustomText] = useState('');
 
   // Image Editor States
   const [showEditor, setShowEditor] = useState(false);
@@ -253,12 +254,12 @@ const ProductDetails = () => {
           showToast(`Only ${maxStock} units available.`, 'error');
           return prev;
         }
-        return prev.map(item => item._id === targetId ? { ...item, qty: item.qty + quantity, customImageBase64: customImageBase64 || item.customImageBase64 } : item);
+        return prev.map(item => item._id === targetId ? { ...item, qty: item.qty + quantity, customImageBase64: customImageBase64 || item.customImageBase64, customText: customText || item.customText } : item);
       }
       
       const itemToAdd = selectedVariant
-        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0], customImageBase64 }
-        : { ...product, maxStock, image: images[0], customImageBase64 };
+        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0], customImageBase64, customText }
+        : { ...product, maxStock, image: images[0], customImageBase64, customText };
         
       return [...prev, { ...itemToAdd, price: displayPrice, qty: quantity }];
     });
@@ -279,11 +280,12 @@ const ProductDetails = () => {
       if (existing.qty + quantity <= maxStock) {
         existing.qty += quantity;
         existing.customImageBase64 = customImageBase64 || existing.customImageBase64;
+        existing.customText = customText || existing.customText;
       }
     } else {
       const itemToAdd = selectedVariant
-        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0], customImageBase64 }
-        : { ...product, maxStock, image: images[0], customImageBase64 };
+        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0], customImageBase64, customText }
+        : { ...product, maxStock, image: images[0], customImageBase64, customText };
       newCart.push({ ...itemToAdd, price: displayPrice, qty: quantity });
     }
     
@@ -347,9 +349,17 @@ const ProductDetails = () => {
                   <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
                 )}
 
-                {customImageBase64 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-multiply opacity-80 z-10 p-8">
-                    <img src={customImageBase64} className="w-full h-full object-contain drop-shadow-md" alt="Custom Print Preview" />
+                {customImageBase64 && product.isCustomizable && product.customizableArea && (
+                  <div 
+                      className="absolute pointer-events-none z-10"
+                      style={{
+                          left: `${product.customizableArea.x}%`,
+                          top: `${product.customizableArea.y}%`,
+                          width: `${product.customizableArea.width}%`,
+                          height: `${product.customizableArea.height}%`,
+                      }}
+                  >
+                      <img src={customImageBase64} className="w-full h-full object-contain" alt="Custom Print Preview" style={{ mixBlendMode: 'multiply', opacity: 0.85 }} />
                   </div>
                 )}
 
@@ -488,6 +498,20 @@ const ProductDetails = () => {
                     <button type="button" onClick={() => setCustomImageBase64(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {product.allowCustomText && (
+              <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <label className="block text-sm font-bold text-slate-800 mb-2">Custom Text (Optional)</label>
+                <input 
+                  type="text" 
+                  value={customText} 
+                  onChange={(e) => setCustomText(e.target.value)} 
+                  placeholder="e.g. Happy Birthday John!" 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-sm"
+                />
+                <p className="text-xs text-slate-500 mt-2">This text will be printed along with your product design.</p>
               </div>
             )}
 

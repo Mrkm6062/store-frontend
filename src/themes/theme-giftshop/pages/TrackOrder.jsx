@@ -303,6 +303,11 @@ const TrackOrder = () => {
                             <div>
                               <p className="font-bold text-slate-800">{item.name}</p>
                               <p className="text-slate-500">Qty: {item.qty} x ₹{item.price}</p>
+                              {item.customText && (
+                                <div className="mt-1 text-xs text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-100 w-fit">
+                                  <span className="font-semibold">Text:</span> {item.customText}
+                                </div>
+                              )}
                             </div>
                             <div className="font-bold text-slate-800">₹{item.qty * item.price}</div>
                           </div>

@@ -42,6 +42,9 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                     <div>
                       <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
                       <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty} {item.unitType || ''}</span></p>
+                          {item.customText && (
+                            <p className="text-xs text-gray-500 mt-0.5"><span className="font-semibold text-gray-700">Text:</span> {item.customText}</p>
+                          )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
