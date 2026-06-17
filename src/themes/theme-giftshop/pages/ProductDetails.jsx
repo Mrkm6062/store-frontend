@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import StoreLayout from '../Layout';
-import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, ChevronRight, Share2, Heart, Maximize2 } from 'lucide-react';
+import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, ChevronRight, Share2, Heart, Maximize2, ZoomIn, RotateCw } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { getPublicCategories } from '../../../services/api';
 import CartSidebar from '../components/CartSidebar';
@@ -71,6 +71,15 @@ const ProductDetails = () => {
   const [customImageBase64, setCustomImageBase64] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
 
+  // Image Editor States
+  const [showEditor, setShowEditor] = useState(false);
+  const [rawImage, setRawImage] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
     return saved ? JSON.parse(saved) : [];
@@ -133,23 +142,70 @@ const ProductDetails = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleCustomImageUpload = async (e) => {
+  const handleCustomImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setRawImage(reader.result);
+      setShowEditor(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = null; // reset input
+  };
+
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX - offset.x, y: clientY - offset.y });
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setOffset({ x: clientX - dragStart.x, y: clientY - dragStart.y });
+  };
+
+  const handlePointerUp = () => setIsDragging(false);
+
+  const handleApplyEdit = () => {
     setIsCompressing(true);
-    try {
-      const compressedFile = await compressImage(file, 1);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomImageBase64(reader.result);
-        setIsCompressing(false);
-      };
-      reader.readAsDataURL(compressedFile);
-    } catch (err) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      const CROP_SIZE = 800; // Output high-res image (800x800)
+      const PREVIEW_SIZE = 300;
+      const ratio = CROP_SIZE / PREVIEW_SIZE;
+
+      canvas.width = CROP_SIZE;
+      canvas.height = CROP_SIZE;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+
+      const s_fit = Math.max(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      const w_rend = img.width * s_fit;
+      const h_rend = img.height * s_fit;
+      const finalScale = zoom * ratio;
+      ctx.scale(finalScale, finalScale);
+      const dx = -w_rend / 2 + (offset.x / zoom);
+      const dy = -h_rend / 2 + (offset.y / zoom);
+
+      ctx.drawImage(img, dx, dy, w_rend, h_rend);
+      setCustomImageBase64(canvas.toDataURL('image/jpeg', 0.9));
+      setRawImage(null);
+      setShowEditor(false);
       setIsCompressing(false);
-      showToast('Failed to process image', 'error');
-    }
+      setZoom(1); setRotation(0); setOffset({x:0, y:0});
+    };
+    img.src = rawImage;
   };
 
   if (storeLoading || productsLoading) {
@@ -554,6 +610,57 @@ const ProductDetails = () => {
         <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 transition-all animate-fadeIn ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-[#76b900] text-white'}`}>
           <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
           {toast.message}
+        </div>
+      )}
+
+      {/* Custom Image Editor Modal */}
+      {showEditor && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl flex flex-col items-center">
+             <h3 className="text-xl font-bold text-slate-800 mb-4">Edit Custom Image</h3>
+             
+             <div 
+               className="relative w-[300px] h-[300px] overflow-hidden bg-slate-100 rounded-2xl border-2 border-slate-200 cursor-move touch-none"
+               onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerUp}
+               onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp}
+             >
+               <div className="absolute top-1/2 left-1/2 w-full h-full" style={{ transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${zoom})` }}>
+                  <img 
+                    src={rawImage} 
+                    alt="Edit" 
+                    className="absolute top-1/2 left-1/2 pointer-events-none" 
+                    style={{ 
+                      transform: `translate(calc(-50% + ${offset.x / zoom}px), calc(-50% + ${offset.y / zoom}px))`,
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover' 
+                    }} 
+                  />
+               </div>
+             </div>
+             <p className="text-xs text-slate-400 mt-3 text-center font-medium">Drag to reposition the image.</p>
+
+             <div className="w-full mt-6 space-y-4">
+               <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                 <div className="flex items-center gap-2 w-20 text-slate-600"><ZoomIn size={18} /> <span className="text-sm font-bold">Zoom</span></div>
+                 <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#76b900]" />
+               </div>
+               <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-600"><RotateCw size={18} /> <span className="text-sm font-bold">Rotate</span></div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setRotation(r => r - 90)} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:border-[#76b900] hover:text-[#76b900] transition-colors">-90°</button>
+                    <button onClick={() => setRotation(r => r + 90)} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:border-[#76b900] hover:text-[#76b900] transition-colors">+90°</button>
+                  </div>
+               </div>
+             </div>
+
+             <div className="flex w-full gap-3 mt-6">
+               <button onClick={() => { setShowEditor(false); setRawImage(null); setZoom(1); setRotation(0); setOffset({x:0, y:0}); }} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+               <button onClick={handleApplyEdit} disabled={isCompressing} className="flex-1 py-3 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition-colors shadow-md disabled:opacity-50">
+                 {isCompressing ? 'Processing...' : 'Apply & Save'}
+               </button>
+             </div>
+          </div>
         </div>
       )}
     </StoreLayout>
