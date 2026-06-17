@@ -210,8 +210,8 @@ const ProductDetails = () => {
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((rotation * Math.PI) / 180);
 
-      // Calculate the initial scale to fit the image into the preview box (contain, not cover)
-      const s_fit = Math.min(PREVIEW_WIDTH / img.width, previewHeight / img.height);
+      // Calculate the initial scale to fit the image into the preview box (cover, not contain)
+      const s_fit = Math.max(PREVIEW_WIDTH / img.width, previewHeight / img.height);
       const w_rend = img.width * s_fit;
       const h_rend = img.height * s_fit;
       
@@ -702,7 +702,7 @@ const ProductDetails = () => {
                       transform: `translate(calc(-50% + ${offset.x / zoom}px), calc(-50% + ${offset.y / zoom}px))`,
                       width: '100%', 
                       height: '100%', 
-                      objectFit: 'contain' 
+                      objectFit: 'cover' 
                     }} 
                   />
                </div>
