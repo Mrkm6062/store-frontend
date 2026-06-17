@@ -180,7 +180,7 @@ const ProductDetails = () => {
     
     img.onload = () => {
       // Get the aspect ratio from the product's customizable area
-      const area = product.customizableArea;
+      const area = product.customizableArea || { width: 1, height: 1 };
       const aspectRatio = area.width / area.height;
 
       // Define max dimension for the output image, maintaining aspect ratio
@@ -210,8 +210,8 @@ const ProductDetails = () => {
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((rotation * Math.PI) / 180);
 
-      // Calculate the initial scale to fit the image into the preview box (cover, not contain)
-      const s_fit = Math.max(PREVIEW_WIDTH / img.width, previewHeight / img.height);
+      // Calculate the initial scale to fit the image into the preview box (contain, not cover)
+      const s_fit = Math.min(PREVIEW_WIDTH / img.width, previewHeight / img.height);
       const w_rend = img.width * s_fit;
       const h_rend = img.height * s_fit;
       
@@ -702,7 +702,7 @@ const ProductDetails = () => {
                       transform: `translate(calc(-50% + ${offset.x / zoom}px), calc(-50% + ${offset.y / zoom}px))`,
                       width: '100%', 
                       height: '100%', 
-                      objectFit: 'cover' 
+                      objectFit: 'contain' 
                     }} 
                   />
                </div>
@@ -712,7 +712,7 @@ const ProductDetails = () => {
              <div className="w-full mt-6 space-y-4">
                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
                  <div className="flex items-center gap-2 w-20 text-slate-600"><ZoomIn size={18} /> <span className="text-sm font-bold">Zoom</span></div>
-                 <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#76b900]" />
+                 <input type="range" min="0.1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#76b900]" />
                </div>
                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-2 text-slate-600"><RotateCw size={18} /> <span className="text-sm font-bold">Rotate</span></div>
