@@ -8,6 +8,45 @@ import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.js
 import { getPublicCategories } from '../../../services/api';
 import CartSidebar from '../components/CartSidebar';
 
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) return resolve(file);
+    if (file.size <= maxSizeMB * 1024 * 1024) return resolve(file);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        const MAX_DIMENSION = 1600;
+        if (width > height && width > MAX_DIMENSION) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else if (height > MAX_DIMENSION) {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        let quality = 0.8;
+        const attemptCompression = () => {
+          canvas.toBlob((blob) => {
+            if (blob.size <= maxSizeMB * 1024 * 1024 || quality <= 0.2) resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg', lastModified: Date.now() }));
+            else { quality -= 0.1; attemptCompression(); }
+          }, 'image/jpeg', quality);
+        };
+        attemptCompression();
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 const ProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
@@ -29,6 +68,8 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [toast, setToast] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [customImageBase64, setCustomImageBase64] = useState(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -92,6 +133,25 @@ const ProductDetails = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const handleCustomImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setIsCompressing(true);
+    try {
+      const compressedFile = await compressImage(file, 1);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomImageBase64(reader.result);
+        setIsCompressing(false);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (err) {
+      setIsCompressing(false);
+      showToast('Failed to process image', 'error');
+    }
+  };
+
   if (storeLoading || productsLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-green-600 font-bold text-xl"><span className="animate-pulse">Loading Product...</span></div>;
   }
@@ -125,6 +185,10 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
+    if (product.isCustomizable && !customImageBase64) {
+      showToast('Please upload your custom image before adding to cart.', 'error');
+      return;
+    }
     
     setCart((prev) => {
       const existing = prev.find(item => item._id === targetId);
@@ -133,12 +197,12 @@ const ProductDetails = () => {
           showToast(`Only ${maxStock} units available.`, 'error');
           return prev;
         }
-        return prev.map(item => item._id === targetId ? { ...item, qty: item.qty + quantity } : item);
+        return prev.map(item => item._id === targetId ? { ...item, qty: item.qty + quantity, customImageBase64: customImageBase64 || item.customImageBase64 } : item);
       }
       
       const itemToAdd = selectedVariant
-        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0] }
-        : { ...product, maxStock, image: images[0] };
+        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0], customImageBase64 }
+        : { ...product, maxStock, image: images[0], customImageBase64 };
         
       return [...prev, { ...itemToAdd, price: displayPrice, qty: quantity }];
     });
@@ -147,6 +211,10 @@ const ProductDetails = () => {
 
   const handleBuyNow = () => {
     if (isOutOfStock) return;
+    if (product.isCustomizable && !customImageBase64) {
+      showToast('Please upload your custom image before proceeding.', 'error');
+      return;
+    }
     
     let newCart = [...cart];
     const existing = newCart.find(item => item._id === targetId);
@@ -154,11 +222,12 @@ const ProductDetails = () => {
     if (existing) {
       if (existing.qty + quantity <= maxStock) {
         existing.qty += quantity;
+        existing.customImageBase64 = customImageBase64 || existing.customImageBase64;
       }
     } else {
       const itemToAdd = selectedVariant
-        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0] }
-        : { ...product, maxStock, image: images[0] };
+        ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: images[0], customImageBase64 }
+        : { ...product, maxStock, image: images[0], customImageBase64 };
       newCart.push({ ...itemToAdd, price: displayPrice, qty: quantity });
     }
     
@@ -220,6 +289,12 @@ const ProductDetails = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
+                )}
+
+                {customImageBase64 && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-multiply opacity-80 z-10 p-8">
+                    <img src={customImageBase64} className="w-full h-full object-contain drop-shadow-md" alt="Custom Print Preview" />
+                  </div>
                 )}
 
                 <button
@@ -335,6 +410,26 @@ const ProductDetails = () => {
                 {isOutOfStock && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-center">
                     <p className="text-red-700 font-semibold">This option is currently out of stock.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {product.isCustomizable && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <label className="block text-sm font-bold text-blue-800 mb-2">Upload Custom Image (For Printing) <span className="text-red-500">*</span></label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleCustomImageUpload} 
+                  className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-colors cursor-pointer"
+                  disabled={isCompressing}
+                />
+                {isCompressing && <p className="text-xs text-blue-600 mt-2 font-bold animate-pulse">Processing image...</p>}
+                {customImageBase64 && (
+                  <div className="mt-3 relative inline-block">
+                    <img src={customImageBase64} alt="Custom Preview" className="h-16 w-16 object-cover rounded-lg border border-blue-200 shadow-sm" />
+                    <button type="button" onClick={() => setCustomImageBase64(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
                   </div>
                 )}
               </div>

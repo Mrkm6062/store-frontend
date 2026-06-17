@@ -32,11 +32,14 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
               {cart.map((item) => (
                 <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
-                      {(item.images?.length > 0 ? item.images[0] : item.image) ? (
+                    <div className="h-12 w-12 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100 relative">
+                      {(item.customImageBase64 || (item.images?.length > 0 ? item.images[0] : item.image)) ? (
                         <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-medium">No Img</div>
+                      )}
+                      {item.customImageBase64 && (
+                        <img src={item.customImageBase64} alt="Custom" className="absolute bottom-0 right-0 w-5 h-5 object-cover rounded shadow-sm border border-white" />
                       )}
                     </div>
                     <div>

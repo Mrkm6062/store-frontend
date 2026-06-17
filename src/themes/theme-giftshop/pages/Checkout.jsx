@@ -62,6 +62,15 @@ const compressImage = (file, maxSizeMB = 1) => {
   });
 };
 
+const dataURLtoBlob = (dataurl) => {
+  let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+  while(n--){
+      u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], {type:mime});
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
@@ -217,8 +226,8 @@ const CheckoutPage = () => {
       const customizableItems = cart.filter(item => item.isCustomizable);
       
       for (const item of customizableItems) {
-        if (!customFiles[item._id]) {
-          showToast(`Please upload a custom image for ${item.name}`);
+        if (!item.customImageBase64 && !customFiles[item._id]) {
+          showToast(`Please upload a custom image for ${item.name} in your cart.`);
           setIsPlacingOrder(false);
           return;
         }
@@ -227,12 +236,17 @@ const CheckoutPage = () => {
       if (customizableItems.length > 0) {
         showToast('Processing custom images...', 'success');
         for (const item of customizableItems) {
-          const file = customFiles[item._id];
-          if (file) {
-            const compressed = await compressImage(file, 1);
+          let fileToUpload = null;
+          if (item.customImageBase64) {
+             fileToUpload = dataURLtoBlob(item.customImageBase64);
+          } else if (customFiles[item._id]) {
+             fileToUpload = await compressImage(customFiles[item._id], 1);
+          }
+          
+          if (fileToUpload) {
             const uploadData = new FormData();
             uploadData.append('storeId', store._id);
-            uploadData.append('images', compressed);
+            uploadData.append('images', fileToUpload, 'custom_print.jpg');
 
             const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
             const uploadRes = await fetch(`${API_BASE_URL}/api/upload/public`, { method: 'POST', body: uploadData });
@@ -426,14 +440,26 @@ const CheckoutPage = () => {
                       <div className="font-bold text-gray-800">₹{item.price * item.qty}</div>
                     </div>
                     {item.isCustomizable && (
-                      <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                        <label className="block text-xs font-bold text-gray-700 mb-2">Upload image to print on this product <span className="text-red-500">*</span></label>
-                        <input type="file" accept="image/*" required={!customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#76b900] file:text-white hover:file:bg-[#659e00] transition-colors cursor-pointer" />
-                        {customFiles[item._id] && (
-                          <div className="mt-2 relative inline-block">
-                            <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
-                            <button type="button" onClick={() => { const newFiles = {...customFiles}; delete newFiles[item._id]; setCustomFiles(newFiles); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
-                          </div>
+                      <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
+                        {item.customImageBase64 ? (
+                          <>
+                            <img src={item.customImageBase64} alt="Custom" className="w-12 h-12 rounded object-cover border shadow-sm" />
+                            <div className="text-xs text-green-700 font-bold flex flex-col">
+                              <span>Custom Image Uploaded</span>
+                              <span className="font-medium text-gray-500">Will be printed on item</span>
+                            </div>
+                          </>
+                        ) : (
+                           <div className="w-full">
+                            <label className="block text-xs font-bold text-gray-700 mb-2">Upload image to print on this product <span className="text-red-500">*</span></label>
+                            <input type="file" accept="image/*" required={!customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#76b900] file:text-white hover:file:bg-[#659e00] transition-colors cursor-pointer" />
+                            {customFiles[item._id] && (
+                              <div className="mt-2 relative inline-block">
+                                <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
+                                <button type="button" onClick={() => { const newFiles = {...customFiles}; delete newFiles[item._id]; setCustomFiles(newFiles); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
+                              </div>
+                            )}
+                           </div>
                         )}
                       </div>
                     )}
