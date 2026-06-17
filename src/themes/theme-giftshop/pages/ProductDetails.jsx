@@ -180,7 +180,7 @@ const ProductDetails = () => {
     
     img.onload = () => {
       // Get the aspect ratio from the product's customizable area
-      const area = product.customizableArea || { width: 1, height: 1 };
+      const area = product.customizableArea;
       const aspectRatio = area.width / area.height;
 
       // Define max dimension for the output image, maintaining aspect ratio
