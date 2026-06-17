@@ -337,13 +337,13 @@ const ProductDetails = () => {
 
             {/* Main Image Area */}
             <div className="flex-1 w-full">
-              <div className="aspect-[2/3] bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative max-w-lg mx-auto group">
+              <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative max-w-lg mx-auto group">
                 {images.length > 0 ? (
                   <img
                     src={images[activeImageIndex]}
                     alt={product.name}
                     loading="lazy"
-                    className="w-full h-full object-cover md:object-contain transition-transform duration-300"
+                    className="w-full h-auto object-contain transition-transform duration-300"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
@@ -359,7 +359,7 @@ const ProductDetails = () => {
                           height: `${product.customizableArea.height}%`,
                       }}
                   >
-                      <img src={customImageBase64} className="w-full h-full object-contain" alt="Custom Print Preview" style={{ mixBlendMode: 'multiply', opacity: 0.85 }} />
+                      <img src={customImageBase64} className="w-full h-full object-contain" alt="Custom Print Preview" />
                   </div>
                 )}
 
