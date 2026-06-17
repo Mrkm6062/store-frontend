@@ -134,9 +134,12 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           <button
             onClick={handleAdd}
             disabled={isOutOfStock}
-            className={`w-full py-3 font-semibold transition-all ${isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            className={`w-full py-3 font-semibold transition-all ${
+              isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 
+              hasVariants ? 'bg-slate-800 text-white hover:bg-slate-900' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
           >
-            {isOutOfStock ? 'Out of Stock' : (hasVariants ? 'Select Options' : 'Add to Cart')}
+            {isOutOfStock ? 'Out of Stock' : (hasVariants ? 'Buy Now' : 'Add to Cart')}
           </button>
         )}
       </div>
