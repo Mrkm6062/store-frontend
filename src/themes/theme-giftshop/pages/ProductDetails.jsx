@@ -179,23 +179,46 @@ const ProductDetails = () => {
     const img = new Image();
     
     img.onload = () => {
-      const CROP_SIZE = 800; // Output high-res image (800x800)
-      const PREVIEW_SIZE = 300;
-      const ratio = CROP_SIZE / PREVIEW_SIZE;
+      // Get the aspect ratio from the product's customizable area
+      const area = product.customizableArea || { width: 1, height: 1 };
+      const aspectRatio = area.width / area.height;
 
-      canvas.width = CROP_SIZE;
-      canvas.height = CROP_SIZE;
+      // Define max dimension for the output image, maintaining aspect ratio
+      const CROP_MAX_DIMENSION = 800;
+      let canvasWidth, canvasHeight;
+
+      if (aspectRatio >= 1) { // Wider or square
+        canvasWidth = CROP_MAX_DIMENSION;
+        canvasHeight = CROP_MAX_DIMENSION / aspectRatio;
+      } else { // Taller
+        canvasHeight = CROP_MAX_DIMENSION;
+        canvasWidth = CROP_MAX_DIMENSION * aspectRatio;
+      }
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // The preview box has a max-width of 300px.
+      const PREVIEW_WIDTH = 300;
+      const previewHeight = PREVIEW_WIDTH / aspectRatio;
+
+      // The ratio of final canvas size to preview size
+      const ratio = canvasWidth / PREVIEW_WIDTH;
 
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((rotation * Math.PI) / 180);
 
-      const s_fit = Math.max(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      // Calculate the initial scale to fit the image into the preview box (cover, not contain)
+      const s_fit = Math.max(PREVIEW_WIDTH / img.width, previewHeight / img.height);
       const w_rend = img.width * s_fit;
       const h_rend = img.height * s_fit;
+      
       const finalScale = zoom * ratio;
       ctx.scale(finalScale, finalScale);
+      
+      // The offset is in preview pixels. We need to apply it before the final scale.
       const dx = -w_rend / 2 + (offset.x / zoom);
       const dy = -h_rend / 2 + (offset.y / zoom);
 
@@ -663,9 +686,12 @@ const ProductDetails = () => {
              <h3 className="text-xl font-bold text-slate-800 mb-4">Edit Custom Image</h3>
              
              <div 
-               className="relative w-[300px] h-[300px] overflow-hidden bg-slate-100 rounded-2xl border-2 border-slate-200 cursor-move touch-none"
+               className="relative w-full max-w-[300px] overflow-hidden bg-slate-100 rounded-2xl border-2 border-slate-200 cursor-move touch-none"
                onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerUp}
                onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp}
+               style={{ 
+                 aspectRatio: `${product.customizableArea?.width || 1} / ${product.customizableArea?.height || 1}`
+               }}
              >
                <div className="absolute top-1/2 left-1/2 w-full h-full" style={{ transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${zoom})` }}>
                   <img 
