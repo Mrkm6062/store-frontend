@@ -337,13 +337,13 @@ const ProductDetails = () => {
 
             {/* Main Image Area */}
             <div className="flex-1 w-full">
-              <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative max-w-lg mx-auto group">
+              <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative w-fit mx-auto group">
                 {images.length > 0 ? (
                   <img
                     src={images[activeImageIndex]}
                     alt={product.name}
                     loading="lazy"
-                    className="w-full h-auto object-contain transition-transform duration-300"
+                    className="h-auto max-w-full object-contain transition-transform duration-300"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
