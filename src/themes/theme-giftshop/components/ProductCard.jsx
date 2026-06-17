@@ -7,17 +7,11 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
   const cardSettings = customization?.productCard || {};
-
   const hasVariants = product.variants && product.variants.length > 0;
-  const [selectedVariantId, setSelectedVariantId] = useState(hasVariants ? product.variants[0]._id : null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  const selectedVariant = hasVariants ? product.variants.find(v => v._id === selectedVariantId) : null;
   
-  const displayPrice = selectedVariant 
-    ? selectedVariant.price 
-    : (product.basePrice || product.price || 0);
+  const displayPrice = product.basePrice || product.price || 0;
 
   // Compute original price for discount badge (fallback to 15% markup if backend doesn't provide it)
   const originalPrice = product.compareAtPrice || product.basePrice || (displayPrice > 0 ? Math.round(displayPrice * 1.15) : 0);
@@ -29,35 +23,37 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
     : (typeof product.images === 'string' ? product.images : product.image);
   
   // Calculate stock based on selected variant or total product stock
-  const maxStock = selectedVariant ? selectedVariant.stock : (product.totalStock !== undefined ? product.totalStock : product.stock);
+  const maxStock = product.totalStock !== undefined ? product.totalStock : product.stock;
   const isOutOfStock = maxStock <= 0;
 
   // Extract rating data (assumes backend populates averageRating and totalReviews)
   const averageRating = product.averageRating || product.rating || 0;
   const totalReviews = product.totalReviews || product.reviewCount || product.numReviews || 0;
 
-  const targetId = selectedVariant ? `${product._id}-${selectedVariant._id}` : product._id;
-  const cartItem = cart.find(item => item._id === targetId);
+  const cartItem = !hasVariants ? cart.find(item => item._id === product._id) : null;
   const cartQty = cartItem ? cartItem.qty : 0;
 
   const handleAdd = (e) => {
     e.stopPropagation();
-    const itemToAdd = selectedVariant
-      ? { ...product, _id: targetId, name: `${product.name} - ${selectedVariant.name}`, basePrice: selectedVariant.price, variants: [], maxStock, image: displayImage }
-      : { ...product, maxStock, image: displayImage };
+    if (hasVariants) {
+      navigate(`/product/${product.slug || product._id}`);
+      return;
+    }
+
+    const itemToAdd = { ...product, maxStock, image: displayImage };
     onAddToCart(itemToAdd);
   };
 
   const handleIncrement = (e) => {
     e.stopPropagation();
-    if (onUpdateQuantity) onUpdateQuantity(targetId, 1);
+    if (onUpdateQuantity) onUpdateQuantity(product._id, 1);
     else handleAdd(e); // Fallback if missing prop
   };
 
   const handleDecrement = (e) => {
     e.stopPropagation();
-    if (cartQty === 1 && onRemoveFromCart) onRemoveFromCart(targetId);
-    else if (onUpdateQuantity) onUpdateQuantity(targetId, -1);
+    if (cartQty === 1 && onRemoveFromCart) onRemoveFromCart(product._id);
+    else if (onUpdateQuantity) onUpdateQuantity(product._id, -1);
   };
 
   // Try to use categoryName if available, else default to 'Fresh Item'
@@ -103,21 +99,6 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           <span className="text-gray-900 text-xs ml-1">({totalReviews || 0})</span>
         </div>
 
-        {hasVariants && (
-          <div className="px-1 mb-2">
-            <select 
-              value={selectedVariantId || ''} 
-              onChange={(e) => setSelectedVariantId(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full text-xs px-2 py-1 border border-gray-200 rounded outline-none focus:border-blue-500 text-gray-700 bg-gray-50 cursor-pointer hover:bg-white transition-colors"
-            >
-              {product.variants.map(v => (
-                <option key={v._id} value={v._id}>{v.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
         <div className="px-1 flex items-baseline space-x-1 text-align-center">
           <span className="text-md font-semibold text-green-800">₹{displayPrice.toLocaleString()}</span>
           {discountPercent > 0 && (
@@ -130,7 +111,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       </div>
 
       <div className="mt-6 z-10">
-        {cartQty > 0 ? (
+        {cartQty > 0 && !hasVariants ? (
           <div className="flex items-center bg-blue-600 text-white w-full h-12">
             <button 
               onClick={handleDecrement}
@@ -155,7 +136,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             disabled={isOutOfStock}
             className={`w-full py-3 font-semibold transition-all ${isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
-            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+            {isOutOfStock ? 'Out of Stock' : (hasVariants ? 'Select Options' : 'Add to Cart')}
           </button>
         )}
       </div>
