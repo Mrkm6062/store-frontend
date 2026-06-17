@@ -242,8 +242,8 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
-    if (product.isCustomizable && !customImageBase64) {
-      showToast('Please upload your custom image before adding to cart.', 'error');
+    if ((product.isCustomizable || product.allowCustomText) && !customImageBase64 && !customText) {
+      showToast('Please upload an image or enter custom text.', 'error');
       return;
     }
     
@@ -268,8 +268,8 @@ const ProductDetails = () => {
 
   const handleBuyNow = () => {
     if (isOutOfStock) return;
-    if (product.isCustomizable && !customImageBase64) {
-      showToast('Please upload your custom image before proceeding.', 'error');
+    if ((product.isCustomizable || product.allowCustomText) && !customImageBase64 && !customText) {
+      showToast('Please upload an image or enter custom text.', 'error');
       return;
     }
     
@@ -366,7 +366,7 @@ const ProductDetails = () => {
                           <img src={customImageBase64} className="absolute inset-0 w-full h-full object-contain" alt="Custom Print Preview" />
                       )}
                       {customText && (
-                        <span className="relative z-20 text-black font-bold text-center text-lg sm:text-2xl break-words px-2 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]" style={{ textShadow: '0 0 10px white, 0 0 10px white' }}>
+                        <span className="absolute inset-0 flex items-center justify-center z-20 text-black font-bold text-center text-lg sm:text-2xl break-words px-2 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]" style={{ textShadow: '0 0 10px white, 0 0 10px white' }}>
                           {customText}
                         </span>
                       )}
