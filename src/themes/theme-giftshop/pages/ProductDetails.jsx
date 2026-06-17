@@ -690,7 +690,7 @@ const ProductDetails = () => {
                onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerUp}
                onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp}
                style={{ 
-                 aspectRatio: `${product.customizableArea?.width || 1} / ${product.customizableArea?.height || 1}`
+                 aspectRatio: `${product.customizableArea?.width} / ${product.customizableArea?.height}`
                }}
              >
                <div className="absolute top-1/2 left-1/2 w-full h-full" style={{ transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${zoom})` }}>
