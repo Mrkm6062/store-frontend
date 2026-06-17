@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, Search, User, Menu, X, ChevronRight, Home, Heart } from 'lucide-react';
 import { getPublicCategories } from '../../../services/api';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { useProducts } from '../../../services/useProducts';
@@ -11,6 +12,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   const customization = useContext(ThemeCustomizationContext);
   const { products } = useProducts();
@@ -20,6 +22,19 @@ const Header = ({ store, cartCount, onCartClick }) => {
 
   useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    // Load the initial count and listen for changes across tabs
+    const updateWishlistCount = () => {
+      const saved = localStorage.getItem('gb_store_wishlist');
+      if (saved) {
+        try { setWishlistCount(JSON.parse(saved).length); } catch(e) {}
+      }
+    };
+    updateWishlistCount();
+    window.addEventListener('storage', updateWishlistCount);
+    return () => window.removeEventListener('storage', updateWishlistCount);
   }, []);
 
   useEffect(() => {
@@ -69,19 +84,32 @@ const Header = ({ store, cartCount, onCartClick }) => {
           </div>
 
           <div className="flex-1 flex justify-center items-center">
-            {(headerSettings.officialdesktopLogo || headerSettings.officialmobileLogo || store?.logo) ? (
-              <>
-                <img src={headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} className="h-10 w-auto object-contain md:hidden" />
-                <img src={headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} className="h-12 w-auto object-contain hidden md:block" />
-              </>
-            ) : (
-              <h1 className="text-xl font-bold" style={{ color: headerSettings.textColor || '#111827' }}>{store?.name || 'Store'}</h1>
-            )}
+            <Link to="/" className="flex items-center justify-center">
+              {(headerSettings.officialdesktopLogo || headerSettings.officialmobileLogo || store?.logo) ? (
+                <>
+                  <img src={headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} className="h-10 w-auto object-contain md:hidden" />
+                  <img src={headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} className="h-12 w-auto object-contain hidden md:block" />
+                </>
+              ) : (
+                <h1 className="text-xl font-bold" style={{ color: headerSettings.textColor || '#111827' }}>{store?.name || 'Store'}</h1>
+              )}
+            </Link>
           </div>
 
           <div className="flex-1 flex justify-end items-center gap-2 sm:gap-4">
+            <Link to="/" className="p-2 hover:bg-black/5 rounded-full hidden md:block transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }} title="Home">
+              <Home size={24} />
+            </Link>
             <button onClick={() => setIsSearchOpen(true)} className="p-2 hover:bg-black/5 rounded-full transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Search size={24} />
+            </button>
+            <button className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }} title="Wishlist">
+              <Heart size={24} />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
             </button>
             <button className="p-2 hover:bg-black/5 rounded-full hidden sm:block transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <User size={24} />
