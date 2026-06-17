@@ -349,9 +349,9 @@ const ProductDetails = () => {
                   <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
                 )}
 
-                {customImageBase64 && product.isCustomizable && product.customizableArea && (
+                {(product.isCustomizable || product.allowCustomText) && product.customizableArea && (
                   <div 
-                      className="absolute pointer-events-none z-10"
+                      className={`absolute pointer-events-none z-10 flex items-center justify-center overflow-hidden transition-all duration-300 ${!customImageBase64 && !customText ? 'bg-white/80 border-2 border-dashed border-gray-400' : ''}`}
                       style={{
                           left: `${product.customizableArea.x}%`,
                           top: `${product.customizableArea.y}%`,
@@ -359,7 +359,17 @@ const ProductDetails = () => {
                           height: `${product.customizableArea.height}%`,
                       }}
                   >
-                      <img src={customImageBase64} className="w-full h-full object-contain" alt="Custom Print Preview" />
+                      {!customImageBase64 && !customText && (
+                        <span className="text-black/60 font-bold text-center text-sm px-2">Your image or text here</span>
+                      )}
+                      {customImageBase64 && (
+                          <img src={customImageBase64} className="absolute inset-0 w-full h-full object-contain" alt="Custom Print Preview" />
+                      )}
+                      {customText && (
+                        <span className="relative z-20 text-black font-bold text-center text-lg sm:text-2xl break-words px-2 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]" style={{ textShadow: '0 0 10px white, 0 0 10px white' }}>
+                          {customText}
+                        </span>
+                      )}
                   </div>
                 )}
 
@@ -504,13 +514,22 @@ const ProductDetails = () => {
             {product.allowCustomText && (
               <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <label className="block text-sm font-bold text-slate-800 mb-2">Custom Text (Optional)</label>
-                <input 
-                  type="text" 
-                  value={customText} 
-                  onChange={(e) => setCustomText(e.target.value)} 
-                  placeholder="e.g. Happy Birthday John!" 
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-sm"
-                />
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={customText} 
+                    onChange={(e) => setCustomText(e.target.value)} 
+                    placeholder="e.g. Happy Birthday John!" 
+                    className="flex-1 w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-sm"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="px-4 py-2 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition-colors whitespace-nowrap shadow-sm"
+                  >
+                    Preview
+                  </button>
+                </div>
                 <p className="text-xs text-slate-500 mt-2">This text will be printed along with your product design.</p>
               </div>
             )}
