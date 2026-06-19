@@ -543,6 +543,7 @@ const ProductDetails = () => {
                     value={customText} 
                     onChange={(e) => setCustomText(e.target.value)} 
                     placeholder="e.g. Happy Birthday John!" 
+                    spellCheck="false"
                     className="flex-1 w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-sm"
                   />
                   <button 

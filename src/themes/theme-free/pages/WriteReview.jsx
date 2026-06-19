@@ -5,7 +5,7 @@ import { useStore } from '../../../services/useStore';
 import StoreLayout from '../Layout';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
-const compressImage = (file, maxSizeMB = 1) => {
+const compressImage = (file, maxSizeMB = 5) => {
   return new Promise((resolve) => {
     if (!file.type.startsWith('image/')) return resolve(file);
     if (file.size <= maxSizeMB * 1024 * 1024) return resolve(file); // Already under max size
@@ -121,7 +121,7 @@ const WriteReview = () => {
     setUploadProgress(0);
     setStatus('Compressing images...');
 
-    const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1))); // Target 1MB
+    const compressedFiles = await Promise.all(files.map(f => compressImage(f, 5))); // Target 5MB
 
     const uploadData = new FormData();
     uploadData.append('storeId', store._id);
