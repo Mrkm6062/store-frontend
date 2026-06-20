@@ -11,11 +11,13 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   
-  const displayPrice = product.basePrice || product.price || 0;
+  const displayPrice = product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0);
 
-  // Compute original price for discount badge (fallback to 15% markup if backend doesn't provide it)
-  const originalPrice = product.compareAtPrice || product.basePrice || (displayPrice > 0 ? Math.round(displayPrice * 1.15) : 0);
-  const discountPercent = originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0;
+  // Compute original price for discount badge
+  const originalPrice = product.basePrice || product.compareAtPrice || (displayPrice > 0 ? Math.round(displayPrice * 1.15) : 0);
+  const discountPercent = typeof product.discount === 'number' && product.discount > 0 
+    ? product.discount 
+    : (originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0);
 
   // Safely extract the image whether it's an array (new GCS uploads), a direct string, or legacy image field
   const displayImage = Array.isArray(product.images) && product.images.length > 0 

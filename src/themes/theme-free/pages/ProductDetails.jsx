@@ -111,9 +111,22 @@ const ProductDetails = () => {
 
   const hasVariants = product.variants && product.variants.length > 0;
   const selectedVariant = hasVariants ? product.variants.find(v => v._id === selectedVariantId) : null;
-  const displayPrice = selectedVariant ? selectedVariant.price : (product.basePrice || product.price || 0);
-  const originalPrice = product.compareAtPrice || product.basePrice || (displayPrice > 0 ? Math.round(displayPrice * 1.15) : 0);
-  const discountPercent = originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0;
+  const displayPrice = selectedVariant 
+    ? selectedVariant.price 
+    : (product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0));
+
+  // Compute original price for discount badge
+  const originalPrice = selectedVariant
+    ? (selectedVariant.comparePrice || selectedVariant.price)
+    : (product.basePrice || product.compareAtPrice || (displayPrice > 0 ? Math.round(displayPrice * 1.15) : 0));
+
+  const discountPercent = selectedVariant
+    ? (selectedVariant.comparePrice && selectedVariant.comparePrice > selectedVariant.price 
+       ? Math.round(((selectedVariant.comparePrice - selectedVariant.price) / selectedVariant.comparePrice) * 100) 
+       : 0)
+    : (typeof product.discount === 'number' && product.discount > 0 
+       ? product.discount 
+       : (originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0));
   const maxStock = selectedVariant ? selectedVariant.stock : (product.totalStock !== undefined ? product.totalStock : product.stock);
   const isOutOfStock = maxStock <= 0;
   const targetId = selectedVariant ? `${product._id}-${selectedVariant._id}` : product._id;
