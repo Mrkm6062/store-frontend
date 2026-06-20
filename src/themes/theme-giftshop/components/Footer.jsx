@@ -68,14 +68,40 @@ const Footer = ({ storeName }) => {
   return (
     <footer className="border-t border-gray-100 mt-auto pt-16 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {footerSettings.newsletter?.enabled && (
+          <div className="border-b border-current/10 pb-8 mb-10 flex flex-col md:flex-row justify-between items-center gap-6 animate-fadeIn">
+            <div className="max-w-md">
+              <h4 className="text-lg font-bold" style={{ color: footerSettings.textColor || '#111827' }}>Subscribe to our Newsletter</h4>
+              <p className="text-xs opacity-75 mt-1">Stay updated with our latest offers, new arrivals, and custom collections.</p>
+            </div>
+            <form className="flex w-full md:w-auto max-w-md shrink-0 gap-2" onSubmit={(e) => e.preventDefault()}>
+              <input 
+                type="email" 
+                placeholder={footerSettings.newsletter.placeholder || 'Enter your email'} 
+                className="px-4 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#76b900] text-gray-900 w-full md:w-64"
+                required
+              />
+              <button 
+                type="submit" 
+                className="px-5 py-2 text-sm font-bold text-white bg-[#76b900] hover:bg-[#659e00] rounded-lg transition-colors duration-300 shrink-0 shadow-sm"
+              >
+                {footerSettings.newsletter.buttonText || 'Subscribe'}
+              </button>
+            </form>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
           
           {/* Brand & Social Section */}
           <div className="flex flex-col space-y-6">
             <div>
-              <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || '#76b900' }}>{storeName}</h2>
+              {footerSettings.officialdesktopLogo ? (
+                <img src={footerSettings.officialdesktopLogo} alt={storeName} className="h-10 object-contain mb-3" />
+              ) : (
+                <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || '#76b900' }}>{storeName}</h2>
+              )}
               <p className="text-sm leading-relaxed pr-4 opacity-80">
-             Order custom printed T-shirts, mugs, photo frames, mobile covers, cushions, and personalized gifts at {storeName}. High-quality printing, unique designs, and fast delivery.
+                {footerSettings.description || `Order custom printed T-shirts, mugs, photo frames, mobile covers, cushions, and personalized gifts at ${storeName}. High-quality printing, unique designs, and fast delivery.`}
               </p>
             </div>
             
