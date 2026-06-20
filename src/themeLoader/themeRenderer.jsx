@@ -151,6 +151,20 @@ const ThemeRenderer = () => {
               document.head.appendChild(link);
             }
           }
+
+          // Inject global style override to force all Tailwind and UI elements to use the selected font
+          const styleId = 'dynamic-theme-font-overrides';
+          let styleTag = document.getElementById(styleId);
+          if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = styleId;
+            document.head.appendChild(styleTag);
+          }
+          styleTag.innerHTML = `
+            body, html, .font-sans, button, input, select, textarea, [class*="font-"], h1, h2, h3, h4, h5, h6, p, span, a, li {
+              font-family: ${data.global.fontFamily} !important;
+            }
+          `;
         } catch (e) {
           console.error("Failed to load custom web font:", e);
         }
