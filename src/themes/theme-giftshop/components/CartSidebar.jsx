@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ShoppingCart } from 'lucide-react';
 
 const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemoveFromCart, cartTotal, primaryColor = '#76b900' }) => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
         <div className="flex-1 overflow-y-auto p-5">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-400">
-              <div className="text-6xl mb-4">🛒</div>
+              <ShoppingCart size={48} />
               <p className="text-lg font-medium">Your cart is empty.</p>
             </div>
           ) : (
