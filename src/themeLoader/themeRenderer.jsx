@@ -134,7 +134,27 @@ const ThemeRenderer = () => {
       if (data.global.primaryColor) root.style.setProperty('--color-primary', data.global.primaryColor);
       if (data.global.secondaryColor) root.style.setProperty('--color-secondary', data.global.secondaryColor);
       if (data.global.borderRadius) root.style.setProperty('--border-radius', data.global.borderRadius);
-      if (data.global.fontFamily) document.body.style.fontFamily = data.global.fontFamily;
+      if (data.global.fontFamily) {
+        document.body.style.fontFamily = data.global.fontFamily;
+        
+        // Dynamically load selected Google Font in storefront
+        try {
+          const fontName = data.global.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+          const standardFonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana', 'Trebuchet MS', 'sans-serif', 'serif', 'monospace', 'system-ui'];
+          if (fontName && !standardFonts.includes(fontName)) {
+            const fontId = `google-font-${fontName.toLowerCase().replace(/\s+/g, '-')}`;
+            if (!document.getElementById(fontId)) {
+              const link = document.createElement('link');
+              link.id = fontId;
+              link.rel = 'stylesheet';
+              link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@300;400;500;600;700;800&display=swap`;
+              document.head.appendChild(link);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load custom web font:", e);
+        }
+      }
       
       if (data.global.officialfaviconimage) {
         let link = document.querySelector("link[rel~='icon']");
