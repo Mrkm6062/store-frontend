@@ -35,6 +35,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
 
   const headerSettings = customization?.header || {};
   const offerBanner = headerSettings.offerBanner || { Enabled: true, text: store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!', bgColor: '#76b900', textColor: '#ffffff' };
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
@@ -187,14 +188,27 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
             <div className="p-4 overflow-y-auto flex-1">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Shop by Category</h3>
               <div className="space-y-1">
-                <a href="/" className="block py-3 px-3 hover:bg-gray-50 rounded-xl font-bold text-[#76b900] flex justify-between items-center transition-colors">
-                  All Products <ChevronRight size={18} className="text-[#76b900]"/>
+                <a 
+                  href="/" 
+                  style={{ color: window.location.pathname === '/' || window.location.pathname === '' ? primaryColor : '#374151' }}
+                  className={`block py-3 px-3 hover:bg-gray-50 rounded-xl flex justify-between items-center transition-colors ${window.location.pathname === '/' || window.location.pathname === '' ? 'font-bold' : 'font-semibold'}`}
+                >
+                  All Products <ChevronRight size={18} style={{ color: window.location.pathname === '/' || window.location.pathname === '' ? primaryColor : '#9ca3af' }}/>
                 </a>
-                {categories.map(c => (
-                  <a key={c._id} href={`/category/${c.slug || c._id}`} className="block py-3 px-3 hover:bg-gray-50 rounded-xl font-semibold text-gray-700 flex justify-between items-center transition-colors">
-                    {c.name} <ChevronRight size={18} className="text-gray-400"/>
-                  </a>
-                ))}
+                {categories.map(c => {
+                  const categoryPath = `/category/${c.slug || c._id}`;
+                  const isActive = window.location.pathname === categoryPath;
+                  return (
+                    <a 
+                      key={c._id} 
+                      href={categoryPath} 
+                      style={{ color: isActive ? primaryColor : '#374151' }}
+                      className={`block py-3 px-3 hover:bg-gray-50 rounded-xl flex justify-between items-center transition-colors ${isActive ? 'font-bold' : 'font-semibold'}`}
+                    >
+                      {c.name} <ChevronRight size={18} style={{ color: isActive ? primaryColor : '#9ca3af' }}/>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </div>
