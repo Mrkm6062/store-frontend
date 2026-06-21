@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
@@ -7,12 +7,15 @@ import StoreLayout from '../Layout';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
 import CartSidebar from '../components/CartSidebar';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
+  const customization = useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [category, setCategory] = useState(null);
@@ -106,7 +109,7 @@ const CategoryPage = () => {
 
   if (storeLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-green-600 font-bold text-xl tracking-wide">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 font-bold text-xl tracking-wide" style={{ color: primaryColor }}>
         <span className="animate-pulse">Loading Store...</span>
       </div>
     );
@@ -174,7 +177,7 @@ const CategoryPage = () => {
             <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
             <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
           </div>
-          <button onClick={() => setIsCartOpen(true)} className="bg-[#76b900] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#659e00] shadow-lg shadow-green-200 transition">
+          <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg transition">
             View Cart &rarr;
           </button>
         </div>
@@ -187,6 +190,7 @@ const CategoryPage = () => {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveFromCart={handleRemoveFromCart}
         cartTotal={cartTotal}
+        primaryColor={primaryColor}
       />
 
       {/* Custom Toast Notification */}

@@ -30,6 +30,7 @@ const Footer = ({ storeName }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const customization = useContext(ThemeCustomizationContext);
   const footerSettings = customization?.footer || {};
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   useEffect(() => {
     const fetchPolicies = async () => {
@@ -67,6 +68,12 @@ const Footer = ({ storeName }) => {
 
   return (
     <footer className="border-t border-gray-100 mt-auto pt-16 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
+      <style>{`
+        .footer-social-icon:hover {
+          background-color: ${primaryColor} !important;
+          color: white !important;
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {footerSettings.newsletter?.enabled && (
           <div className="border-b border-current/10 pb-8 mb-10 flex flex-col md:flex-row justify-between items-center gap-6 animate-fadeIn">
@@ -83,7 +90,8 @@ const Footer = ({ storeName }) => {
               />
               <button 
                 type="submit" 
-                className="px-5 py-2 text-sm font-bold text-white bg-[#76b900] hover:bg-[#659e00] rounded-lg transition-colors duration-300 shrink-0 shadow-sm"
+                style={{ backgroundColor: primaryColor }}
+                className="px-5 py-2 text-sm font-bold text-white hover:opacity-90 rounded-lg transition-colors duration-300 shrink-0 shadow-sm"
               >
                 {footerSettings.newsletter.buttonText || 'Subscribe'}
               </button>
@@ -98,7 +106,7 @@ const Footer = ({ storeName }) => {
               {footerSettings.officialdesktopLogo ? (
                 <img src={footerSettings.officialdesktopLogo} alt={storeName} className="h-10 object-contain mb-3" />
               ) : (
-                <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || '#76b900' }}>{storeName}</h2>
+                <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || primaryColor }}>{storeName}</h2>
               )}
               <p className="text-sm leading-relaxed pr-4 opacity-80">
                 {footerSettings.description || `Order custom printed T-shirts, mugs, photo frames, mobile covers, cushions, and personalized gifts at ${storeName}. High-quality printing, unique designs, and fast delivery.`}
@@ -110,7 +118,7 @@ const Footer = ({ storeName }) => {
                 <h2 className="text-2xl font-extrabold mb-3" style={{ color: footerSettings.textColor}}>Follow Us</h2>
                 <div className="flex items-center gap-3 flex-wrap">
                   {socialLinks.map(link => (
-                    <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-black/5 rounded-full hover:bg-[#76b900] hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
+                    <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="footer-social-icon p-2.5 bg-black/5 rounded-full hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
                       <SocialIcon platform={link.platform} />
                     </a>
                   ))}

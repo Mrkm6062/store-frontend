@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { placeOrder } from '../../../services/api';
 import StoreLayout from '../Layout';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 // Helper to dynamically load razorpay
 const loadRazorpay = () => {
@@ -74,6 +75,8 @@ const dataURLtoBlob = (dataurl) => {
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
+  const customization = useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
@@ -365,7 +368,7 @@ const CheckoutPage = () => {
     }
   };
 
-  if (storeLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-green-600 font-bold text-xl"><span className="animate-pulse">Loading Store...</span></div>;
+  if (storeLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 font-bold text-xl" style={{ color: primaryColor }}><span className="animate-pulse">Loading Store...</span></div>;
   if (storeError || !store) return <div className="min-h-screen flex items-center justify-center bg-gray-50">Store Not Available</div>;
 
   if (orderSuccess) {
@@ -375,7 +378,7 @@ const CheckoutPage = () => {
           <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={48} /></div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Order Placed Successfully!</h2>
           <p className="text-gray-500 mb-8 text-lg">Thank you for your purchase. You will receive tracking updates shortly.</p>
-          <Link to="/" className="px-8 py-3.5 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition shadow-lg shadow-green-100">Continue Shopping</Link>
+          <Link to="/" style={{ backgroundColor: primaryColor }} className="px-8 py-3.5 text-white font-bold rounded-xl hover:opacity-90 transition shadow-lg">Continue Shopping</Link>
         </div>
       </StoreLayout>
     );
@@ -383,6 +386,14 @@ const CheckoutPage = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => {}} hideFooter={true}>
+      <style>{`
+        .primary-file-input::file-selector-button {
+          background-color: ${primaryColor} !important;
+        }
+        .primary-file-input:hover::file-selector-button {
+          opacity: 0.9 !important;
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8">
           <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors mb-4"><ArrowLeft size={16} className="mr-1" /> Back to Cart</Link>
@@ -461,7 +472,7 @@ const CheckoutPage = () => {
                               Upload image to print on this product {!item.customText && <span className="text-red-500">*</span>}
                               {item.customText && <span className="text-gray-400 font-normal ml-1">(Optional)</span>}
                             </label>
-                            <input type="file" accept="image/*" required={!item.customText && !customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#76b900] file:text-white hover:file:bg-[#659e00] transition-colors cursor-pointer" />
+                            <input type="file" accept="image/*" required={!item.customText && !customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="primary-file-input w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:text-white transition-colors cursor-pointer" />
                             {customFiles[item._id] && (
                               <div className="mt-2 relative inline-block">
                                 <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
@@ -485,7 +496,7 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between items-center font-bold text-xl mb-6 border-t pt-4 text-gray-800"><span>Total:</span><span className="text-green-600">₹{finalTotal}</span></div>
               
-              <button type="submit" form="checkout-form" disabled={isPlacingOrder} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200 disabled:opacity-50">
+              <button type="submit" form="checkout-form" disabled={isPlacingOrder} style={{ backgroundColor: primaryColor }} className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-50">
                 {isPlacingOrder ? 'Processing...' : 'Confirm & Place Order'}
               </button>
             </div>

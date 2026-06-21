@@ -7,6 +7,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
   const cardSettings = customization?.productCard || {};
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   const hasVariants = product.variants && product.variants.length > 0;
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -114,10 +115,10 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
 
       <div className="mt-6 z-10">
         {cartQty > 0 && !hasVariants ? (
-          <div className="flex items-center bg-blue-600 text-white w-full h-12">
+          <div className="flex items-center text-white w-full h-12" style={{ backgroundColor: primaryColor }}>
             <button 
               onClick={handleDecrement}
-              className="w-12 h-full flex items-center justify-center hover:bg-blue-700 transition-colors active:scale-95"
+              className="w-12 h-full flex items-center justify-center hover:bg-black/10 transition-colors active:scale-95"
             >
               <Minus size={16} />
             </button>
@@ -127,7 +128,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             <button 
               onClick={handleIncrement}
               disabled={cartQty >= maxStock}
-              className={`w-12 h-full flex items-center justify-center transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+              className={`w-12 h-full flex items-center justify-center transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/10'}`}
             >
               <Plus size={16} />
             </button>
@@ -136,9 +137,9 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           <button
             onClick={handleAdd}
             disabled={isOutOfStock}
+            style={!isOutOfStock ? { backgroundColor: primaryColor } : undefined}
             className={`w-full py-3 font-semibold transition-all ${
-              isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 
-              hasVariants ? 'bg-slate-800 text-white hover:bg-slate-900' : 'bg-blue-600 text-white hover:bg-blue-700'
+              isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'text-white hover:opacity-90'
             }`}
           >
             {isOutOfStock ? 'Out of Stock' : (hasVariants ? 'Buy Now' : 'Add to Cart')}

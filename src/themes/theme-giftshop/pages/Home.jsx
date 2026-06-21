@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
@@ -7,13 +7,16 @@ import StoreLayout from '../Layout';
 import Banner from '../components/Banner';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
- import Story from '../components/story';
+import Story from '../components/story';
 import CartSidebar from '../components/CartSidebar';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const navigate = useNavigate();
+  const customization = useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
@@ -134,7 +137,7 @@ const StoreHome = () => {
 
   if (storeLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-green-600 font-bold text-xl tracking-wide">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 font-bold text-xl tracking-wide" style={{ color: primaryColor }}>
         <span className="animate-pulse">Loading Store...</span>
       </div>
     );
@@ -219,7 +222,7 @@ const StoreHome = () => {
             <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
             <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
           </div>
-          <button onClick={() => setIsCartOpen(true)} className="bg-[#76b900] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#659e00] shadow-lg shadow-green-200 transition">
+          <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg transition">
             View Cart &rarr;
           </button>
         </div>
@@ -232,6 +235,7 @@ const StoreHome = () => {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveFromCart={handleRemoveFromCart}
         cartTotal={cartTotal}
+        primaryColor={primaryColor}
       />
 
       {/* Custom Toast Notification */}

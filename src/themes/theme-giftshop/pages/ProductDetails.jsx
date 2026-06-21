@@ -287,7 +287,7 @@ const ProductDetails = () => {
   };
 
   if (storeLoading || productsLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-green-600 font-bold text-xl"><span className="animate-pulse">Loading Product...</span></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50 font-bold text-xl" style={{ color: primaryColor }}><span className="animate-pulse">Loading Product...</span></div>;
   }
 
   if (!product) {
@@ -406,6 +406,14 @@ const ProductDetails = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
+      <style>{`
+        .primary-file-input::file-selector-button {
+          background-color: ${primaryColor} !important;
+        }
+        .primary-file-input:hover::file-selector-button {
+          opacity: 0.9 !important;
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-12">
           
@@ -588,13 +596,13 @@ const ProductDetails = () => {
                   type="file" 
                   accept="image/*" 
                   onChange={handleCustomImageUpload} 
-                  className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-colors cursor-pointer"
+                  className="primary-file-input w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:text-white transition-colors cursor-pointer"
                   disabled={isCompressing}
                 />
                 {isCompressing && <p className="text-xs text-blue-600 mt-2 font-bold animate-pulse">Processing image...</p>}
                 {customImageBase64 && (
                   <div className="mt-3 relative inline-block">
-                    <img src={customImageBase64} alt="Custom Preview" className="h-16 w-16 object-cover rounded-lg border border-blue-200 shadow-sm" />
+                     <img src={customImageBase64} alt="Custom Preview" className="h-16 w-16 object-cover rounded-lg border border-blue-200 shadow-sm" />
                     <button type="button" onClick={() => setCustomImageBase64(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
                   </div>
                 )}
@@ -616,7 +624,8 @@ const ProductDetails = () => {
                   <button 
                     type="button" 
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="px-4 py-2 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition-colors whitespace-nowrap shadow-sm"
+                    style={{ backgroundColor: primaryColor }}
+                    className="px-4 py-2 text-white font-bold rounded-xl hover:opacity-90 transition-colors whitespace-nowrap shadow-sm"
                   >
                     Preview
                   </button>
@@ -639,7 +648,7 @@ const ProductDetails = () => {
                 <button 
                   onClick={handleAddToCart}
                   disabled={isOutOfStock}
-                  className="flex-1 bg-white text-blue-600 py-3 px-2 sm:px-4 rounded-xl text-sm sm:text-base font-bold hover:bg-blue-50 transition-colors border-2 border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 bg-white py-3 px-2 sm:px-4 rounded-xl text-sm sm:text-base font-bold hover:bg-gray-50 transition-colors border-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   style={{ color: primaryColor, borderColor: primaryColor }}
                 >
                   Add to Cart
