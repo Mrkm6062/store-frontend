@@ -106,8 +106,8 @@ const Banner = ({ bannerUrl, storeName }) => {
       {/* Navigation Arrows */}
       {banners.length > 1 && (
         <>
-          <button onClick={handlePrev} className="absolute top-1/2 left-2 md:left-4 -translate-y-1/2 bg-white/60 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronLeft size={24} /></button>
-          <button onClick={handleNext} className="absolute top-1/2 right-2 md:right-4 -translate-y-1/2 bg-white/60 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronRight size={24} /></button>
+          <button onClick={handlePrev} aria-label="Previous slide" className="absolute top-1/2 left-2 md:left-4 -translate-y-1/2 bg-white/60 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronLeft size={24} /></button>
+          <button onClick={handleNext} aria-label="Next slide" className="absolute top-1/2 right-2 md:right-4 -translate-y-1/2 bg-white/60 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronRight size={24} /></button>
         </>
       )}
 

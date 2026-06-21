@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, ShoppingCart, Package, User } from 'lucide-react';
-import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
 
 const BottomNav = ({ cartCount, onCartClick }) => {
   const location = useLocation();
@@ -9,6 +9,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
   
   // Use the primary color from theme settings, or default to green
   const primaryColor = customization?.global?.primaryColor || '#76b900';
+  const activeColor = isLightColor(primaryColor) ? '#15803d' : primaryColor;
 
   const isActive = (path) => location.pathname === path;
 
@@ -19,7 +20,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         <Link 
           to="/" 
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/') ? '' : 'text-gray-500 hover:text-gray-900'}`} 
-          style={isActive('/') ? { color: primaryColor } : {}}
+          style={isActive('/') ? { color: activeColor } : {}}
         >
           <Home size={20} />
           <span className="text-[10px] font-bold">Home</span>
@@ -29,7 +30,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         <Link 
           to="/track" 
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/track') ? '' : 'text-gray-500 hover:text-gray-900'}`} 
-          style={isActive('/track') ? { color: primaryColor } : {}}
+          style={isActive('/track') ? { color: activeColor } : {}}
         >
           <Package size={20} />
           <span className="text-[10px] font-bold">Orders</span>
@@ -45,7 +46,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
             {cartCount > 0 && (
               <span 
                 className="absolute -top-2 -right-2 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
-                style={{ backgroundColor: primaryColor }}
+                style={{ backgroundColor: activeColor }}
               >
                 {cartCount}
               </span>

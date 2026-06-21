@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Truck, Leaf, ShieldCheck, Clock, Star } from 'lucide-react';
-import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
 
 const Story = () => {
   const customization = useContext(ThemeCustomizationContext);
@@ -65,13 +65,18 @@ const Story = () => {
   const activeItems = whyChooseUs.items?.filter(item => item.isActive) || [];
   const featuresToDisplay = activeItems.length > 0 ? activeItems : defaultFeatures;
 
+  const isLightBg = isLightColor(primaryColor);
+  const textColorClass = isLightBg ? 'text-slate-900' : 'text-white';
+  const descColorClass = isLightBg ? 'text-slate-600' : 'text-white/80';
+  const cardBgClass = isLightBg ? 'bg-black/5 border-black/10 hover:bg-black/10' : 'bg-white/10 border-white/20 hover:bg-white/20';
+
   return (
     <div ref={sectionRef} className="py-12 transition-colors duration-300 overflow-hidden" style={{ backgroundColor: primaryColor }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4">{whyChooseUs.title || "Why Choose Us"}</h2>
+          <h2 className={`text-2xl md:text-3xl font-extrabold mb-4 ${textColorClass}`}>{whyChooseUs.title || "Why Choose Us"}</h2>
           {whyChooseUs.subtitle && (
-            <p className="text-white/80 max-w-2xl mx-auto">{whyChooseUs.subtitle}</p>
+            <p className={`max-w-2xl mx-auto ${descColorClass}`}>{whyChooseUs.subtitle}</p>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
@@ -82,7 +87,7 @@ const Story = () => {
                 transitionDuration: '300ms',
                 transitionDelay: `${index * 100}ms`
               }}
-              className={`flex flex-col items-center text-center p-6 bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all transform group ${
+              className={`flex flex-col items-center text-center p-6 rounded-2xl border transition-all transform group ${cardBgClass} ${
                 isVisible 
                   ? 'opacity-100 scale-100' 
                   : 'opacity-0 scale-[0.85]'
@@ -107,8 +112,8 @@ const Story = () => {
                   <Star size={32} style={{ color: primaryColor }} />
                 )}
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-              <p className="text-sm text-white/80 leading-relaxed">{feature.description}</p>
+              <h3 className={`text-lg font-bold mb-2 ${textColorClass}`}>{feature.title}</h3>
+              <p className={`text-sm leading-relaxed ${descColorClass}`}>{feature.description}</p>
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
 import { getPublicCategories } from '../../../services/api';
-import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
 import { useProducts } from '../../../services/useProducts';
 
 const Header = ({ store, cartCount, onCartClick }) => {
@@ -17,6 +17,9 @@ const Header = ({ store, cartCount, onCartClick }) => {
 
   const headerSettings = customization?.header || {};
   const offerBanner = headerSettings.offerBanner || { Enabled: true, text: store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!', bgColor: '#76b900', textColor: '#ffffff' };
+
+  const isLightBanner = isLightColor(offerBanner.bgColor || '#76b900');
+  const bannerTextColor = isLightBanner ? '#111827' : (offerBanner.textColor || '#ffffff');
 
   useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
@@ -45,7 +48,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
       {offerBanner.Enabled !== false && (
         <div 
           className="py-1.5 sm:py-2 text-xs sm:text-sm font-medium w-full overflow-hidden transition-colors duration-300 flex"
-          style={{ backgroundColor: offerBanner.bgColor, color: offerBanner.textColor }}
+          style={{ backgroundColor: offerBanner.bgColor, color: bannerTextColor }}
         >
           <style>
             {`
@@ -63,7 +66,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex-1 flex justify-start items-center">
-            <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-black/5 rounded-md md:hidden transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
+            <button onClick={() => setIsMenuOpen(true)} aria-label="Open menu" className="p-2 -ml-2 hover:bg-black/5 rounded-md md:hidden transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Menu size={24} />
             </button>
           </div>
@@ -80,13 +83,13 @@ const Header = ({ store, cartCount, onCartClick }) => {
           </div>
 
           <div className="flex-1 flex justify-end items-center gap-2 sm:gap-4">
-            <button onClick={() => setIsSearchOpen(true)} className="p-2 hover:bg-black/5 rounded-full transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
+            <button onClick={() => setIsSearchOpen(true)} aria-label="Search products" className="p-2 hover:bg-black/5 rounded-full transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Search size={24} />
             </button>
-            <button className="p-2 hover:bg-black/5 rounded-full hidden sm:block transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
+            <button aria-label="User account" className="p-2 hover:bg-black/5 rounded-full hidden sm:block transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <User size={24} />
             </button>
-            <button onClick={onCartClick} className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
+            <button onClick={onCartClick} aria-label="Shopping cart" className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <ShoppingCart size={24} />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-green-600 rounded-full">
@@ -104,7 +107,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
           <div className="w-4/5 max-w-sm bg-white h-full shadow-2xl flex flex-col">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h2 className="font-extrabold text-xl text-gray-800">Menu</h2>
-              <button onClick={() => setIsMenuOpen(false)} className="p-1 text-gray-500 hover:bg-gray-200 rounded-full"><X size={24} /></button>
+              <button onClick={() => setIsMenuOpen(false)} aria-label="Close menu" className="p-1 text-gray-500 hover:bg-gray-200 rounded-full"><X size={24} /></button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Shop by Category</h3>
@@ -137,7 +140,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
                 className="flex-1 text-lg outline-none bg-transparent placeholder-gray-400 text-gray-800"
                 placeholder="Search for products..."
               />
-              <button onClick={() => setIsSearchOpen(false)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+              <button onClick={() => setIsSearchOpen(false)} aria-label="Close search" className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
                 <X size={24} />
               </button>
             </div>

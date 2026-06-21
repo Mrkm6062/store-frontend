@@ -93,6 +93,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       {/* Wishlist Button */}
       <button 
         onClick={(e) => { e.stopPropagation(); setIsWishlisted(!isWishlisted); }}
+        aria-label="Toggle wishlist"
         className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 p-1.5 sm:p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm text-gray-400 hover:text-red-500 transition-colors"
       >
         <Heart size={16} className={isWishlisted ? "fill-red-500 text-red-500" : ""} />
@@ -181,6 +182,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             <div className="flex items-center bg-green-600 text-white rounded-xl shadow-md h-8 sm:h-9">
               <button 
                 onClick={handleDecrement}
+                aria-label="Decrease quantity"
                 className="w-8 sm:w-9 h-full flex items-center justify-center hover:bg-green-700 rounded-l-xl transition-colors active:scale-95"
               >
                 <Minus size={16} />
@@ -191,6 +193,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
               <button 
                 onClick={handleIncrement}
                 disabled={cartQty >= maxStock}
+                aria-label="Increase quantity"
                 className={`w-8 sm:w-9 h-full flex items-center justify-center rounded-r-xl transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
               >
                 <Plus size={16} />

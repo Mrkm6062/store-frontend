@@ -109,7 +109,7 @@ const Footer = ({ storeName }) => {
         {footerSettings.newsletter?.enabled && (
           <div className="border-b border-current/10 pb-8 mb-10 flex flex-col md:flex-row justify-between items-center gap-6 animate-fadeIn">
             <div className="max-w-md">
-              <h4 className="text-lg font-bold" style={{ color: footerSettings.textColor || '#111827' }}>Subscribe to our Newsletter</h4>
+              <h3 className="text-lg font-bold" style={{ color: footerSettings.textColor || '#111827' }}>Subscribe to our Newsletter</h3>
               <p className="text-xs opacity-75 mt-1">Stay updated with our latest offers, new arrivals, and custom collections.</p>
             </div>
             <form className="flex w-full md:w-auto max-w-md shrink-0 gap-2" onSubmit={(e) => e.preventDefault()}>
@@ -146,7 +146,7 @@ const Footer = ({ storeName }) => {
             
             {socialLinks.length > 0 && (
               <div>
-                <h2 className="text-2xl font-extrabold mb-3" style={{ color: footerSettings.textColor}}>Follow Us</h2>
+                <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Follow Us</h3>
                 <div className="flex items-center gap-3 flex-wrap">
                   {socialLinks.map(link => (
                     <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="footer-social-icon p-2.5 bg-black/5 rounded-full hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>

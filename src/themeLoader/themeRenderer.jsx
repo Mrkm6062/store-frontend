@@ -2,6 +2,35 @@ import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Import theme-free components
+export const isLightColor = (color) => {
+  if (!color) return false;
+  const cleanColor = color.trim().toLowerCase();
+  
+  if (cleanColor.startsWith('rgb')) {
+    const match = cleanColor.match(/\d+/g);
+    if (match && match.length >= 3) {
+      const r = parseInt(match[0], 10);
+      const g = parseInt(match[1], 10);
+      const b = parseInt(match[2], 10);
+      const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+      return hsp > 127.5;
+    }
+  }
+  
+  let hex = cleanColor.replace('#', '');
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('');
+  }
+  if (hex.length === 6) {
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+    return hsp > 127.5;
+  }
+  return false;
+};
+
 import FreeHome from '../themes/theme-free/pages/Home.jsx';
 import FreeCategory from '../themes/theme-free/pages/Category.jsx';
 import FreeCategories from '../themes/theme-free/pages/Categories.jsx';
