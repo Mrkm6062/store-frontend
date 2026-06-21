@@ -26,7 +26,7 @@ const SocialIcon = ({ platform, size = 26, className }) => {
 import WishlistSidebar from './components/WishlistSidebar';
 import { ThemeCustomizationContext } from '../../themeLoader/themeRenderer.jsx';
 
-const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
+const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const customization = React.useContext(ThemeCustomizationContext);
@@ -42,7 +42,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
       <main className="flex-1 w-full flex flex-col">
         {children}
       </main>
-      <Footer storeName={store?.name || 'Store'} />
+      {!hideFooter && <Footer storeName={store?.name || 'Store'} />}
       <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />
       <WishlistSidebar isWishlistOpen={isWishlistOpen} setIsWishlistOpen={setIsWishlistOpen} primaryColor={primaryColor} />
     </div>

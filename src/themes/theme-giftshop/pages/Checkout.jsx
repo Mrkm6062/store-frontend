@@ -370,7 +370,7 @@ const CheckoutPage = () => {
 
   if (orderSuccess) {
     return (
-      <StoreLayout store={store} cartCount={0} onCartClick={() => {}}>
+      <StoreLayout store={store} cartCount={0} onCartClick={() => {}} hideFooter={true}>
         <div className="max-w-2xl mx-auto px-4 py-20 text-center w-full">
           <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={48} /></div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Order Placed Successfully!</h2>
@@ -382,7 +382,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => {}}>
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => {}} hideFooter={true}>
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8">
           <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors mb-4"><ArrowLeft size={16} className="mr-1" /> Back to Cart</Link>
