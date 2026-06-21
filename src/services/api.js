@@ -85,7 +85,7 @@ export const getOptimizedImageUrl = (url, width) => {
   return url;
 };
 
-export const getImageProps = (url, fallbackWidth = 600) => {
+export const getImageProps = (url, fallbackWidth = 600, customSizes) => {
   if (!url) return { src: '' };
   if (!url.includes('storage.googleapis.com/')) {
     return { src: url };
@@ -94,10 +94,16 @@ export const getImageProps = (url, fallbackWidth = 600) => {
   if (match) {
     const relativePath = match[2];
     const baseUrl = `${API_BASE || ''}/api/images/${relativePath}`;
+    
+    // Default sizes based on fallback width
+    const defaultSizes = fallbackWidth === 300 
+      ? "(max-width: 640px) 50vw, 300px" 
+      : "(max-width: 768px) 100vw, 600px";
+
     return {
       src: `${baseUrl}?w=${fallbackWidth}`,
       srcSet: `${baseUrl}?w=300 300w, ${baseUrl}?w=600 600w, ${url} 1200w`,
-      sizes: "(max-width: 640px) 300px, (max-width: 1024px) 600px, 1200px"
+      sizes: customSizes || defaultSizes
     };
   }
   return { src: url };

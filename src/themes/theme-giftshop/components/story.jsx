@@ -2,6 +2,8 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Truck, Leaf, ShieldCheck, Clock, Star } from 'lucide-react';
 import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
 
+import { getOptimizedImageUrl } from '../../../services/api';
+
 const Story = () => {
   const customization = useContext(ThemeCustomizationContext);
   const whyChooseUs = customization?.whyChooseUs || {};
@@ -105,7 +107,7 @@ const Story = () => {
                 }`}
               >
                 {feature.icon && typeof feature.icon === 'string' ? (
-                  <img src={feature.icon} alt={feature.title} width="56" height="56" className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src={getOptimizedImageUrl(feature.icon, 300)} alt={feature.title} width="56" height="56" className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 ) : feature.icon ? (
                   feature.icon
                 ) : (

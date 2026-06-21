@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { getOptimizedImageUrl } from '../../../services/api';
 
 const CategoryCard = ({ category, onClick }) => {
   const customization = useContext(ThemeCustomizationContext);
@@ -15,7 +16,7 @@ const CategoryCard = ({ category, onClick }) => {
         style={{ backgroundColor: categorySettings.bgColor || '#f0fdf4' }}
       >
         {category.image?.url ? (
-          <img src={category.image.url} alt={category.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+          <img src={getOptimizedImageUrl(category.image.url, 300)} alt={category.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
         ) : (
           <span className="text-2xl uppercase font-black text-[#76b900] tracking-wider transform group-hover:scale-110 transition-transform duration-500">{initials}</span>
         )}
