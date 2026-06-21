@@ -67,18 +67,22 @@ const Story = () => {
   const activeItems = whyChooseUs.items?.filter(item => item.isActive) || [];
   const featuresToDisplay = activeItems.length > 0 ? activeItems : defaultFeatures;
 
-  const isLightBg = isLightColor(primaryColor);
-  const textColorClass = isLightBg ? 'text-slate-900' : 'text-white';
-  const descColorClass = isLightBg ? 'text-slate-600' : 'text-white/80';
-  const cardBgClass = isLightBg ? 'bg-black/5 border-black/10 hover:bg-black/10' : 'bg-white/10 border-white/20 hover:bg-white/20';
+  const isLightSectionBg = isLightColor(whyChooseUs.bgColor || '#f9fafb');
+  const cardBgClass = isLightSectionBg 
+    ? 'bg-slate-50/80 border-slate-200/60 hover:bg-slate-100/80 hover:shadow-md' 
+    : 'bg-white/5 border-white/10 hover:bg-white/10';
+
+  const sectionTextColor = whyChooseUs.textColor || '#111111';
+  const itemTitleColor = whyChooseUs.itemTitleColor || '#111111';
+  const itemTextColor = whyChooseUs.itemTextColor || '#111111';
 
   return (
-    <div ref={sectionRef} className="py-12 transition-colors duration-300 overflow-hidden" style={{ backgroundColor: primaryColor }}>
+    <div ref={sectionRef} className="py-12 transition-colors duration-300 overflow-hidden" style={{ backgroundColor: whyChooseUs.bgColor || '#f9fafb' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className={`text-2xl md:text-3xl font-extrabold mb-4 ${textColorClass}`}>{whyChooseUs.title || "Why Choose Us"}</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-4" style={{ color: sectionTextColor }}>{whyChooseUs.title || "Why Choose Us"}</h2>
           {whyChooseUs.subtitle && (
-            <p className={`max-w-2xl mx-auto ${descColorClass}`}>{whyChooseUs.subtitle}</p>
+            <p className="max-w-2xl mx-auto text-sm md:text-base opacity-90" style={{ color: sectionTextColor }}>{whyChooseUs.subtitle}</p>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
@@ -114,8 +118,8 @@ const Story = () => {
                   <Star size={32} style={{ color: primaryColor }} />
                 )}
               </div>
-              <h3 className={`text-lg font-bold mb-2 ${textColorClass}`}>{feature.title}</h3>
-              <p className={`text-sm leading-relaxed ${descColorClass}`}>{feature.description}</p>
+              <h3 className="text-lg font-bold mb-2" style={{ color: itemTitleColor }}>{feature.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: itemTextColor }}>{feature.description}</p>
             </div>
           ))}
         </div>
