@@ -48,6 +48,20 @@ export default defineConfig({
     hmr: process.env.NODE_ENV === 'production' ? false : true,
     headers: {
       'Cache-Control': 'public, max-age=31536000'
+    },
+    proxy: {
+      '/robots.txt': {
+        target: 'http://localhost:3011',
+        changeOrigin: true
+      },
+      '/sitemap.xml': {
+        target: 'http://localhost:3011',
+        changeOrigin: true
+      },
+      '/llms.txt': {
+        target: 'http://localhost:3011',
+        changeOrigin: true
+      }
     }
   }
 })
