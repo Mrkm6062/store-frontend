@@ -2,7 +2,27 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'inline-css',
+      transformIndexHtml(html, ctx) {
+        if (!ctx || !ctx.bundle) return html;
+        let cssContent = '';
+        for (const [fileName, file] of Object.entries(ctx.bundle)) {
+          if (fileName.endsWith('.css') && file.type === 'asset') {
+            cssContent += file.source;
+            delete ctx.bundle[fileName];
+          }
+        }
+        if (cssContent) {
+          const cleanedHtml = html.replace(/<link rel="stylesheet"[^>]*href="[^"]+\.css"[^>]*>/g, '');
+          return cleanedHtml.replace('</head>', `<style>${cssContent}</style></head>`);
+        }
+        return html;
+      }
+    }
+  ],
   build: {
     minify: 'terser',
     terserOptions: {

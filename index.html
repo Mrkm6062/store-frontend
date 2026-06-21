@@ -6,7 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Online Store Powered by Galibrand Cloud" />
     <meta name="theme-color" content="#0b3d2e" />
-    </head>
+    <!-- Preconnect to critical domains to reduce connection latencies -->
+    <link rel="preconnect" href="https://api.galibrand.cloud" crossorigin />
+    <link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link rel="dns-prefetch" href="https://api.galibrand.cloud" />
+    <link rel="dns-prefetch" href="https://storage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
