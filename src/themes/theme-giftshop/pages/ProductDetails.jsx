@@ -81,6 +81,47 @@ const ProductDetails = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    if (product?._id) {
+      const saved = localStorage.getItem('gb_store_wishlist');
+      if (saved) {
+        try {
+          const wishlist = JSON.parse(saved);
+          setIsWishlisted(wishlist.some(item => item._id === product._id));
+        } catch (e) {}
+      }
+    }
+  }, [product]);
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    let wishlist = [];
+    try {
+      const saved = localStorage.getItem('gb_store_wishlist');
+      wishlist = saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      wishlist = [];
+    }
+
+    const exists = wishlist.some(item => item._id === product._id);
+    let newWishlist;
+    if (exists) {
+      newWishlist = wishlist.filter(item => item._id !== product._id);
+      setIsWishlisted(false);
+      showToast('Removed from wishlist!', 'success');
+    } else {
+      const prodPrice = product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0);
+      const prodImage = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : (product.image || '');
+      newWishlist = [...wishlist, { _id: product._id, name: product.name, price: prodPrice, image: prodImage, slug: product.slug }];
+      setIsWishlisted(true);
+      showToast('Added to wishlist!', 'success');
+    }
+    localStorage.setItem('gb_store_wishlist', JSON.stringify(newWishlist));
+    window.dispatchEvent(new Event('wishlist-updated'));
+  };
+
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
     return saved ? JSON.parse(saved) : [];
@@ -101,6 +142,19 @@ const ProductDetails = () => {
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      const saved = localStorage.getItem('gb_store_cart');
+      if (saved) {
+        try { setCart(JSON.parse(saved)); } catch(e) {}
+      } else {
+        setCart([]);
+      }
+    };
+    window.addEventListener('cart-updated', handleCartUpdate);
+    return () => window.removeEventListener('cart-updated', handleCartUpdate);
+  }, []);
 
   useEffect(() => {
     if (!productsLoading && products.length > 0) {
@@ -418,11 +472,11 @@ const ProductDetails = () => {
                 </button>
 
                 <button
-                  onClick={() => showToast('Wishlist functionality coming soon!', 'success')}
+                  onClick={handleToggleWishlist}
                   aria-label="Add to wishlist"
                   className="absolute top-16 right-4 w-10 h-10 rounded-full shadow-md transition-all duration-200 flex items-center justify-center bg-white text-gray-600 hover:text-red-500 z-10"
                 >
-                  <Heart className="w-5 h-5" />
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
                 </button>
 
                 <button

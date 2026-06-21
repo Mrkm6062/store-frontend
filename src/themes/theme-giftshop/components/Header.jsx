@@ -5,7 +5,7 @@ import { getPublicCategories } from '../../../services/api';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { useProducts } from '../../../services/useProducts';
 
-const Header = ({ store, cartCount, onCartClick }) => {
+const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,16 +25,22 @@ const Header = ({ store, cartCount, onCartClick }) => {
   }, []);
 
   useEffect(() => {
-    // Load the initial count and listen for changes across tabs
+    // Load the initial count and listen for changes across tabs & same tab
     const updateWishlistCount = () => {
       const saved = localStorage.getItem('gb_store_wishlist');
       if (saved) {
         try { setWishlistCount(JSON.parse(saved).length); } catch(e) {}
+      } else {
+        setWishlistCount(0);
       }
     };
     updateWishlistCount();
     window.addEventListener('storage', updateWishlistCount);
-    return () => window.removeEventListener('storage', updateWishlistCount);
+    window.addEventListener('wishlist-updated', updateWishlistCount);
+    return () => {
+      window.removeEventListener('storage', updateWishlistCount);
+      window.removeEventListener('wishlist-updated', updateWishlistCount);
+    };
   }, []);
 
   useEffect(() => {
@@ -103,7 +109,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
             <button onClick={() => setIsSearchOpen(true)} className="p-2 hover:bg-black/5 rounded-full transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Search size={24} />
             </button>
-            <button className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }} title="Wishlist">
+            <button onClick={onWishlistClick} className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }} title="Wishlist">
               <Heart size={24} />
               {wishlistCount > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">

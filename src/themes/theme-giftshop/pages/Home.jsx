@@ -29,6 +29,19 @@ const StoreHome = () => {
   }, [cart]);
 
   useEffect(() => {
+    const handleCartUpdate = () => {
+      const saved = localStorage.getItem('gb_store_cart');
+      if (saved) {
+        try { setCart(JSON.parse(saved)); } catch(e) {}
+      } else {
+        setCart([]);
+      }
+    };
+    window.addEventListener('cart-updated', handleCartUpdate);
+    return () => window.removeEventListener('cart-updated', handleCartUpdate);
+  }, []);
+
+  useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
   }, []);
 

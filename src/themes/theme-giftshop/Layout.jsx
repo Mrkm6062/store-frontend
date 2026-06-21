@@ -23,8 +23,14 @@ const SocialIcon = ({ platform, size = 26, className }) => {
   );
 };
 
+import WishlistSidebar from './components/WishlistSidebar';
+import { ThemeCustomizationContext } from '../../themeLoader/themeRenderer.jsx';
+
 const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
   const [socialLinks, setSocialLinks] = useState([]);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const customization = React.useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   useEffect(() => {
     getPublicSocialMedia().then(setSocialLinks).catch(console.error);
@@ -32,12 +38,13 @@ const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip">
-      <Header store={store} cartCount={cartCount} onCartClick={onCartClick} />
+      <Header store={store} cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />
       <main className="flex-1 w-full flex flex-col">
         {children}
       </main>
       <Footer storeName={store?.name || 'Store'} />
-      <BottomNav cartCount={cartCount} onCartClick={onCartClick} />
+      <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />
+      <WishlistSidebar isWishlistOpen={isWishlistOpen} setIsWishlistOpen={setIsWishlistOpen} primaryColor={primaryColor} />
     </div>
   );
 };
