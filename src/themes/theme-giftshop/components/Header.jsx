@@ -112,8 +112,8 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
             <Link to="/" className="flex items-center justify-center">
               {(headerSettings.officialdesktopLogo || headerSettings.officialmobileLogo || store?.logo) ? (
                 <>
-                  <img src={headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} width="80" height="40" className="h-10 w-auto object-contain md:hidden" />
-                  <img src={headerSettings.officialdesktopLogo || store?.logo} alt={store?.name} width="96" height="48" className="h-12 w-auto object-contain hidden md:block" />
+                  <img src={getOptimizedImageUrl(headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo, 300)} alt={store?.name} width="80" height="40" className="h-10 w-auto object-contain md:hidden" />
+                  <img src={getOptimizedImageUrl(headerSettings.officialdesktopLogo || store?.logo, 300)} alt={store?.name} width="96" height="48" className="h-12 w-auto object-contain hidden md:block" />
                 </>
               ) : (
                 <h1 className="text-xl font-bold" style={{ color: headerSettings.textColor || '#111827' }}>{store?.name || 'Store'}</h1>
