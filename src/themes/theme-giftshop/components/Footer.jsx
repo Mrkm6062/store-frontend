@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { getPublicPolicies } from '../../../services/api';
 import { Mail, Phone, MapPin, Send, ChevronRight } from 'lucide-react';
@@ -31,6 +31,31 @@ const Footer = ({ storeName }) => {
   const customization = useContext(ThemeCustomizationContext);
   const footerSettings = customization?.footer || {};
   const primaryColor = customization?.global?.primaryColor || '#76b900';
+
+  const [isVisible, setIsVisible] = useState(false);
+  const footerRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    if (footerRef.current) {
+      observer.observe(footerRef.current);
+    }
+
+    return () => {
+      if (footerRef.current) {
+        observer.unobserve(footerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchPolicies = async () => {
@@ -67,7 +92,13 @@ const Footer = ({ storeName }) => {
   const isCustomDomain = !window.location.hostname.includes('galibrand.cloud') && !window.location.hostname.includes('localhost');
 
   return (
-    <footer className="border-t border-gray-100 mt-auto pt-16 transition-colors duration-300" style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}>
+    <footer 
+      ref={footerRef}
+      className={`border-t border-gray-100 mt-auto pt-16 transition-all duration-1000 ease-out transform ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+      style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}
+    >
       <style>{`
         .footer-social-icon:hover {
           background-color: ${primaryColor} !important;

@@ -1,15 +1,47 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const CategoryCard = ({ category, onClick }) => {
   const customization = useContext(ThemeCustomizationContext);
   const categorySettings = customization?.category || {};
+  const cardRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   // Generate initials for placeholder if no image exists
   const initials = category.name.substring(0, 2).toUpperCase();
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        observer.unobserve(cardRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div onClick={() => onClick(category)} className="flex flex-col items-center gap-3 md:gap-4 cursor-pointer group w-full">
+    <div 
+      ref={cardRef}
+      onClick={() => onClick(category)} 
+      className={`flex flex-col items-center gap-3 md:gap-4 cursor-pointer group w-full transition-all duration-700 ease-out transform ${
+        isVisible 
+          ? 'opacity-100 translate-y-0 scale-100' 
+          : 'opacity-0 translate-y-5 scale-95'
+      }`}
+    >
       <div 
         className="w-full aspect-square rounded-full border border-gray-200 group-hover:border-[#76b900] flex items-center justify-center overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-lg"
         style={{ backgroundColor: categorySettings.bgColor || '#f0fdf4' }}

@@ -1,9 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Minus, Heart, Star } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
-const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart }) => {
+const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart, index }) => {
   const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
   const cardSettings = customization?.productCard || {};
@@ -11,6 +11,33 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const hasVariants = product.variants && product.variants.length > 0;
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        observer.unobserve(cardRef.current);
+      }
+    };
+  }, []);
+
+  const delayMs = index !== undefined ? (index % 4) * 100 : 0;
   
   const displayPrice = product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0);
 
@@ -63,7 +90,18 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const categoryName = product.categoryName || (typeof product.category === 'string' && product.category.length < 20 ? product.category : 'Fresh Item');
 
   return (
-    <div className="overflow-hidden shadow hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group flex flex-col bg-white">
+    <div 
+      ref={cardRef}
+      style={{ 
+        transitionDelay: isVisible ? `${delayMs}ms` : '0ms'
+      }}
+      className={`w-full transition-all duration-700 ease-out transform ${
+        isVisible 
+          ? 'opacity-100 translate-y-0' 
+          : 'opacity-0 translate-y-8'
+      }`}
+    >
+      <div className="overflow-hidden shadow hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group flex flex-col bg-white w-full">
       <div 
         className="relative overflow-hidden aspect-[2/3] bg-[#4b2d1e] cursor-pointer"
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
@@ -147,6 +185,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
         )}
       </div>
     </div>
+  </div>
   );
 };
 
