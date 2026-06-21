@@ -548,10 +548,6 @@ const ProductDetails = () => {
               </a>
                 </div>
               </div>
-              
-              {product.description && (
-                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{product.description}</p>
-              )}
             </div>
 
             <div className="flex items-center space-x-3 py-2">
@@ -631,6 +627,13 @@ const ProductDetails = () => {
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">This text will be printed along with your product design.</p>
+              </div>
+            )}
+
+            {product.description && (
+              <div className="mt-6 border-t border-gray-100 pt-6">
+                <h4 className="font-semibold text-gray-900 mb-2">Description</h4>
+                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{product.description}</p>
               </div>
             )}
 
