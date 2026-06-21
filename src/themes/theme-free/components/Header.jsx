@@ -19,7 +19,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
   const offerBanner = headerSettings.offerBanner || { Enabled: true, text: store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!', bgColor: '#76b900', textColor: '#ffffff' };
 
   const isLightBanner = isLightColor(offerBanner.bgColor || '#76b900');
-  const bannerTextColor = isLightBanner ? '#111827' : (offerBanner.textColor || '#ffffff');
+  const bannerTextColor = offerBanner.textColor || (isLightBanner ? '#111827' : '#ffffff');
 
   useEffect(() => {
     getPublicCategories().then(setCategories).catch(console.error);
