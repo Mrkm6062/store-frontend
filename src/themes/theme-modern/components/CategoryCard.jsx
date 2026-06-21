@@ -10,7 +10,7 @@ const CategoryCard = ({ category, onClick }) => {
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-green-50 border border-gray-200 group-hover:border-[#76b900] flex items-center justify-center overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-lg">
         {category.image?.url ? (
           <img 
-            src={getOptimizedImageUrl(category.image.url, 300)} 
+            src={getOptimizedImageUrl(category.image.url, 186)} 
             alt={category.name} 
             loading="lazy"
             className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 

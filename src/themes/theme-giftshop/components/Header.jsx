@@ -112,8 +112,8 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
             <Link to="/" className="flex items-center justify-center">
               {(headerSettings.officialdesktopLogo || headerSettings.officialmobileLogo || store?.logo) ? (
                 <>
-                  <img src={getOptimizedImageUrl(headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo, 300)} alt={store?.name} width="80" height="40" className="h-10 w-auto object-contain md:hidden" />
-                  <img src={getOptimizedImageUrl(headerSettings.officialdesktopLogo || store?.logo, 300)} alt={store?.name} width="96" height="48" className="h-12 w-auto object-contain hidden md:block" />
+                  <img src={getOptimizedImageUrl(headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo, 80)} alt={store?.name} width="80" height="40" className="h-10 w-auto object-contain md:hidden" />
+                  <img src={getOptimizedImageUrl(headerSettings.officialdesktopLogo || store?.logo, 80)} alt={store?.name} width="96" height="48" className="h-12 w-auto object-contain hidden md:block" />
                 </>
               ) : (
                 <h1 className="text-xl font-bold" style={{ color: headerSettings.textColor || '#111827' }}>{store?.name || 'Store'}</h1>
@@ -260,7 +260,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
                       >
                         <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                           {displayImage ? (
-                            <img src={getOptimizedImageUrl(displayImage, 300)} alt={product.name} className="w-full h-full object-cover" />
+                            <img src={getOptimizedImageUrl(displayImage, 323)} alt={product.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs text-center leading-none">No img</div>
                           )}

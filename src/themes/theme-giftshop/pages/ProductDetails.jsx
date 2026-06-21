@@ -428,7 +428,7 @@ const ProductDetails = () => {
                   className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                   style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
                 >
-                  <img src={getOptimizedImageUrl(img, 300)} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={getOptimizedImageUrl(img, 186)} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

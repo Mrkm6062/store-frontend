@@ -242,7 +242,7 @@ const ProductDetails = () => {
                       className={`w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all snap-start ${activeImageIndex === idx ? 'border-[#76b900]' : 'border-transparent opacity-60 hover:opacity-100'}`}
                       style={activeImageIndex === idx ? { borderColor: primaryColor } : {}}
                     >
-                      <img src={getOptimizedImageUrl(img, 300)} alt="" className="w-full h-full object-cover" />
+                      <img src={getOptimizedImageUrl(img, 186)} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

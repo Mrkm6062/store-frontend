@@ -169,7 +169,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
                       >
                         <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                           {displayImage ? (
-                            <img src={getOptimizedImageUrl(displayImage, 300)} alt={product.name} className="w-full h-full object-cover" />
+                            <img src={getOptimizedImageUrl(displayImage, 323)} alt={product.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs text-center leading-none">No img</div>
                           )}

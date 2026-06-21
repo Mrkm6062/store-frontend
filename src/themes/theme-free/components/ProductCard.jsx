@@ -104,7 +104,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       <div className="h-32 sm:h-48 relative w-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-green-50/50 to-white p-3 sm:p-5">
         {displayImage ? (
           <img 
-            {...getImageProps(displayImage, 300)}
+            {...getImageProps(displayImage, 323)}
             alt={product.name} 
             loading="lazy"
             className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 drop-shadow-sm"

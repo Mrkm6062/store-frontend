@@ -108,7 +108,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
         <img 
-          {...getImageProps(displayImage || 'https://placehold.co/400x600/f8fafc/475569?text=No+Image', 300)}
+          {...getImageProps(displayImage || 'https://placehold.co/400x600/f8fafc/475569?text=No+Image', 323)}
           alt={product.name}
           className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
           loading="lazy"
