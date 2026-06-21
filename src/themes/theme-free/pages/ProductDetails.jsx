@@ -5,7 +5,7 @@ import { useProducts } from '../../../services/useProducts';
 import StoreLayout from '../Layout';
 import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, ChevronRight } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
-import { getPublicCategories } from '../../../services/api';
+import { getPublicCategories, getImageProps, getOptimizedImageUrl } from '../../../services/api';
 import CartSidebar from '../components/CartSidebar';
 
 const ProductDetails = () => {
@@ -228,7 +228,7 @@ const ProductDetails = () => {
             <div className="space-y-4">
               <div className="aspect-square w-full rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
                 {images.length > 0 ? (
-                  <img src={images[activeImageIndex]} alt={product.name} className="w-full h-full object-contain mix-blend-multiply p-4" />
+                  <img {...getImageProps(images[activeImageIndex], 600)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply p-4" />
                 ) : (
                   <span className="text-slate-300 font-medium">No Image Available</span>
                 )}
@@ -242,7 +242,7 @@ const ProductDetails = () => {
                       className={`w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all snap-start ${activeImageIndex === idx ? 'border-[#76b900]' : 'border-transparent opacity-60 hover:opacity-100'}`}
                       style={activeImageIndex === idx ? { borderColor: primaryColor } : {}}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={getOptimizedImageUrl(img, 300)} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

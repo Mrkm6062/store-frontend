@@ -5,7 +5,7 @@ import { useProducts } from '../../../services/useProducts';
 import StoreLayout from '../Layout';
 import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, ChevronRight, Share2, Heart, Maximize2, ZoomIn, RotateCw } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
-import { getPublicCategories } from '../../../services/api';
+import { getPublicCategories, getImageProps, getOptimizedImageUrl } from '../../../services/api';
 import CartSidebar from '../components/CartSidebar';
 
 const compressImage = (file, maxSizeMB = 1) => {
@@ -428,7 +428,7 @@ const ProductDetails = () => {
                   className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                   style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
                 >
-                  <img src={img} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={getOptimizedImageUrl(img, 300)} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -438,7 +438,7 @@ const ProductDetails = () => {
               <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative w-fit mx-auto group">
                 {images.length > 0 ? (
                   <img
-                    src={images[activeImageIndex]}
+                    {...getImageProps(images[activeImageIndex], 600)}
                     alt={product.name}
                     loading="lazy"
                     className="h-auto max-w-full object-contain transition-transform duration-300"

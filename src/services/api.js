@@ -68,3 +68,37 @@ export const getPublicSocialMedia = () => {
 export const getPublicCategories = () => {
   return request("/api/categories/public");
 };
+
+// ✅ Image Optimization helpers
+export const getOptimizedImageUrl = (url, width) => {
+  if (!url) return '';
+  if (!url.includes('storage.googleapis.com/')) {
+    return url;
+  }
+  const match = url.match(/storage\.googleapis\.com\/([^/]+)\/(.+)$/);
+  if (match) {
+    const relativePath = match[2];
+    if (width === 300 || width === 600) {
+      return `${API_BASE || ''}/api/images/${relativePath}?w=${width}`;
+    }
+  }
+  return url;
+};
+
+export const getImageProps = (url, fallbackWidth = 600) => {
+  if (!url) return { src: '' };
+  if (!url.includes('storage.googleapis.com/')) {
+    return { src: url };
+  }
+  const match = url.match(/storage\.googleapis\.com\/([^/]+)\/(.+)$/);
+  if (match) {
+    const relativePath = match[2];
+    const baseUrl = `${API_BASE || ''}/api/images/${relativePath}`;
+    return {
+      src: `${baseUrl}?w=${fallbackWidth}`,
+      srcSet: `${baseUrl}?w=300 300w, ${baseUrl}?w=600 600w, ${url} 1200w`,
+      sizes: "(max-width: 640px) 300px, (max-width: 1024px) 600px, 1200px"
+    };
+  }
+  return { src: url };
+};

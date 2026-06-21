@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getImageProps } from '../../../services/api';
 import { Plus, Minus, Heart, Star } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
@@ -107,7 +108,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
         <img 
-          src={displayImage || 'https://placehold.co/400x600/f8fafc/475569?text=No+Image'}
+          {...getImageProps(displayImage || 'https://placehold.co/400x600/f8fafc/475569?text=No+Image', 300)}
           alt={product.name}
           className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
           loading="lazy"
