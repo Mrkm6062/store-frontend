@@ -90,6 +90,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           <img 
             src={displayImage} 
             alt={product.name} 
+            loading="lazy"
             className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 drop-shadow-sm"
           />
         ) : (

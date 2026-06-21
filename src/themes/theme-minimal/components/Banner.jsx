@@ -8,6 +8,7 @@ const Banner = ({ bannerUrl, storeName }) => {
       <img 
         src={bannerUrl} 
         alt={`${storeName} Banner`} 
+        fetchpriority="high"
         className="w-full h-full object-cover"
       />
     </div>

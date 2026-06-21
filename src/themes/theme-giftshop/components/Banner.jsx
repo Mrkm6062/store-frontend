@@ -91,7 +91,13 @@ const Banner = ({ bannerUrl, storeName }) => {
       <div ref={scrollRef} className="w-full flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {banners.map((url, index) => (
           <div key={index} data-index={index} className="w-full shrink-0 snap-center relative">
-            <img src={url} alt={`${storeName} Banner ${index + 1}`} className="w-full h-auto object-cover" />
+            <img 
+              src={url} 
+              alt={`${storeName} Banner ${index + 1}`} 
+              className="w-full h-auto object-cover" 
+              fetchpriority={index === 0 ? "high" : undefined}
+              loading={index === 0 ? undefined : "lazy"}
+            />
             {/* Future text overlays can use style={{ color: bannerSettings.textColor || '#111111' }} */}
           </div>
         ))}
