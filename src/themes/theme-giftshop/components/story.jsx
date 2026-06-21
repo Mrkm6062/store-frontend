@@ -49,7 +49,7 @@ const Story = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {featuresToDisplay.map((feature, index) => (
             <div key={index} className="flex flex-col items-center text-center p-6 bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 group">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-1 transition-transform overflow-hidden p-3">
+              <div className="w-full h-full bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-1 transition-transform overflow-hidden p-3">
                 {feature.icon && typeof feature.icon === 'string' ? (
                   <img src={feature.icon} alt={feature.title} className="w-full h-full object-contain" />
                 ) : feature.icon ? (
