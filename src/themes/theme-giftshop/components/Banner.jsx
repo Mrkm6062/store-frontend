@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { getImageProps } from '../../../services/api';
 
 const Banner = ({ bannerUrl, storeName }) => {
   const customization = useContext(ThemeCustomizationContext);
@@ -93,7 +92,7 @@ const Banner = ({ bannerUrl, storeName }) => {
         {banners.map((url, index) => (
           <div key={index} data-index={index} className="w-full shrink-0 snap-center relative">
             <img 
-              {...getImageProps(url, 600)}
+              src={url}
               alt={`${storeName} Banner ${index + 1}`} 
               width="1600"
               height="599"
