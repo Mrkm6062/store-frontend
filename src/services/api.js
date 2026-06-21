@@ -78,7 +78,7 @@ export const getOptimizedImageUrl = (url, width) => {
   const match = url.match(/storage\.googleapis\.com\/([^/]+)\/(.+)$/);
   if (match) {
     const relativePath = match[2];
-    const whitelistedWidths = [80, 186, 56, 323, 600];
+    const whitelistedWidths = [80, 160, 186, 56, 323, 600];
     if (whitelistedWidths.includes(width)) {
       return `${API_BASE || ''}/api/images/${relativePath}?w=${width}`;
     }

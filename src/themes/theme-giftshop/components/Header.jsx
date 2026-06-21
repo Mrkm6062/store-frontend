@@ -101,7 +101,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
         </div>
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 md:h-20">
           <div className="flex-1 flex justify-start items-center">
             <button onClick={() => setIsMenuOpen(true)} aria-label="Open menu" className="p-2 -ml-2 hover:bg-black/5 rounded-md md:hidden transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Menu size={24} />
@@ -112,8 +112,8 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
             <Link to="/" className="flex items-center justify-center">
               {(headerSettings.officialdesktopLogo || headerSettings.officialmobileLogo || store?.logo) ? (
                 <>
-                  <img src={getOptimizedImageUrl(headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo, 80)} alt={store?.name} width="80" height="40" className="h-10 w-auto object-contain md:hidden" />
-                  <img src={getOptimizedImageUrl(headerSettings.officialdesktopLogo || store?.logo, 80)} alt={store?.name} width="96" height="48" className="h-12 w-auto object-contain hidden md:block" />
+                  <img src={getOptimizedImageUrl(headerSettings.officialmobileLogo || headerSettings.officialdesktopLogo || store?.logo, 160)} alt={store?.name} width="120" height="60" className="h-12 w-auto object-contain md:hidden" />
+                  <img src={getOptimizedImageUrl(headerSettings.officialdesktopLogo || store?.logo, 160)} alt={store?.name} width="160" height="80" className="h-16 w-auto object-contain hidden md:block" />
                 </>
               ) : (
                 <h1 className="text-xl font-bold" style={{ color: headerSettings.textColor || '#111827' }}>{store?.name || 'Store'}</h1>
