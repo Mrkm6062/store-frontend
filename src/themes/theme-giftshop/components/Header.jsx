@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, ChevronRight, Home, Heart } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, ChevronRight, Home, Heart, Package } from 'lucide-react';
 import { getPublicCategories } from '../../../services/api';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { useProducts } from '../../../services/useProducts';
@@ -13,6 +13,22 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [customerToken, setCustomerToken] = useState(() => localStorage.getItem('gb_customer_token'));
+  const [customerName, setCustomerName] = useState(() => localStorage.getItem('gb_customer_name') || '');
+
+  useEffect(() => {
+    const handleCustomerUpdate = () => {
+      setCustomerToken(localStorage.getItem('gb_customer_token'));
+      setCustomerName(localStorage.getItem('gb_customer_name') || '');
+    };
+    window.addEventListener('customer-login-updated', handleCustomerUpdate);
+    window.addEventListener('storage', handleCustomerUpdate);
+    return () => {
+      window.removeEventListener('customer-login-updated', handleCustomerUpdate);
+      window.removeEventListener('storage', handleCustomerUpdate);
+    };
+  }, []);
+
 
   const customization = useContext(ThemeCustomizationContext);
   const { products } = useProducts();
@@ -117,9 +133,37 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
                 </span>
               )}
             </button>
-            <button className="p-2 hover:bg-black/5 rounded-full hidden sm:block transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
-              <User size={24} />
-            </button>
+            {customerToken ? (
+              <div className="flex items-center gap-1.5 relative group">
+                <Link to="/track" className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center" style={{ color: headerSettings.textColor || '#4b5563' }} title="Track Orders & History">
+                  <Package size={24} />
+                </Link>
+                <button type="button" className="flex items-center gap-1 hover:bg-black/5 px-2.5 py-1.5 rounded-xl transition-colors text-sm font-bold" style={{ color: headerSettings.textColor || '#4b5563' }}>
+                  <User size={20} />
+                  <span className="max-w-[80px] truncate hidden sm:inline">{customerName || 'Account'}</span>
+                </button>
+                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl py-2 w-40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <Link to="/track" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-semibold">Order History</Link>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem('gb_customer_token');
+                      localStorage.removeItem('gb_customer_email');
+                      localStorage.removeItem('gb_customer_name');
+                      window.dispatchEvent(new Event('customer-login-updated'));
+                      window.location.reload();
+                    }} 
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-semibold border-t border-gray-100 mt-1"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link to="/track" className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center" style={{ color: headerSettings.textColor || '#4b5563' }} title="Login / Track Orders">
+                <User size={24} />
+              </Link>
+            )}
             <button onClick={onCartClick} className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <ShoppingCart size={24} />
               {cartCount > 0 && (

@@ -103,6 +103,8 @@ const TrackOrder = () => {
         const data = await response.json();
         setOrders(data);
         if (data.length > 0) {
+          localStorage.setItem('gb_customer_name', data[0].customerName || '');
+          window.dispatchEvent(new Event('customer-login-updated'));
           if (orderId) {
             const found = data.find(o => o._id === orderId);
             setSelectedOrder(found || data[0]);
@@ -129,6 +131,8 @@ const TrackOrder = () => {
   const handleLogout = () => {
     localStorage.removeItem('gb_customer_token');
     localStorage.removeItem('gb_customer_email');
+    localStorage.removeItem('gb_customer_name');
+    window.dispatchEvent(new Event('customer-login-updated'));
     setCustomerToken(null);
     setCustomerEmail('');
     setAuthStep('email');
