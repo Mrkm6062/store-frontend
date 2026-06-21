@@ -461,10 +461,28 @@ const ProductDetails = () => {
                         <span className="text-black/60 font-bold text-center text-sm px-2">Your image or text here</span>
                       )}
                       {customImageBase64 && (
-                          <img src={customImageBase64} className="absolute inset-0 w-full h-full object-contain" alt="Custom Print Preview" />
+                          <img 
+                            src={customImageBase64} 
+                            className="absolute inset-0 w-full h-full object-contain transition-all duration-300" 
+                            alt="Custom Print Preview" 
+                            style={{ 
+                              mixBlendMode: 'multiply',
+                              filter: 'contrast(1.05) brightness(1.02) saturate(0.95)',
+                              opacity: 0.93
+                            }}
+                          />
                       )}
                       {customText && (
-                        <span className="absolute inset-0 flex items-center justify-center z-20 text-black font-bold text-center text-lg sm:text-2xl break-words px-2 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]" style={{ textShadow: '0 0 10px white, 0 0 10px white' }}>
+                        <span 
+                          className="absolute inset-0 flex items-center justify-center z-20 text-gray-800 font-extrabold text-center text-lg sm:text-2xl break-words px-2 transition-all duration-300" 
+                          style={{ 
+                            textShadow: '0 1px 1px rgba(255,255,255,0.6)', 
+                            mixBlendMode: 'multiply',
+                            opacity: 0.88,
+                            letterSpacing: '-0.02em',
+                            lineHeight: '1.1'
+                          }}
+                        >
                           {customText}
                         </span>
                       )}
