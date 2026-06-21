@@ -134,7 +134,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
               )}
             </button>
             {customerToken ? (
-              <div className="flex items-center gap-1.5 relative group">
+              <div className="hidden md:flex items-center gap-1.5 relative group">
                 <Link to="/track" className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center" style={{ color: headerSettings.textColor || '#4b5563' }} title="Track Orders & History">
                   <Package size={24} />
                 </Link>
@@ -160,11 +160,11 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
                 </div>
               </div>
             ) : (
-              <Link to="/track" className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center" style={{ color: headerSettings.textColor || '#4b5563' }} title="Login / Track Orders">
+              <Link to="/track" className="hidden md:flex p-2 hover:bg-black/5 rounded-full transition-colors items-center" style={{ color: headerSettings.textColor || '#4b5563' }} title="Login / Track Orders">
                 <User size={24} />
               </Link>
             )}
-            <button onClick={onCartClick} className="p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
+            <button onClick={onCartClick} className="hidden md:block p-2 hover:bg-black/5 rounded-full relative transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <ShoppingCart size={24} />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-green-600 rounded-full">
