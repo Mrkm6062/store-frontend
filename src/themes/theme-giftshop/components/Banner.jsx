@@ -94,6 +94,8 @@ const Banner = ({ bannerUrl, storeName }) => {
             <img 
               src={url} 
               alt={`${storeName} Banner ${index + 1}`} 
+              width="1600"
+              height="599"
               className="w-full h-auto object-cover" 
               fetchpriority={index === 0 ? "high" : undefined}
               loading={index === 0 ? undefined : "lazy"}

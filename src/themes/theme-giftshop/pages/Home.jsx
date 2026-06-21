@@ -20,6 +20,7 @@ const StoreHome = () => {
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -45,7 +46,15 @@ const StoreHome = () => {
   }, []);
 
   useEffect(() => {
-    getPublicCategories().then(setCategories).catch(console.error);
+    getPublicCategories()
+      .then(data => {
+        setCategories(data);
+        setCategoriesLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setCategoriesLoading(false);
+      });
   }, []);
 
   const showToast = (message, type = 'error') => {
@@ -157,18 +166,24 @@ const StoreHome = () => {
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       <Banner bannerUrl={store.banner} storeName={store.name} />
 
-      {categories.length > 0 && (
+      {(categoriesLoading || categories.length > 0) && (
         <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 pt-16">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Collections</h2>
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 justify-items-center">
-            {categories.slice(0, 12).map(c => (
-              <div key={c._id} className="w-full max-w-[220px]">
-                <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
-              </div>
-            ))}
+            {categoriesLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="w-full max-w-[220px] h-48 bg-gray-200/50 rounded-2xl animate-pulse"></div>
+              ))
+            ) : (
+              categories.slice(0, 12).map(c => (
+                <div key={c._id} className="w-full max-w-[220px]">
+                  <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

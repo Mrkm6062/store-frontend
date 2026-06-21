@@ -135,7 +135,7 @@ const Footer = ({ storeName }) => {
           <div className="flex flex-col space-y-6">
             <div>
               {footerSettings.officialdesktopLogo ? (
-                <img src={footerSettings.officialdesktopLogo} alt={storeName} className="h-10 object-contain mb-3" />
+                <img src={footerSettings.officialdesktopLogo} alt={storeName} width="80" height="40" className="h-10 object-contain mb-3" />
               ) : (
                 <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || primaryColor }}>{storeName}</h2>
               )}

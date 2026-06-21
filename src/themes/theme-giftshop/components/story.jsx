@@ -105,7 +105,7 @@ const Story = () => {
                 }`}
               >
                 {feature.icon && typeof feature.icon === 'string' ? (
-                  <img src={feature.icon} alt={feature.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <img src={feature.icon} alt={feature.title} width="56" height="56" className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
                 ) : feature.icon ? (
                   feature.icon
                 ) : (

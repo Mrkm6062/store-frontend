@@ -8,6 +8,8 @@ const Banner = ({ bannerUrl, storeName }) => {
       <img 
         src={bannerUrl} 
         alt={`${storeName} Banner`} 
+        width="1600"
+        height="599"
         fetchpriority="high"
         className="w-full h-full object-cover"
       />

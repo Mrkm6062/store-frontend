@@ -17,6 +17,7 @@ const StoreHome = () => {
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -29,7 +30,15 @@ const StoreHome = () => {
   }, [cart]);
 
   useEffect(() => {
-    getPublicCategories().then(setCategories).catch(console.error);
+    getPublicCategories()
+      .then(data => {
+        setCategories(data);
+        setCategoriesLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setCategoriesLoading(false);
+      });
   }, []);
 
   const showToast = (message, type = 'error') => {
@@ -141,7 +150,7 @@ const StoreHome = () => {
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       <Banner bannerUrl={store.banner} storeName={store.name} />
 
-      {categories.length > 0 && (
+      {(categoriesLoading || categories.length > 0) && (
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-12">
           <div className="flex justify-between items-end mb-6">
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">BROWSE OUR COLLECTIONS</h2>
@@ -151,11 +160,17 @@ const StoreHome = () => {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
-            {categories.slice(0, 10).map(c => (
-              <div key={c._id} className="w-full">
-                <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
-              </div>
-            ))}
+            {categoriesLoading ? (
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="w-full h-40 bg-gray-200/50 rounded-2xl animate-pulse"></div>
+              ))
+            ) : (
+              categories.slice(0, 10).map(c => (
+                <div key={c._id} className="w-full">
+                  <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

@@ -69,7 +69,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
 
           <div className="flex-1 flex justify-center items-center">
             {store?.logo ? (
-              <img src={store?.logo} alt={store?.name} className="h-10 sm:h-12 w-auto object-contain" />
+              <img src={store?.logo} alt={store?.name} width="96" height="48" className="h-10 sm:h-12 w-auto object-contain" />
             ) : (
               <h1 className="text-xl font-bold text-gray-900">{store?.name || 'Store'}</h1>
             )}
