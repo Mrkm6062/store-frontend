@@ -305,22 +305,37 @@ const ProductDetails = () => {
 
   const hasVariants = product.variants && product.variants.length > 0;
   const selectedVariant = hasVariants ? product.variants.find(v => v._id === selectedVariantId) : null;
-  const displayPrice = selectedVariant 
-    ? selectedVariant.price 
-    : (product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0));
 
-  // Compute original price for discount badge
-  const originalPrice = selectedVariant
-    ? (selectedVariant.comparePrice || selectedVariant.price)
-    : (product.basePrice || product.compareAtPrice || (displayPrice > 0 ? Math.round(displayPrice * 1.15) : 0));
+  // Unified Pricing & Discount logic for variants and normal products
+  const productDiscount = typeof product.discount === 'number' && product.discount > 0 ? product.discount : 0;
+  
+  let displayPrice = 0;
+  let originalPrice = 0;
+  let discountPercent = 0;
 
-  const discountPercent = selectedVariant
-    ? (selectedVariant.comparePrice && selectedVariant.comparePrice > selectedVariant.price 
-       ? Math.round(((selectedVariant.comparePrice - selectedVariant.price) / selectedVariant.comparePrice) * 100) 
-       : 0)
-    : (typeof product.discount === 'number' && product.discount > 0 
-       ? product.discount 
-       : (originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0));
+  if (selectedVariant) {
+    if (productDiscount > 0) {
+      originalPrice = selectedVariant.price;
+      displayPrice = selectedVariant.price - (selectedVariant.price * productDiscount / 100);
+      discountPercent = productDiscount;
+    } else if (selectedVariant.comparePrice && selectedVariant.comparePrice > selectedVariant.price) {
+      originalPrice = selectedVariant.comparePrice;
+      displayPrice = selectedVariant.price;
+      discountPercent = Math.round(((selectedVariant.comparePrice - selectedVariant.price) / selectedVariant.comparePrice) * 100);
+    } else {
+      originalPrice = selectedVariant.price;
+      displayPrice = selectedVariant.price;
+      discountPercent = 0;
+    }
+  } else {
+    originalPrice = product.basePrice || 0;
+    displayPrice = product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0);
+    if (productDiscount > 0) {
+      discountPercent = productDiscount;
+    } else if (originalPrice > displayPrice) {
+      discountPercent = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
+    }
+  }
   const maxStock = selectedVariant ? selectedVariant.stock : (product.totalStock !== undefined ? product.totalStock : product.stock);
   const isOutOfStock = maxStock <= 0;
   const targetId = selectedVariant ? `${product._id}-${selectedVariant._id}` : product._id;
@@ -582,7 +597,9 @@ const ProductDetails = () => {
 
             {hasVariants && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Select Option</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Select {product.variantType && product.variantType !== 'option' ? (product.variantType.charAt(0).toUpperCase() + product.variantType.slice(1)) : 'Option'}
+                </h3>
                 <div className="flex flex-wrap gap-3">
                   {product.variants.map(v => (
                     <button 
