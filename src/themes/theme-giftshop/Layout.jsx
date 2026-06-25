@@ -37,7 +37,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter }) =>
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip">
+    <div className={`min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip ${cartCount > 0 ? 'pb-36' : 'pb-16'} md:pb-0`}>
       <Header store={store} cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />
       <main className="flex-1 w-full flex flex-col">
         {children}
