@@ -84,19 +84,33 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
       {/* Offer Header */}
       {offerBanner.Enabled !== false && (
         <div 
-          className="py-1.5 sm:py-2 text-xs sm:text-sm font-medium w-full overflow-hidden transition-colors duration-300 flex"
+          className="w-full overflow-hidden flex relative py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors duration-300"
           style={{ backgroundColor: offerBanner.bgColor, color: bannerTextColor }}
         >
           <style>
             {`
-              @keyframes scrolling-text {
-                0% { transform: translateX(100vw); }
-                100% { transform: translateX(-100%); }
+              @keyframes marquee-infinite {
+                0% { transform: translate3d(0, 0, 0); }
+                100% { transform: translate3d(-50%, 0, 0); }
               }
             `}
           </style>
-          <div className="whitespace-nowrap" style={{ animation: 'scrolling-text 20s linear infinite' }}>
-            {offerBanner.text}
+          <div 
+            className="flex whitespace-nowrap animate-marquee" 
+            style={{ animation: 'marquee-infinite 25s linear infinite' }}
+          >
+            {/* Group 1 */}
+            <div className="flex justify-around min-w-full shrink-0 gap-16 px-8">
+              <span>{offerBanner.text}</span>
+              <span>{offerBanner.text}</span>
+              <span>{offerBanner.text}</span>
+            </div>
+            {/* Group 2 */}
+            <div className="flex justify-around min-w-full shrink-0 gap-16 px-8">
+              <span>{offerBanner.text}</span>
+              <span>{offerBanner.text}</span>
+              <span>{offerBanner.text}</span>
+            </div>
           </div>
         </div>
       )}
