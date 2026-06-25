@@ -188,7 +188,7 @@ const StoreHome = () => {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 py-12">
+      <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 py-12">
         {productsLoading || categoriesLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
             {[...Array(8)].map((_, i) => (

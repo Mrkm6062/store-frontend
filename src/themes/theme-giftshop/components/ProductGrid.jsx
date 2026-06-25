@@ -11,9 +11,9 @@ const ProductGrid = ({ products, onAddToCart, cart = [], onUpdateQuantity, onRem
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6 md:gap-8 justify-items-center w-full">
       {products.map((product, index) => (
-        <div key={product._id || product.id} className="w-full max-w-[260px]">
+        <div key={product._id || product.id} className="w-full max-w-full sm:max-w-[260px]">
           <ProductCard 
             product={product} 
             index={index}
