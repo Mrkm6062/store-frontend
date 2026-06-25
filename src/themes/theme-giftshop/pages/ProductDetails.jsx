@@ -792,7 +792,10 @@ const ProductDetails = () => {
 
       {/* Custom Toast Notification */}
       {toast && (
-        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 transition-all animate-fadeIn ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-[#76b900] text-white'}`}>
+        <div 
+          className="fixed top-10 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 transition-all animate-fadeIn text-white"
+          style={{ backgroundColor: toast.type === 'error' ? '#ef4444' : primaryColor }}
+        >
           <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
           {toast.message}
         </div>

@@ -57,7 +57,11 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                       <span className="px-2 font-semibold text-sm">{item.qty}</span>
                       <button type="button" onClick={() => onUpdateQuantity(item._id, 1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">+</button>
                     </div>
-                    <button onClick={() => onRemoveFromCart(item._id)} className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg transition">
+                    <button 
+                      onClick={() => onRemoveFromCart(item._id)} 
+                      className="text-sm font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
+                      style={{ color: primaryColor, backgroundColor: `${primaryColor}15` }}
+                    >
                       Remove
                     </button>
                   </div>
