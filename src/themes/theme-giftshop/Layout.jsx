@@ -44,6 +44,27 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter }) =>
       </main>
       {!hideFooter && <Footer storeName={store?.name || 'Store'} />}
       <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />
+      
+      {store?.whatsappSupportEnabled && store?.whatsappNumber && (
+        <a
+          href={`https://wa.me/${store.whatsappNumber.replace(/[^0-9]/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-20 md:bottom-6 right-6 z-40 bg-[#25D366] text-white p-3.5 rounded-full shadow-2xl hover:bg-[#20ba5a] transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/20"
+          aria-label="Contact Support on WhatsApp"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.504-5.729-1.463L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.725 1.45 5.236 0 9.5-4.26 9.504-9.5.002-2.54-1.002-4.93-2.826-6.753-1.824-1.823-4.24-2.828-6.78-2.828-5.243 0-9.513 4.268-9.517 9.51-.002 1.603.486 3.17 1.411 4.566l-.979 3.573 3.667-.962zm10.702-7.11c-.273-.137-1.62-.8-1.871-.892-.252-.093-.437-.137-.62.137-.183.274-.7.892-.857 1.077-.158.183-.317.206-.59.068-.273-.137-1.155-.426-2.2-1.358-.813-.726-1.36-1.62-1.52-1.894-.158-.274-.017-.422.122-.56.124-.124.273-.317.41-.476.136-.158.182-.27.273-.456.09-.186.046-.35-.022-.486-.068-.137-.62-1.492-.849-2.04-.223-.538-.466-.464-.62-.464-.158-.002-.34-.002-.523-.002-.183 0-.482.068-.734.34-.252.274-.963.94-.963 2.29 0 1.35.983 2.65 1.12 2.83.137.185 1.93 2.947 4.676 4.13.654.282 1.164.45 1.562.576.657.21 1.256.18 1.728.11.526-.077 1.62-.663 1.85-1.302.23-.64.23-1.187.16-1.302-.07-.11-.25-.205-.52-.34z"/>
+          </svg>
+        </a>
+      )}
+
       <WishlistSidebar isWishlistOpen={isWishlistOpen} setIsWishlistOpen={setIsWishlistOpen} primaryColor={primaryColor} />
     </div>
   );
