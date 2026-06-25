@@ -393,10 +393,38 @@ const CheckoutPage = () => {
         .primary-file-input:hover::file-selector-button {
           opacity: 0.9 !important;
         }
+        .floating-label {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          background-color: transparent;
+          transition: all 0.2s ease-out;
+          pointer-events: none;
+          color: #94a3b8;
+          font-size: 0.875rem;
+          padding: 0 4px;
+        }
+        .floating-input:focus ~ .floating-label,
+        .floating-input:not(:placeholder-shown) ~ .floating-label {
+          top: 0px;
+          transform: translateY(-50%) scale(0.85);
+          color: ${primaryColor};
+          background-color: #ffffff;
+          font-weight: 600;
+        }
+        .floating-input:focus {
+          border-color: ${primaryColor} !important;
+          box-shadow: 0 0 0 1px ${primaryColor};
+        }
       `}</style>
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8">
-          <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors mb-4"><ArrowLeft size={16} className="mr-1" /> Back to Cart</Link>
+          <div className="sticky top-[96px] md:top-[112px] z-30 bg-gray-50/95 backdrop-blur-sm py-2 mb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 flex justify-start">
+            <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
+              <ArrowLeft size={16} className="mr-1" /> Back to Cart
+            </Link>
+          </div>
           <h1 className="text-3xl font-extrabold text-gray-900">Checkout</h1>
         </div>
 
@@ -407,10 +435,19 @@ const CheckoutPage = () => {
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Contact Details</h3>
                 <div className="space-y-4">
-                  <input type="text" required placeholder="Full Name" value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                  <div className="relative">
+                    <input type="text" required placeholder=" " value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                    <label className="floating-label">Full Name</label>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="tel" required placeholder="Mobile Number" maxLength="10" value={formData.customerPhone} onChange={e => setFormData({...formData, customerPhone: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                    <input type="email" required placeholder="Email Address" value={formData.customerEmail} onChange={e => setFormData({...formData, customerEmail: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
+                    <div className="relative">
+                      <input type="tel" required placeholder=" " maxLength="10" value={formData.customerPhone} onChange={e => setFormData({...formData, customerPhone: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Mobile Number</label>
+                    </div>
+                    <div className="relative">
+                      <input type="email" required placeholder=" " value={formData.customerEmail} onChange={e => setFormData({...formData, customerEmail: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Email Address</label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -418,10 +455,34 @@ const CheckoutPage = () => {
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Delivery Address</h3>
                 <div className="space-y-4">
-                  <input type="text" required placeholder="Address Line 1 (House No, Building, Street)" value={formData.addressLine1} onChange={e => setFormData({...formData, addressLine1: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                  <input type="text" required placeholder="Landmark" value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" />
-                  <div className="grid grid-cols-2 gap-4"><input type="text" required placeholder="Pincode" maxLength="6" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /><input type="tel" required placeholder="Alternate Mobile" maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /></div>
-                  <div className="grid grid-cols-2 gap-4"><input type="text" required placeholder="City" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /><input type="text" required placeholder="State" value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" /></div>
+                  <div className="relative">
+                    <input type="text" required placeholder=" " value={formData.addressLine1} onChange={e => setFormData({...formData, addressLine1: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
+                  </div>
+                  <div className="relative">
+                    <input type="text" required placeholder=" " value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                    <label className="floating-label">Landmark</label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input type="text" required placeholder=" " maxLength="6" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Pincode</label>
+                    </div>
+                    <div className="relative">
+                      <input type="tel" required placeholder=" " maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Alternate Mobile</label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input type="text" required placeholder=" " value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">City</label>
+                    </div>
+                    <div className="relative">
+                      <input type="text" required placeholder=" " value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">State</label>
+                    </div>
+                  </div>
                 </div>
               </div>
               
