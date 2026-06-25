@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Package, Truck, CheckCircle, XCircle, ArrowLeft, RefreshCcw, Key, LogOut } from 'lucide-react';
 import { useStore } from '../../../services/useStore';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import StoreLayout from '../Layout';
 
 const TrackOrder = () => {
   const { orderId } = useParams();
@@ -25,6 +26,24 @@ const TrackOrder = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
+
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('gb_store_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      const saved = localStorage.getItem('gb_store_cart');
+      if (saved) {
+        try { setCart(JSON.parse(saved)); } catch(e) {}
+      } else {
+        setCart([]);
+      }
+    };
+    window.addEventListener('cart-updated', handleCartUpdate);
+    return () => window.removeEventListener('cart-updated', handleCartUpdate);
+  }, []);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
 
@@ -185,8 +204,8 @@ const TrackOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
-      <div className="max-w-6xl mx-auto">
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => navigate('/')} hideFooter={true}>
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-6">
           <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
             <ArrowLeft size={16} className="mr-1" /> Back to Store
@@ -353,7 +372,7 @@ const TrackOrder = () => {
           </div>
         )}
       </div>
-    </div>
+    </StoreLayout>
   );
 };
 

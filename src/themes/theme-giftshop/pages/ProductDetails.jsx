@@ -55,6 +55,10 @@ const ProductDetails = () => {
   const customization = useContext(ThemeCustomizationContext);
   const primaryColor = customization?.global?.primaryColor || '#76b900';
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [productId]);
+
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
