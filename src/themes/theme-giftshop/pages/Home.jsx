@@ -189,11 +189,7 @@ const StoreHome = () => {
       )}
 
       <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 py-12">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Products</h2>
-        </div>
-
-        {productsLoading ? (
+        {productsLoading || categoriesLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[340px] w-full max-w-[260px] animate-pulse">
@@ -205,25 +201,52 @@ const StoreHome = () => {
         ) : productsError ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
         ) : (
-          <>
-            <ProductGrid 
-              products={products.slice(0, visibleCount)} 
-              onAddToCart={handleAddToCart} 
-              cart={cart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveFromCart={handleRemoveFromCart}
-            />
-            {visibleCount < products.length && (
-              <div className="mt-10 text-center flex justify-center">
-                <button 
-                  onClick={() => setVisibleCount(prev => prev + 12)} 
-                  className="px-8 py-3 bg-white border-2 border-[#76b900] text-[#76b900] font-bold rounded-xl hover:bg-[#76b900] hover:text-white transition-colors shadow-sm hover:shadow-md"
-                >
-                  Load More Products
-                </button>
-              </div>
-            )}
-          </>
+          <div className="space-y-16">
+            {categories
+              .map(c => {
+                const categoryProducts = products.filter(p => p.category === c._id);
+                return { category: c, products: categoryProducts };
+              })
+              .filter(item => item.products.length > 0)
+              .map(({ category, products: categoryProducts }) => (
+                <div key={category._id} className="border-b border-gray-100 pb-10 last:border-b-0 last:pb-0">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+                      {category.name}
+                    </h2>
+                  </div>
+                  
+                  <ProductGrid 
+                    products={categoryProducts.slice(0, 4)} 
+                    onAddToCart={handleAddToCart} 
+                    cart={cart}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemoveFromCart={handleRemoveFromCart}
+                  />
+
+                  <div className="mt-6 flex justify-center w-full">
+                    <button 
+                      onClick={() => navigate(`/category/${category.slug || category._id}`)}
+                      className="w-full md:w-auto px-8 py-3 bg-white border-2 font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:text-white text-center"
+                      style={{
+                        borderColor: primaryColor,
+                        color: primaryColor,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = primaryColor;
+                        e.currentTarget.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = primaryColor;
+                      }}
+                    >
+                      View All Products
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
         )}
       </div>
 

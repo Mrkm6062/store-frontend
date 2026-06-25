@@ -129,7 +129,9 @@ const CategoryPage = () => {
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 py-12">
         <div className="mb-10 text-center">
-          <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800 mb-4">&larr; Back to All Products</button>
+          <div className="sticky top-[96px] md:top-[112px] z-30 bg-gray-50/95 backdrop-blur-sm py-2 mb-4 -mx-4 px-4 flex justify-center">
+            <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800">&larr; Back to All Products</button>
+          </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">
             {category ? `Products in ${category.name}` : 'Loading Category...'}
           </h2>
