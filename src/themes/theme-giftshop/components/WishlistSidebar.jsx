@@ -75,7 +75,7 @@ const WishlistSidebar = ({ isWishlistOpen, setIsWishlistOpen, primaryColor = '#7
       <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col z-[100] transform transition-transform duration-300 ease-in-out ${isWishlistOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <Heart className="fill-red-500 text-red-500" size={24} /> Your Wishlist Products
+            <Heart className="fill-red-500 text-red-500" size={24} /> Your Wishlist
           </h2>
           <button onClick={() => setIsWishlistOpen(false)} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
             &times;
