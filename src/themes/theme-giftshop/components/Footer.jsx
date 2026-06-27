@@ -229,9 +229,14 @@ const Footer = ({ storeName }) => {
             &copy; {new Date().getFullYear()} {storeName}. All rights reserved.
           </div>
           {!isCustomDomain && (
-            <div className="text-center opacity-60 text-xs font-mono tracking-widest uppercase">
+            <a 
+              href="https://www.galibrand.cloud" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-center opacity-60 hover:opacity-100 text-xs font-mono tracking-widest uppercase transition-opacity duration-300 hover:underline"
+            >
               POWERED BY GALIBRAND
-            </div>
+            </a>
           )}
         </div>
       </div>
