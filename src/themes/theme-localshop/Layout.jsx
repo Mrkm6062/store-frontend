@@ -37,6 +37,8 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hide
   }, []);
 
   const isProductPage = typeof window !== 'undefined' && window.location.pathname.includes('/product/');
+  const isHomePage = typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '');
+  const shouldShowFooter = isHomePage && !hideFooter;
 
   return (
     <div className={`min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip ${cartCount > 0 && !hideBottomNav ? 'pb-36' : (!hideBottomNav ? 'pb-16' : '')} md:pb-0`}>
@@ -44,7 +46,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hide
       <main className="flex-1 w-full flex flex-col">
         {children}
       </main>
-      {!hideFooter && <Footer storeName={store?.name || 'Store'} />}
+      {shouldShowFooter && <Footer storeName={store?.name || 'Store'} />}
       {!hideBottomNav && <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       
       {store?.whatsappSupportEnabled && store?.whatsappNumber && (

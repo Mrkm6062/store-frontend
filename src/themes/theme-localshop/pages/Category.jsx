@@ -8,6 +8,7 @@ import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
 import CartSidebar from '../components/CartSidebar';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { LayoutGrid } from 'lucide-react';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
@@ -19,6 +20,7 @@ const CategoryPage = () => {
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [category, setCategory] = useState(null);
+  const [allCategories, setAllCategories] = useState([]);
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -60,8 +62,13 @@ const CategoryPage = () => {
 
   useEffect(() => {
     getPublicCategories().then(categories => {
-      const currentCategory = categories.find(c => c.slug === categoryId || c._id === categoryId);
-      setCategory(currentCategory);
+      setAllCategories(categories);
+      if (categoryId === 'all') {
+        setCategory(null);
+      } else {
+        const currentCategory = categories.find(c => c.slug === categoryId || c._id === categoryId);
+        setCategory(currentCategory);
+      }
     }).catch(console.error);
   }, [categoryId]);
 
@@ -115,12 +122,14 @@ const CategoryPage = () => {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   useEffect(() => {
-    if (store && category) {
-      document.title = `${category.name} - ${store.websiteTitle || store.name}`;
+    if (store) {
+      document.title = category 
+        ? `${category.name} - ${store.websiteTitle || store.name}`
+        : `All Products - ${store.websiteTitle || store.name}`;
     }
   }, [store, category]);
 
-  const filteredProducts = category ? products.filter(p => p.category === category._id) : [];
+  const filteredProducts = category ? products.filter(p => p.category === category._id) : products;
 
   if (storeLoading) {
     return (
@@ -143,14 +152,62 @@ const CategoryPage = () => {
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 py-12">
-        <div className="mb-10 text-center">
-          <div className="sticky top-[96px] md:top-[112px] z-30 bg-gray-50/95 backdrop-blur-sm py-2 mb-4 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 flex justify-center">
-            <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800">&larr; Back to All Products</button>
+        {/* Style block to hide scrollbars */}
+        <style>{`
+          .scrollbar-none::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+
+        {/* Horizontal Category Selector */}
+        <div className="border-b border-gray-200/80 bg-white sticky top-0 z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-8 py-4 shadow-sm backdrop-blur-md bg-white/95">
+          <div className="max-w-5xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-none snap-x pb-1">
+            {/* "All Products" Button */}
+            <button
+              onClick={() => navigate('/category/all')}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
+                !category 
+                  ? 'text-white shadow-md shadow-green-150 scale-105' 
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+              style={{ backgroundColor: !category ? primaryColor : undefined, borderColor: !category ? primaryColor : undefined }}
+            >
+              <LayoutGrid size={16} />
+              <span>All Products</span>
+            </button>
+
+            {/* Other Categories */}
+            {allCategories.map(c => {
+              const isActive = category && category._id === c._id;
+              return (
+                <button
+                  key={c._id}
+                  onClick={() => navigate(`/category/${c.slug || c._id}`)}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
+                    isActive 
+                      ? 'text-white shadow-md shadow-green-150 scale-105' 
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                  style={{ backgroundColor: isActive ? primaryColor : undefined, borderColor: isActive ? primaryColor : undefined }}
+                >
+                  {c.image ? (
+                    <img 
+                      src={c.image} 
+                      alt={c.name} 
+                      className="w-6 h-6 rounded-lg object-cover border border-slate-200/50" 
+                    />
+                  ) : (
+                    <span className="text-base">📦</span>
+                  )}
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
           </div>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">
-            {category ? `Products in ${category.name}` : 'Loading Category...'}
-          </h2>
-          {category?.description && <p className="text-gray-500 mt-2 text-lg">{category.description}</p>}
         </div>
 
         {productsLoading ? (
