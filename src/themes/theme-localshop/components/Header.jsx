@@ -12,6 +12,47 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [storeOpenStatus, setStoreOpenStatus] = useState({ isOpen: true, reason: '', nextOpen: null });
+  const [showClosedPopup, setShowClosedPopup] = useState(false);
+
+  useEffect(() => {
+    if (!store?._id) return;
+    const fetchStatus = async () => {
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+        const res = await fetch(`${API_BASE_URL}/api/store-hours/public/status`, {
+          headers: { 'x-store-id': store._id }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setStoreOpenStatus(data);
+          if (!data.isOpen) {
+            const popupShown = sessionStorage.getItem('store_closed_popup_shown');
+            if (!popupShown) {
+              setShowClosedPopup(true);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch store public open status", err);
+      }
+    };
+    fetchStatus();
+  }, [store?._id]);
+
+  const handleClosePopup = () => {
+    setShowClosedPopup(false);
+    sessionStorage.setItem('store_closed_popup_shown', 'true');
+  };
+
+  const getClosedText = () => {
+    if (!storeOpenStatus.nextOpen) {
+      return "⚠️ Store is currently closed today and not accepting orders.";
+    }
+    const { day, date, time } = storeOpenStatus.nextOpen;
+    const dayStr = day === "Tomorrow" ? "tomorrow" : `on ${day} (${date})`;
+    return `⚠️ Store is closed today. Kindly order ${dayStr} at ${time}`;
+  };
   const [wishlistCount, setWishlistCount] = useState(0);
   const [customerToken, setCustomerToken] = useState(() => localStorage.getItem('gb_customer_token'));
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('gb_customer_name') || '');
@@ -101,38 +142,47 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
 
   return (
     <header className="shadow-sm sticky top-0 z-50 transition-colors duration-300" style={{ backgroundColor: headerSettings.bgColor || '#ffffff', color: headerSettings.textColor || '#000000' }}>
-      {/* Offer Header */}
-      {offerBanner.Enabled !== false && (
+      {/* Offer Header or Store Closed Notice */}
+      {!storeOpenStatus.isOpen ? (
         <div 
-          className="w-full overflow-hidden flex relative py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors duration-300"
-          style={{ backgroundColor: offerBanner.bgColor, color: bannerTextColor }}
+          className="w-full py-2 px-4 text-center text-xs sm:text-sm font-bold transition-colors duration-300"
+          style={{ backgroundColor: '#dc2626', color: '#ffffff' }}
         >
-          <style>
-            {`
-              @keyframes marquee-infinite {
-                0% { transform: translate3d(0, 0, 0); }
-                100% { transform: translate3d(-50%, 0, 0); }
-              }
-            `}
-          </style>
+          {getClosedText()}
+        </div>
+      ) : (
+        offerBanner.Enabled !== false && (
           <div 
-            className="flex whitespace-nowrap animate-marquee" 
-            style={{ animation: 'marquee-infinite 25s linear infinite' }}
+            className="w-full overflow-hidden flex relative py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors duration-300"
+            style={{ backgroundColor: offerBanner.bgColor, color: bannerTextColor }}
           >
-            {/* Group 1 */}
-            <div className="flex justify-around min-w-full shrink-0 gap-16 px-8">
-              <span>{offerBanner.text}</span>
-              <span>{offerBanner.text}</span>
-              <span>{offerBanner.text}</span>
-            </div>
-            {/* Group 2 */}
-            <div className="flex justify-around min-w-full shrink-0 gap-16 px-8">
-              <span>{offerBanner.text}</span>
-              <span>{offerBanner.text}</span>
-              <span>{offerBanner.text}</span>
+            <style>
+              {`
+                @keyframes marquee-infinite {
+                  0% { transform: translate3d(0, 0, 0); }
+                  100% { transform: translate3d(-50%, 0, 0); }
+                }
+              `}
+            </style>
+            <div 
+              className="flex whitespace-nowrap animate-marquee" 
+              style={{ animation: 'marquee-infinite 25s linear infinite' }}
+            >
+              {/* Group 1 */}
+              <div className="flex justify-around min-w-full shrink-0 gap-16 px-8">
+                <span>{offerBanner.text}</span>
+                <span>{offerBanner.text}</span>
+                <span>{offerBanner.text}</span>
+              </div>
+              {/* Group 2 */}
+              <div className="flex justify-around min-w-full shrink-0 gap-16 px-8">
+                <span>{offerBanner.text}</span>
+                <span>{offerBanner.text}</span>
+                <span>{offerBanner.text}</span>
+              </div>
             </div>
           </div>
-        </div>
+        )
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
@@ -329,6 +379,37 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {/* Store Closed Popup Dialog */}
+      {showClosedPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative border border-slate-100 animate-scaleUp">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+              ⏰
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Store is Closed Today</h3>
+            <p className="text-sm text-slate-600 mb-6 text-left">
+              We are currently closed and not accepting orders today.
+              {storeOpenStatus.nextOpen ? (
+                <>
+                  <br />
+                  <span className="font-bold text-red-600 block mt-2 text-base text-center">
+                    Kindly place your order {storeOpenStatus.nextOpen.day === "Tomorrow" ? "tomorrow" : `on ${storeOpenStatus.nextOpen.day} (${storeOpenStatus.nextOpen.date})`} at {storeOpenStatus.nextOpen.time}.
+                  </span>
+                </>
+              ) : (
+                <span className="font-semibold block mt-2 text-center">Please check back soon for our opening hours!</span>
+              )}
+            </p>
+            <button
+              onClick={handleClosePopup}
+              className="w-full py-3 bg-[#76b900] hover:bg-[#659e00] text-white font-bold rounded-xl shadow-lg transition-colors text-sm"
+              style={{ backgroundColor: primaryColor }}
+            >
+              Close & Continue Browsing
+            </button>
           </div>
         </div>
       )}
