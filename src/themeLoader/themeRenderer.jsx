@@ -73,6 +73,16 @@ import GiftshopTrackOrder from '../themes/theme-giftshop/pages/TrackOrder.jsx';
 import GiftshopCheckout from '../themes/theme-giftshop/pages/Checkout.jsx';
 import GiftshopProductDetails from '../themes/theme-giftshop/pages/ProductDetails.jsx';
 
+// Import theme-localshop components
+import LocalshopHome from '../themes/theme-localshop/pages/Home.jsx';
+import LocalshopCategory from '../themes/theme-localshop/pages/Category.jsx';
+import LocalshopCategories from '../themes/theme-localshop/pages/Categories.jsx';
+import LocalshopPolicy from '../themes/theme-localshop/pages/Policy.jsx';
+import LocalshopTrackOrder from '../themes/theme-localshop/pages/TrackOrder.jsx';
+import LocalshopCheckout from '../themes/theme-localshop/pages/Checkout.jsx';
+import LocalshopProductDetails from '../themes/theme-localshop/pages/ProductDetails.jsx';
+import LocalshopWriteReview from '../themes/theme-localshop/pages/WriteReview.jsx';
+
 const themesMap = {
   'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
   'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
@@ -80,7 +90,9 @@ const themesMap = {
   'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails },
   'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails },
   'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails },
+  'theme-localshop': { Home: LocalshopHome, Category: LocalshopCategory, Categories: LocalshopCategories, Policy: LocalshopPolicy, TrackOrder: LocalshopTrackOrder, Checkout: LocalshopCheckout, WriteReview: LocalshopWriteReview, ProductDetails: LocalshopProductDetails },
 };
+
 
 export const ThemeCustomizationContext = createContext(null);
 
