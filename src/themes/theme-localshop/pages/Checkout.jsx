@@ -100,6 +100,8 @@ const CheckoutPage = () => {
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(null);
   const [checkoutSettings, setCheckoutSettings] = useState(null);
+  const [storeOpenStatus, setStoreOpenStatus] = useState({ isOpen: true, reason: '' });
+  const [loadingOpenStatus, setLoadingOpenStatus] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [customFiles, setCustomFiles] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
@@ -144,6 +146,28 @@ const CheckoutPage = () => {
     };
     fetchEditCityState();
   }, [editPincode]);
+
+  useEffect(() => {
+    const checkOpenStatus = async () => {
+      if (!store?._id) return;
+      setLoadingOpenStatus(true);
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+        const res = await fetch(`${API_BASE_URL}/api/store-hours/public/status`, {
+          headers: { 'x-store-id': store._id }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setStoreOpenStatus(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch store open status", e);
+      } finally {
+        setLoadingOpenStatus(false);
+      }
+    };
+    checkOpenStatus();
+  }, [store?._id]);
 
   const handleSaveEditedAddress = async (e) => {
     e.preventDefault();
@@ -665,8 +689,24 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between items-center font-bold text-xl mb-6 border-t pt-4 text-gray-800"><span>Total:</span><span className="text-green-600">₹{finalTotal}</span></div>
               
-              <button type="submit" form="checkout-form" disabled={isPlacingOrder} style={{ backgroundColor: primaryColor }} className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-50">
-                {isPlacingOrder ? 'Processing...' : 'Confirm & Place Order'}
+              {/* Store Hours Check */}
+              {!storeOpenStatus.isOpen && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
+                  <span>⚠️</span>
+                  <span>
+                    {storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}
+                  </span>
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                form="checkout-form" 
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen} 
+                style={{ backgroundColor: storeOpenStatus.isOpen ? primaryColor : '#94a3b8' }} 
+                className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
+              >
+                {isPlacingOrder ? 'Processing...' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order')}
               </button>
             </div>
           </div>
@@ -794,15 +834,25 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
+              {/* Store Hours Check */}
+              {!storeOpenStatus.isOpen && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
+                  <span>⚠️</span>
+                  <span>
+                    {storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}
+                  </span>
+                </div>
+              )}
+
               {/* 4. Action Button */}
               <button 
                 type="submit" 
                 form="checkout-form" 
-                disabled={isPlacingOrder} 
-                style={{ backgroundColor: primaryColor }} 
-                className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-base sm:text-lg shadow-lg disabled:opacity-50"
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen} 
+                style={{ backgroundColor: storeOpenStatus.isOpen ? primaryColor : '#94a3b8' }} 
+                className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-base sm:text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? 'Processing...' : 'Confirm & Place Order'}
+                {isPlacingOrder ? 'Processing...' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order')}
               </button>
             </>
           ) : (
