@@ -8,7 +8,7 @@ import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
 import CartSidebar from '../components/CartSidebar';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, ArrowLeft } from 'lucide-react';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
