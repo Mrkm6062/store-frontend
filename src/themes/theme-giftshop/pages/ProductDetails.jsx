@@ -320,7 +320,7 @@ const ProductDetails = () => {
   if (selectedVariant) {
     if (productDiscount > 0) {
       originalPrice = selectedVariant.price;
-      displayPrice = selectedVariant.price - (selectedVariant.price * productDiscount / 100);
+      displayPrice = Math.round(selectedVariant.price - (selectedVariant.price * productDiscount / 100));
       discountPercent = productDiscount;
     } else if (selectedVariant.comparePrice && selectedVariant.comparePrice > selectedVariant.price) {
       originalPrice = selectedVariant.comparePrice;
@@ -333,7 +333,7 @@ const ProductDetails = () => {
     }
   } else {
     originalPrice = product.basePrice || 0;
-    displayPrice = product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0);
+    displayPrice = Math.round(product.price !== undefined && product.price !== null ? product.price : (product.basePrice || 0));
     if (productDiscount > 0) {
       discountPercent = productDiscount;
     } else if (originalPrice > displayPrice) {
