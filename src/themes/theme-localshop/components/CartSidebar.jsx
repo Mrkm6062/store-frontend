@@ -2,8 +2,41 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 
-const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemoveFromCart, cartTotal, primaryColor = '#76b900' }) => {
+const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemoveFromCart, cartTotal, primaryColor = '#76b900', store, deliverySettings: passedSettings }) => {
   const navigate = useNavigate();
+  const [deliverySettings, setDeliverySettings] = React.useState(passedSettings || null);
+
+  React.useEffect(() => {
+    if (passedSettings) {
+      setDeliverySettings(passedSettings);
+      return;
+    }
+    const fetchSettings = async () => {
+      if (store?._id) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+            headers: { 'x-store-id': store?._id }
+          });
+          if (settingsRes.ok) {
+            const settings = await settingsRes.json();
+            setDeliverySettings(settings);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    };
+    fetchSettings();
+  }, [store, passedSettings]);
+
+  const freeLimit = deliverySettings?.freeDeliveryMinOrder || 0;
+  const baseCharge = deliverySettings?.baseCharge || 0;
+
+  const isShippingFree = freeLimit > 0 && cartTotal >= freeLimit;
+  const shippingCharge = isShippingFree ? 0 : baseCharge;
+  const estimatedTotal = cartTotal + shippingCharge;
+  const amountNeededForFreeDelivery = freeLimit - cartTotal;
 
   return (
     <>
@@ -73,17 +106,30 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
         
         {cart.length > 0 && (
           <div className="p-5 border-t border-gray-100 bg-white">
+            {/* Free Delivery Promo Message */}
+            {freeLimit > 0 && (
+              <div className={`p-3 rounded-xl text-xs font-bold mb-4 text-center ${isShippingFree ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                {isShippingFree ? (
+                  <span>Free delivery unlocked! 🎉</span>
+                ) : (
+                  <span>Add ₹{amountNeededForFreeDelivery} more to get free delivery / shipping charges zero</span>
+                )}
+              </div>
+            )}
+            
             <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
               <span>Subtotal:</span>
-              <span>₹{cartTotal}</span>
+              <span className="font-bold text-gray-800">₹{cartTotal}</span>
             </div>
             <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-              <span>Shipping & Discounts:</span>
-              <span>Calculated at checkout</span>
+              <span>Shipping Charges:</span>
+              <span className={`font-bold ${shippingCharge === 0 ? 'text-green-600' : 'text-gray-800'}`}>
+                {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
+              </span>
             </div>
-            <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800">
+            <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800 border-t border-dashed border-gray-200 pt-3">
               <span>Estimated Total:</span>
-              <span className="text-green-600">₹{cartTotal}</span>
+              <span className="text-green-600">₹{estimatedTotal}</span>
             </div>
             <button type="button" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} className="w-full text-white font-bold py-4 rounded-xl transition text-lg shadow-lg hover:opacity-90" style={{ backgroundColor: primaryColor }}>
               Proceed to Checkout

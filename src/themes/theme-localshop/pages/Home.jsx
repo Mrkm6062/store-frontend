@@ -50,6 +50,21 @@ const StoreHome = () => {
 
   const [checkingDelivery, setCheckingDelivery] = useState(false);
   const [checkResult, setCheckResult] = useState({ text: '', type: '' });
+  const [deliverySettings, setDeliverySettings] = useState(null);
+
+  useEffect(() => {
+    if (store?._id) {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+        headers: { 'x-store-id': store?._id }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) setDeliverySettings(data);
+        })
+        .catch(console.error);
+    }
+  }, [store]);
 
   useEffect(() => {
     if (customerInfo) {
@@ -617,14 +632,25 @@ const StoreHome = () => {
 
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
-        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex justify-between items-center pb-safe">
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
-            <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
+        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex flex-col gap-2 pb-safe">
+          {deliverySettings?.freeDeliveryMinOrder > 0 && (
+            <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeDeliveryMinOrder ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
+              {cartTotal >= deliverySettings.freeDeliveryMinOrder ? (
+                <span>Free delivery unlocked! 🎉</span>
+              ) : (
+                <span>Add ₹{deliverySettings.freeDeliveryMinOrder - cartTotal} more to get free delivery</span>
+              )}
+            </div>
+          )}
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
+              <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
+            </div>
+            <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg transition">
+              View Cart &rarr;
+            </button>
           </div>
-          <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg transition">
-            View Cart &rarr;
-          </button>
         </div>
       )}
 
@@ -636,6 +662,8 @@ const StoreHome = () => {
         onRemoveFromCart={handleRemoveFromCart}
         cartTotal={cartTotal}
         primaryColor={primaryColor}
+        store={store}
+        deliverySettings={deliverySettings}
       />
 
       {/* Custom Toast Notification */}

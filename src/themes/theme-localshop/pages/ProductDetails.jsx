@@ -72,6 +72,21 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [toast, setToast] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [deliverySettings, setDeliverySettings] = useState(null);
+
+  useEffect(() => {
+    if (store?._id) {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+        headers: { 'x-store-id': store?._id }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) setDeliverySettings(data);
+        })
+        .catch(console.error);
+    }
+  }, [store]);
   const [customImageBase64, setCustomImageBase64] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [customText, setCustomText] = useState('');
@@ -793,6 +808,8 @@ const ProductDetails = () => {
         onRemoveFromCart={handleRemoveFromCart}
         cartTotal={cartTotal}
         primaryColor={primaryColor}
+        store={store}
+        deliverySettings={deliverySettings}
       />
 
       {/* Custom Toast Notification */}
