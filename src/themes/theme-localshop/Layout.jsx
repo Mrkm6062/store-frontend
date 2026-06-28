@@ -26,7 +26,7 @@ const SocialIcon = ({ platform, size = 26, className }) => {
 import WishlistSidebar from './components/WishlistSidebar';
 import { ThemeCustomizationContext } from '../../themeLoader/themeRenderer.jsx';
 
-const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hideHeader }) => {
+const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hideHeader, hideBottomNav }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const customization = React.useContext(ThemeCustomizationContext);
@@ -39,13 +39,13 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hide
   const isProductPage = typeof window !== 'undefined' && window.location.pathname.includes('/product/');
 
   return (
-    <div className={`min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip ${cartCount > 0 ? 'pb-36' : 'pb-16'} md:pb-0`}>
+    <div className={`min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip ${cartCount > 0 && !hideBottomNav ? 'pb-36' : (!hideBottomNav ? 'pb-16' : '')} md:pb-0`}>
       {!hideHeader && <Header store={store} cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       <main className="flex-1 w-full flex flex-col">
         {children}
       </main>
       {!hideFooter && <Footer storeName={store?.name || 'Store'} />}
-      <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />
+      {!hideBottomNav && <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       
       {store?.whatsappSupportEnabled && store?.whatsappNumber && (
         <a

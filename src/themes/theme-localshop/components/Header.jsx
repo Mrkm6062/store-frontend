@@ -25,19 +25,6 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
     }
   });
 
-  const [pincodeInput, setPincodeInput] = useState('');
-  const [addressInput, setAddressInput] = useState('');
-  const [checkingDelivery, setCheckingDelivery] = useState(false);
-  const [checkResult, setCheckResult] = useState({ text: '', type: '' });
-  const [showInputCard, setShowInputCard] = useState(false);
-
-  useEffect(() => {
-    if (customerInfo) {
-      setPincodeInput(customerInfo.pincode || '');
-      setAddressInput(customerInfo.addressLine1 || '');
-    }
-  }, [customerInfo]);
-
   useEffect(() => {
     const handleUpdate = () => {
       try {
@@ -48,72 +35,6 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
     window.addEventListener('customer-info-updated', handleUpdate);
     return () => window.removeEventListener('customer-info-updated', handleUpdate);
   }, []);
-
-  const checkDeliveryAvailability = async (e) => {
-    e.preventDefault();
-    if (!pincodeInput || pincodeInput.trim().length !== 6) {
-      setCheckResult({ text: 'Please enter a valid 6-digit pincode.', type: 'error' });
-      return;
-    }
-    if (!addressInput || !addressInput.trim()) {
-      setCheckResult({ text: 'Please enter your address.', type: 'error' });
-      return;
-    }
-
-    setCheckingDelivery(true);
-    setCheckResult({ text: '', type: '' });
-
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
-      const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
-        headers: { 'x-store-id': store?._id }
-      });
-      if (!settingsRes.ok) throw new Error('Failed to load delivery settings.');
-      const settings = await settingsRes.json();
-
-      const pinRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${pincodeInput.trim()}`);
-      if (!pinRes.ok) throw new Error('Invalid pincode.');
-      const pinData = await pinRes.json();
-
-      const city = pinData.city || '';
-      const state = pinData.state || '';
-
-      let allowed = false;
-      if (settings.deliveryMode === 'state') {
-        const allowedStates = (settings.allowedStates || []).map(s => s.toLowerCase());
-        allowed = allowedStates.includes(state.toLowerCase().trim());
-      } else if (settings.deliveryMode === 'pincode') {
-        const allowedPincodes = settings.allowedPincodes || [];
-        allowed = allowedPincodes.includes(pincodeInput.trim());
-      } else {
-        allowed = true;
-      }
-
-      if (allowed) {
-        const existingInfo = JSON.parse(localStorage.getItem('gb_customer_info') || '{}');
-        const updatedInfo = {
-          ...existingInfo,
-          pincode: pincodeInput.trim(),
-          addressLine1: addressInput.trim(),
-          city,
-          state
-        };
-        localStorage.setItem('gb_customer_info', JSON.stringify(updatedInfo));
-        setCheckResult({ text: 'Delivery is available!', type: 'success' });
-        window.dispatchEvent(new Event('customer-info-updated'));
-        setTimeout(() => {
-          setShowInputCard(false);
-          setCheckResult({ text: '', type: '' });
-        }, 1500);
-      } else {
-        setCheckResult({ text: 'Delivery not available to this pincode.', type: 'error' });
-      }
-    } catch (err) {
-      setCheckResult({ text: err.message || 'Verification failed. Try again.', type: 'error' });
-    } finally {
-      setCheckingDelivery(false);
-    }
-  };
 
   useEffect(() => {
     const handleCustomerUpdate = () => {
@@ -219,79 +140,6 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
             <button onClick={() => setIsMenuOpen(true)} aria-label="Open menu" className="p-2 -ml-2 hover:bg-black/5 rounded-md md:hidden transition-colors" style={{ color: headerSettings.textColor || '#4b5563' }}>
               <Menu size={24} />
             </button>
-            
-            {/* Desktop Delivery Check */}
-            <div className="hidden md:block">
-              {customerInfo?.pincode ? (
-                <button 
-                  onClick={() => setShowInputCard(!showInputCard)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-xs font-semibold hover:bg-slate-50 transition"
-                  style={{ color: headerSettings.textColor || '#1e293b' }}
-                >
-                  <span className="text-[#76b900]">📍</span>
-                  <span>Deliver to: <strong className="text-slate-800">{customerInfo.pincode}</strong></span>
-                </button>
-              ) : (
-                <button 
-                  onClick={() => setShowInputCard(!showInputCard)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-xs font-semibold hover:bg-slate-50 transition"
-                  style={{ color: headerSettings.textColor || '#1e293b' }}
-                >
-                  <span className="text-gray-400">📍</span>
-                  <span>Select delivery location</span>
-                </button>
-              )}
-
-              {showInputCard && (
-                <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 text-slate-800 text-left animate-fadeIn">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 mb-2">Check Delivery Availability</h4>
-                  <form onSubmit={checkDeliveryAvailability} className="space-y-3">
-                    <div>
-                      <input 
-                        type="text" 
-                        placeholder="Enter 6-digit Pincode"
-                        maxLength="6"
-                        required
-                        value={pincodeInput}
-                        onChange={e => setPincodeInput(e.target.value.replace(/\D/g, ''))}
-                        className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-[#76b900]"
-                      />
-                    </div>
-                    <div>
-                      <textarea 
-                        placeholder="Enter Full Address"
-                        required
-                        rows="2"
-                        value={addressInput}
-                        onChange={e => setAddressInput(e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-[#76b900] resize-none"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        type="button" 
-                        onClick={() => setShowInputCard(false)}
-                        className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold text-slate-600 transition"
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        type="submit" 
-                        disabled={checkingDelivery}
-                        className="flex-1 py-1.5 bg-[#76b900] text-white hover:opacity-95 rounded-lg text-xs font-semibold transition disabled:opacity-50"
-                      >
-                        {checkingDelivery ? 'Checking...' : 'Check'}
-                      </button>
-                    </div>
-                    {checkResult.text && (
-                      <p className={`text-[10px] font-bold mt-2 ${checkResult.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
-                        {checkResult.text}
-                      </p>
-                    )}
-                  </form>
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="flex-1 flex justify-center items-center">

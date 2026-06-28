@@ -492,7 +492,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => {}} hideFooter={true} hideHeader={true}>
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => {}} hideFooter={true} hideHeader={true} hideBottomNav={showEditModal}>
       <style>{`
         .primary-file-input::file-selector-button {
           background-color: ${primaryColor} !important;

@@ -290,7 +290,7 @@ const StoreHome = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideBottomNav={showAddressModal}>
       
       {/* Top Location Bar */}
       <div className="bg-slate-50 border-b border-gray-200">
