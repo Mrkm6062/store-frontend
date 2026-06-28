@@ -92,8 +92,8 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                     </div>
                     <button 
                       onClick={() => onRemoveFromCart(item._id)} 
-                      className="text-sm font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
-                      style={{ color: primaryColor, backgroundColor: `${primaryColor}15` }}
+                      className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 p-2 rounded-lg transition"
+                      title="Remove from Cart"
                     >
                       <Trash2 size={14} />
                     </button>
