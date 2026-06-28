@@ -87,6 +87,43 @@ const Footer = ({ storeName }) => {
   const displayEmail = store?.supportEmail && store.supportEmail.trim() !== '' ? store.supportEmail.trim() : null;
   const displayAddress = store?.locationAddress && store.locationAddress.trim() !== '' ? store.locationAddress.trim() : null;
   const validMapLink = store?.mapLocation && store.mapLocation.trim() !== '' ? store.mapLocation.trim() : null;
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] = useState(''); // 'success', 'error'
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail || !store?._id) return;
+
+    setSubmitting(true);
+    setSubscribeStatus('');
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const res = await fetch(`${API_URL}/api/newsletter/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          storeId: store._id,
+          email: newsletterEmail
+        })
+      });
+
+      if (res.ok) {
+        setSubscribeStatus('success');
+        setNewsletterEmail('');
+      } else {
+        setSubscribeStatus('error');
+      }
+    } catch (err) {
+      setSubscribeStatus('error');
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+      setTimeout(() => setSubscribeStatus(''), 4000);
+    }
+  };
 
   // Check if the store is running on a custom domain
   const isCustomDomain = !window.location.hostname.includes('galibrand.cloud') && !window.location.hostname.includes('localhost');
@@ -112,21 +149,33 @@ const Footer = ({ storeName }) => {
               <h3 className="text-lg font-bold" style={{ color: footerSettings.textColor || '#111827' }}>Subscribe to our Newsletter</h3>
               <p className="text-xs opacity-75 mt-1">Stay updated with our latest offers, new arrivals, and custom collections.</p>
             </div>
-            <form className="flex w-full md:w-auto max-w-md shrink-0 gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input 
-                type="email" 
-                placeholder={footerSettings.newsletter.placeholder || 'Enter your email'} 
-                className="px-4 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#76b900] text-gray-900 w-full md:w-64"
-                required
-              />
-              <button 
-                type="submit" 
-                style={{ backgroundColor: primaryColor }}
-                className="px-5 py-2 text-sm font-bold text-white hover:opacity-90 rounded-lg transition-colors duration-300 shrink-0 shadow-sm"
-              >
-                {footerSettings.newsletter.buttonText || 'Subscribe'}
-              </button>
-            </form>
+            <div className="flex flex-col w-full md:w-auto max-w-md shrink-0 gap-1.5">
+              <form className="flex w-full gap-2" onSubmit={handleSubscribe}>
+                <input 
+                  type="email" 
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder={footerSettings.newsletter.placeholder || 'Enter your email'} 
+                  className="px-4 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#76b900] text-gray-900 w-full md:w-64"
+                  required
+                  disabled={submitting}
+                />
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  style={{ backgroundColor: primaryColor }}
+                  className="px-5 py-2 text-sm font-bold text-white hover:opacity-90 rounded-lg transition-colors duration-300 shrink-0 shadow-sm disabled:opacity-50"
+                >
+                  {submitting ? 'Subscribing...' : (footerSettings.newsletter.buttonText || 'Subscribe')}
+                </button>
+              </form>
+              {subscribeStatus === 'success' && (
+                <p className="text-[11px] text-green-600 font-bold transition-all animate-fadeIn">Subscribed successfully!</p>
+              )}
+              {subscribeStatus === 'error' && (
+                <p className="text-[11px] text-red-500 font-bold transition-all animate-fadeIn">Already subscribed or error occurred.</p>
+              )}
+            </div>
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
