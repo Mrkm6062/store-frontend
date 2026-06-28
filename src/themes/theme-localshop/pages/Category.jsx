@@ -28,6 +28,7 @@ const CategoryPage = () => {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (store?._id) {
@@ -129,7 +130,8 @@ const CategoryPage = () => {
     }
   }, [store, category]);
 
-  const filteredProducts = category ? products.filter(p => p.category === category._id) : products;
+  const filteredProducts = (category ? products.filter(p => p.category === category._id) : products)
+    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   if (storeLoading) {
     return (
@@ -150,8 +152,8 @@ const CategoryPage = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
-      <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 py-12">
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideFooter={true} hideHeader={true}>
+      <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 pt-0 pb-12">
         {/* Style block to hide scrollbars */}
         <style>{`
           .scrollbar-none::-webkit-scrollbar {
@@ -163,8 +165,20 @@ const CategoryPage = () => {
           }
         `}</style>
 
+        {/* Back navigation to Home */}
+        <div className="flex items-center gap-2 mb-4 pt-4 text-left">
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shadow-sm"
+            title="Go to Home"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <span className="text-xs font-bold text-slate-400">Home</span>
+        </div>
+
         {/* Horizontal Category Selector */}
-        <div className="border-b border-gray-200/80 bg-white sticky top-0 z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-8 py-4 shadow-sm backdrop-blur-md bg-white/95">
+        <div className="border-b border-gray-200/80 bg-white sticky top-0 z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-6 py-4 shadow-sm backdrop-blur-md bg-white/95">
           <div className="max-w-5xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-none snap-x pb-1">
             {/* "All Products" Button */}
             <button
@@ -194,9 +208,9 @@ const CategoryPage = () => {
                   }`}
                   style={{ backgroundColor: isActive ? primaryColor : undefined, borderColor: isActive ? primaryColor : undefined }}
                 >
-                  {c.image ? (
+                  {c.image?.url ? (
                     <img 
-                      src={c.image} 
+                      src={c.image.url} 
                       alt={c.name} 
                       className="w-6 h-6 rounded-lg object-cover border border-slate-200/50" 
                     />
@@ -208,6 +222,28 @@ const CategoryPage = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Real-time Search Input */}
+        <div className="mb-8 relative text-left">
+          <input
+            type="text"
+            placeholder="Search products in this collection..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onFocus={e => e.target.style.borderColor = primaryColor}
+            onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+            className="w-full px-4 py-3 pl-11 border border-slate-200 rounded-2xl focus:outline-none text-sm bg-white shadow-sm transition-colors duration-250"
+          />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-600 text-lg font-bold"
+            >
+              &times;
+            </button>
+          )}
         </div>
 
         {productsLoading ? (
