@@ -37,16 +37,31 @@ const StoreHome = () => {
     }
   });
 
-  const [pincodeInput, setPincodeInput] = useState('');
-  const [addressInput, setAddressInput] = useState('');
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [modalName, setModalName] = useState('');
+  const [modalPhone, setModalPhone] = useState('');
+  const [modalEmail, setModalEmail] = useState('');
+  const [modalAddress, setModalAddress] = useState('');
+  const [modalLandmark, setModalLandmark] = useState('');
+  const [modalPincode, setModalPincode] = useState('');
+  const [modalAlternate, setModalAlternate] = useState('');
+  const [modalCity, setModalCity] = useState('');
+  const [modalState, setModalState] = useState('');
+
   const [checkingDelivery, setCheckingDelivery] = useState(false);
   const [checkResult, setCheckResult] = useState({ text: '', type: '' });
-  const [showInputCard, setShowInputCard] = useState(false);
 
   useEffect(() => {
     if (customerInfo) {
-      setPincodeInput(customerInfo.pincode || '');
-      setAddressInput(customerInfo.addressLine1 || '');
+      setModalName(customerInfo.customerName || '');
+      setModalPhone(customerInfo.customerPhone || '');
+      setModalEmail(customerInfo.customerEmail || '');
+      setModalAddress(customerInfo.addressLine1 || '');
+      setModalLandmark(customerInfo.landmark || '');
+      setModalPincode(customerInfo.pincode || '');
+      setModalAlternate(customerInfo.alternateNumber || '');
+      setModalCity(customerInfo.city || '');
+      setModalState(customerInfo.state || '');
     }
   }, [customerInfo]);
 
@@ -61,14 +76,31 @@ const StoreHome = () => {
     return () => window.removeEventListener('customer-info-updated', handleUpdate);
   }, []);
 
-  const checkDeliveryAvailability = async (e) => {
+  useEffect(() => {
+    const fetchCityState = async () => {
+      if (modalPincode && modalPincode.trim().length === 6) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${modalPincode.trim()}`);
+          if (response.ok) {
+            const data = await response.json();
+            setModalCity(data.city || '');
+            setModalState(data.state || '');
+          }
+        } catch (e) {}
+      }
+    };
+    fetchCityState();
+  }, [modalPincode]);
+
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
-    if (!pincodeInput || pincodeInput.trim().length !== 6) {
-      setCheckResult({ text: 'Please enter a valid 6-digit pincode.', type: 'error' });
+    if (!modalPhone || modalPhone.trim().length < 10) {
+      setCheckResult({ text: 'Mobile number must be at least 10 digits.', type: 'error' });
       return;
     }
-    if (!addressInput || !addressInput.trim()) {
-      setCheckResult({ text: 'Please enter your address.', type: 'error' });
+    if (!modalPincode || modalPincode.trim().length !== 6) {
+      setCheckResult({ text: 'Pincode must be exactly 6 digits.', type: 'error' });
       return;
     }
 
@@ -80,45 +112,41 @@ const StoreHome = () => {
       const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
         headers: { 'x-store-id': store?._id }
       });
-      if (!settingsRes.ok) throw new Error('Failed to load delivery settings.');
+      if (!settingsRes.ok) throw new Error('Failed to load store delivery settings.');
       const settings = await settingsRes.json();
-
-      const pinRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${pincodeInput.trim()}`);
-      if (!pinRes.ok) throw new Error('Invalid pincode.');
-      const pinData = await pinRes.json();
-
-      const city = pinData.city || '';
-      const state = pinData.state || '';
 
       let allowed = false;
       if (settings.deliveryMode === 'state') {
         const allowedStates = (settings.allowedStates || []).map(s => s.toLowerCase());
-        allowed = allowedStates.includes(state.toLowerCase().trim());
+        allowed = allowedStates.includes(modalState.toLowerCase().trim());
       } else if (settings.deliveryMode === 'pincode') {
         const allowedPincodes = settings.allowedPincodes || [];
-        allowed = allowedPincodes.includes(pincodeInput.trim());
+        allowed = allowedPincodes.includes(modalPincode.trim());
       } else {
         allowed = true;
       }
 
       if (allowed) {
-        const existingInfo = JSON.parse(localStorage.getItem('gb_customer_info') || '{}');
         const updatedInfo = {
-          ...existingInfo,
-          pincode: pincodeInput.trim(),
-          addressLine1: addressInput.trim(),
-          city,
-          state
+          customerName: modalName.trim(),
+          customerPhone: modalPhone.trim(),
+          customerEmail: modalEmail.trim(),
+          addressLine1: modalAddress.trim(),
+          landmark: modalLandmark.trim(),
+          pincode: modalPincode.trim(),
+          alternateNumber: modalAlternate.trim(),
+          city: modalCity.trim(),
+          state: modalState.trim()
         };
         localStorage.setItem('gb_customer_info', JSON.stringify(updatedInfo));
-        setCheckResult({ text: 'Delivery is available!', type: 'success' });
+        setCheckResult({ text: 'Delivery is available! Address saved.', type: 'success' });
         window.dispatchEvent(new Event('customer-info-updated'));
         setTimeout(() => {
-          setShowInputCard(false);
+          setShowAddressModal(false);
           setCheckResult({ text: '', type: '' });
         }, 1500);
       } else {
-        setCheckResult({ text: 'Delivery not available to this pincode.', type: 'error' });
+        setCheckResult({ text: `Sorry, we do not deliver to this location (${modalPincode}).`, type: 'error' });
       }
     } catch (err) {
       setCheckResult({ text: err.message || 'Verification failed. Try again.', type: 'error' });
@@ -264,121 +292,239 @@ const StoreHome = () => {
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
       
-      {/* Mobile-only Delivery Check */}
-      <div className="block md:hidden bg-slate-50 border-b border-gray-150 p-4">
-        {customerInfo?.pincode ? (
-          <div className="flex justify-between items-center bg-white border border-gray-200 rounded-xl p-3 shadow-sm text-left">
-            <div className="flex items-center gap-2">
-              <span className="text-[#76b900]">📍</span>
-              <div className="text-left">
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Delivering to</p>
-                <p className="text-xs font-semibold text-slate-800">{customerInfo.pincode} - {customerInfo.city || 'Saved Address'}</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowInputCard(true)}
-              className="text-[10px] font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-2.5 py-1.5 rounded-lg transition"
-            >
-              Change
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm text-left">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-gray-400 text-base">📍</span>
-              <h4 className="font-bold text-slate-800 text-xs">Enter Pincode and Address to Check Delivery</h4>
-            </div>
-            <form onSubmit={checkDeliveryAvailability} className="space-y-3">
-              <div>
-                <input 
-                  type="text" 
-                  placeholder="Enter 6-digit Pincode"
-                  maxLength="6"
-                  required
-                  value={pincodeInput}
-                  onChange={e => setPincodeInput(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]"
-                />
-              </div>
-              <div>
-                <textarea 
-                  placeholder="Enter Full Address details"
-                  required
-                  rows="2"
-                  value={addressInput}
-                  onChange={e => setAddressInput(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] resize-none"
-                />
+      {/* Top Location Bar */}
+      <div className="bg-slate-50 border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-4 py-3 sm:px-12 lg:px-16">
+          {customerInfo?.pincode ? (
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-left">
+                <span className="text-[#76b900]">📍</span>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden sm:block">Delivering to</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-800">
+                    {customerInfo.customerName} - {customerInfo.addressLine1}, {customerInfo.city} ({customerInfo.pincode})
+                  </p>
+                </div>
               </div>
               <button 
-                type="submit" 
-                disabled={checkingDelivery}
-                className="w-full py-2 bg-[#76b900] text-white font-bold rounded-xl text-xs transition shadow-md shadow-green-50 disabled:opacity-50"
+                onClick={() => setShowAddressModal(true)}
+                className="text-xs font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-3 py-1.5 rounded-lg transition shrink-0"
               >
-                {checkingDelivery ? 'Checking availability...' : 'Check Delivery'}
+                Change
               </button>
-              {checkResult.text && (
-                <p className={`text-[10px] font-bold mt-2 ${checkResult.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
-                  {checkResult.text}
-                </p>
-              )}
-            </form>
-          </div>
-        )}
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-left">
+              <div className="flex items-start sm:items-center gap-2">
+                <span className="text-gray-400">📍</span>
+                <span className="text-xs sm:text-sm text-slate-600 font-semibold">
+                  Please add your address to check delivery availability and shipping charges.
+                </span>
+              </div>
+              <button 
+                onClick={() => setShowAddressModal(true)}
+                className="w-full sm:w-auto px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md shadow-green-100 hover:opacity-95 transition shrink-0 text-center animate-pulse"
+              >
+                Add address to check delivery
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
-        {/* Change address modal overlay/card when already set */}
-        {customerInfo?.pincode && showInputCard && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-2xl w-full max-w-sm p-5 border shadow-xl text-left">
-              <h4 className="font-bold text-slate-800 text-sm mb-3">Change Delivery Location</h4>
-              <form onSubmit={checkDeliveryAvailability} className="space-y-3">
-                <div>
+      {/* Address & Delivery Modal */}
+      {showAddressModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fadeIn">
+          {/* Backdrop click close */}
+          <div className="absolute inset-0" onClick={() => setShowAddressModal(false)} />
+          
+          <div className="bg-white w-full rounded-t-3xl sm:rounded-2xl sm:max-w-lg shadow-2xl border-t sm:border border-slate-100 flex flex-col h-[90vh] sm:h-auto sm:max-h-[85vh] overflow-hidden relative z-10 animate-slideUp sm:animate-zoomIn">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
+              <div className="text-left">
+                <h3 className="text-base sm:text-lg font-bold text-slate-800">Check Delivery Address</h3>
+                <p className="text-[10px] text-gray-500">Enter details to verify availability</p>
+              </div>
+              <button 
+                onClick={() => setShowAddressModal(false)} 
+                className="text-slate-400 hover:text-red-500 transition-colors text-2xl font-bold leading-none p-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Scrollable Form */}
+            <form onSubmit={handleSaveAddress} className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Contact Details */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1 text-left">Contact Details</h4>
+                <div className="relative">
                   <input 
                     type="text" 
-                    placeholder="Enter 6-digit Pincode"
-                    maxLength="6"
-                    required
-                    value={pincodeInput}
-                    onChange={e => setPincodeInput(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]"
+                    required 
+                    placeholder=" " 
+                    value={modalName} 
+                    onChange={e => setModalName(e.target.value)} 
+                    className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
                   />
+                  <label className="floating-label">Full Name</label>
                 </div>
-                <div>
-                  <textarea 
-                    placeholder="Enter Full Address"
-                    required
-                    rows="2"
-                    value={addressInput}
-                    onChange={e => setAddressInput(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] resize-none"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input 
+                      type="tel" 
+                      required 
+                      placeholder=" " 
+                      maxLength="10" 
+                      value={modalPhone} 
+                      onChange={e => setModalPhone(e.target.value.replace(/[^0-9]/g, ''))} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">Mobile Number</label>
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type="email" 
+                      required 
+                      placeholder=" " 
+                      value={modalEmail} 
+                      onChange={e => setModalEmail(e.target.value)} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">Email Address</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1 text-left">Delivery Address</h4>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder=" " 
+                    value={modalAddress} 
+                    onChange={e => setModalAddress(e.target.value)} 
+                    className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
                   />
+                  <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
                 </div>
-                <div className="flex gap-2 pt-2">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder=" " 
+                    value={modalLandmark} 
+                    onChange={e => setModalLandmark(e.target.value)} 
+                    className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                  />
+                  <label className="floating-label">Landmark</label>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder=" " 
+                      maxLength="6" 
+                      value={modalPincode} 
+                      onChange={e => setModalPincode(e.target.value.replace(/[^0-9]/g, ''))} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">Pincode</label>
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type="tel" 
+                      required 
+                      placeholder=" " 
+                      maxLength="10" 
+                      value={modalAlternate} 
+                      onChange={e => setModalAlternate(e.target.value.replace(/[^0-9]/g, ''))} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">Alternate Mobile</label>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder=" " 
+                      value={modalCity} 
+                      onChange={e => setModalCity(e.target.value)} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">City</label>
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder=" " 
+                      value={modalState} 
+                      onChange={e => setModalState(e.target.value)} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">State</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status and Action Buttons */}
+              <div className="pt-2">
+                {checkResult.text && (
+                  <div className={`p-3 rounded-xl text-xs font-bold mb-4 text-left ${checkResult.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                    {checkResult.type === 'success' ? '✅' : '⚠️'} {checkResult.text}
+                  </div>
+                )}
+                <div className="flex gap-3">
                   <button 
                     type="button" 
-                    onClick={() => setShowInputCard(false)}
-                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 transition"
+                    onClick={() => setShowAddressModal(false)}
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-600 transition"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit" 
                     disabled={checkingDelivery}
-                    className="flex-1 py-1.5 bg-[#76b900] text-white hover:opacity-95 rounded-xl text-xs font-semibold transition"
+                    className="flex-1 py-3 bg-[#76b900] text-white font-bold rounded-xl text-sm transition shadow-md shadow-green-50 disabled:opacity-50"
                   >
                     {checkingDelivery ? 'Checking...' : 'Check & Save'}
                   </button>
                 </div>
-                {checkResult.text && (
-                  <p className={`text-xs font-bold mt-2 ${checkResult.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
-                    {checkResult.text}
-                  </p>
-                )}
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes zoomIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-slideUp {
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out forwards;
+        }
+        .animate-zoomIn {
+          animation: zoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
 
       <Banner bannerUrl={store.banner} storeName={store.name} />
 
