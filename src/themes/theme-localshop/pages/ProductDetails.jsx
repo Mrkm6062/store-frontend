@@ -424,7 +424,7 @@ const ProductDetails = () => {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideFooter={true} hideHeader={true}>
       <style>{`
         .primary-file-input::file-selector-button {
           background-color: ${primaryColor} !important;
@@ -433,7 +433,7 @@ const ProductDetails = () => {
           opacity: 0.9 !important;
         }
       `}</style>
-      <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-36 md:pt-12 md:pb-24 lg:pb-12">
+      <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-0 pb-36 lg:pt-6 lg:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-12">
           
           <div className="lg:sticky lg:top-8 lg:h-fit flex gap-4 items-start px-0">
@@ -506,6 +506,14 @@ const ProductDetails = () => {
                       )}
                   </div>
                 )}
+
+                <button
+                  onClick={() => navigate(-1)}
+                  aria-label="Go back"
+                  className="absolute top-4 left-4 w-10 h-10 rounded-full shadow-md transition-all duration-200 flex items-center justify-center bg-white text-gray-600 hover:text-black z-10"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
 
                 <button
                   onClick={() => showToast('Share functionality coming soon!', 'success')}
