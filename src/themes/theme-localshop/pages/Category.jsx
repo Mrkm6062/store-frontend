@@ -8,7 +8,7 @@ import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
 import CartSidebar from '../components/CartSidebar';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
-import { LayoutGrid, ArrowLeft } from 'lucide-react';
+import { LayoutGrid, ArrowLeft, Search } from 'lucide-react';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
@@ -235,7 +235,7 @@ const CategoryPage = () => {
             onBlur={e => e.target.style.borderColor = '#e2e8f0'}
             className="w-full px-4 py-3 pl-11 border border-slate-200 rounded-2xl focus:outline-none text-sm bg-white shadow-sm transition-colors duration-250"
           />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Search className="text-gray-400" size={24} /></span>
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
