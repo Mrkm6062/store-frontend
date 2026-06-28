@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Trash2} from 'lucide-react';
 
 const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemoveFromCart, cartTotal, primaryColor = '#76b900', store, deliverySettings: passedSettings }) => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
     fetchSettings();
   }, [store, passedSettings]);
 
-  const freeLimit = deliverySettings?.freeDeliveryMinOrder || 0;
+  const freeLimit = deliverySettings?.freeShippingThreshold || 0;
   const baseCharge = deliverySettings?.baseCharge || 0;
 
   const isShippingFree = freeLimit > 0 && cartTotal >= freeLimit;
@@ -95,7 +95,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                       className="text-sm font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
                       style={{ color: primaryColor, backgroundColor: `${primaryColor}15` }}
                     >
-                      Remove
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

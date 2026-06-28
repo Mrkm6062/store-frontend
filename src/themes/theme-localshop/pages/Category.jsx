@@ -190,12 +190,12 @@ const CategoryPage = () => {
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
         <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex flex-col gap-2 pb-safe">
-          {deliverySettings?.freeDeliveryMinOrder > 0 && (
-            <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeDeliveryMinOrder ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
-              {cartTotal >= deliverySettings.freeDeliveryMinOrder ? (
+          {deliverySettings?.freeShippingThreshold > 0 && (
+            <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeShippingThreshold ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
+              {cartTotal >= deliverySettings.freeShippingThreshold ? (
                 <span>Free delivery unlocked! 🎉</span>
               ) : (
-                <span>Add ₹{deliverySettings.freeDeliveryMinOrder - cartTotal} more to get free delivery</span>
+                <span>Add ₹{deliverySettings.freeShippingThreshold - cartTotal} more to get free delivery</span>
               )}
             </div>
           )}
