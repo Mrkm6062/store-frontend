@@ -436,8 +436,7 @@ const ProductDetails = () => {
       <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-36 md:pt-12 md:pb-24 lg:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-12">
           
-          {/* Left Column: Images */}
-          <div className="lg:sticky lg:top-8 lg:h-fit flex gap-4 items-start px-4 sm:px-0">
+          <div className="lg:sticky lg:top-8 lg:h-fit flex gap-4 items-start px-0">
             {/* Vertical Thumbnails (Desktop) */}
             <div className="hidden lg:flex flex-col space-y-3">
               {images.map((img, index) => (
@@ -532,26 +531,30 @@ const ProductDetails = () => {
                 </button>
               </div>
               
-              {/* Mobile Horizontal Thumbnails */}
-              {images.length > 1 && (
-                <div className="flex lg:hidden gap-3 mt-4 overflow-x-auto pb-2 px-4 snap-x">
-                  {images.map((img, index) => (
-                    <button 
-                      key={index} 
-                      onClick={() => setActiveImageIndex(index)} 
-                      className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
-                      style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
-                    >
-                      <img src={img} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Mobile thumbnails removed from here and moved to right column */}
             </div>
           </div>
 
           {/* Right Column: Product Info */}
-          <div className="space-y-6 px-4 lg:px-0 mt-4 lg:mt-0 pb-32 lg:pb-0">
+          <div className="space-y-6 px-5 pt-8 pb-32 bg-white rounded-t-[30px] -mt-10 relative z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] lg:space-y-6 lg:px-0 lg:pt-0 lg:pb-0 lg:bg-transparent lg:rounded-none lg:mt-0 lg:shadow-none">
+            {/* Mobile Drawer Handle Indicator */}
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-2 block lg:hidden" />
+
+            {/* Mobile Horizontal Thumbnails inside details card */}
+            {images.length > 1 && (
+              <div className="flex lg:hidden gap-3 overflow-x-auto pb-4 snap-x scrollbar-hide">
+                {images.map((img, index) => (
+                  <button 
+                    key={index} 
+                    onClick={() => setActiveImageIndex(index)} 
+                    className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
+                    style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
+                  >
+                    <img src={img} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
             
             {/* Breadcrumb Navigation */}
             <nav className="mb-4 hidden sm:block">
