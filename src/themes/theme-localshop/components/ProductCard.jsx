@@ -104,7 +104,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
     >
       <div className="overflow-hidden shadow hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group flex flex-col bg-white w-full">
       <div 
-        className="relative overflow-hidden aspect-[2/3] bg-[#4b2d1e] cursor-pointer"
+        className="relative overflow-hidden aspect-square bg-[#4b2d1e] cursor-pointer"
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
         <img 
@@ -134,12 +134,6 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             ? product.name.slice(0, 40) + "..." 
            : product.name}
         </p>
-        <div className="px-2 flex items-center mb-1 space-x-1">
-          <div className="justify-center text-yellow-400 text-xl ">
-            {'★'.repeat(Math.floor(averageRating || 0))}{'☆'.repeat(5 - Math.floor(averageRating || 0))}
-          </div>
-          <span className="text-gray-900 text-xs ml-1">({totalReviews || 0})</span>
-        </div>
 
         <div className="px-1 flex items-baseline space-x-1 text-align-center">
           <span className="text-md font-semibold text-green-800">₹{displayPrice.toLocaleString()}</span>

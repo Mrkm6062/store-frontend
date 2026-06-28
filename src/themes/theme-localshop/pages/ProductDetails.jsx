@@ -444,7 +444,7 @@ const ProductDetails = () => {
                 <button 
                   key={index} 
                   onClick={() => setActiveImageIndex(index)} 
-                  className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
+                  className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                   style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
                 >
                   <img src={getOptimizedImageUrl(img, 186)} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
@@ -454,13 +454,13 @@ const ProductDetails = () => {
 
             {/* Main Image Area */}
             <div className="flex-1 w-full">
-              <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative w-fit mx-auto group">
+              <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative aspect-square w-full max-w-lg mx-auto group">
                 {images.length > 0 ? (
                   <img
                     {...getImageProps(images[activeImageIndex], 600)}
                     alt={product.name}
                     loading="lazy"
-                    className="h-auto max-w-full object-contain transition-transform duration-300"
+                    className="w-full h-full object-cover transition-transform duration-300"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
@@ -539,7 +539,7 @@ const ProductDetails = () => {
                     <button 
                       key={index} 
                       onClick={() => setActiveImageIndex(index)} 
-                      className={`w-16 h-20 shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
+                      className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                       style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
                     >
                       <img src={img} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
@@ -578,12 +578,6 @@ const ProductDetails = () => {
                 <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                   {categoryName || product.categoryName || 'Product'}
                 </span>
-                <div className="flex items-center text-amber-400">
-                  {'★'.repeat(Math.floor(product.averageRating || 0))}{'☆'.repeat(5 - Math.floor(product.averageRating || 0))}
-              <a href="#reviews" className="text-gray-600 text-sm ml-2 font-medium hover:text-blue-600 hover:underline cursor-pointer">
-                    ({product.averageRating || 0}) {product.totalReviews || 0} reviews
-              </a>
-                </div>
               </div>
             </div>
 

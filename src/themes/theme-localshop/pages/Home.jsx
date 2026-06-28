@@ -28,6 +28,105 @@ const StoreHome = () => {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [customerInfo, setCustomerInfo] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gb_customer_info');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [pincodeInput, setPincodeInput] = useState('');
+  const [addressInput, setAddressInput] = useState('');
+  const [checkingDelivery, setCheckingDelivery] = useState(false);
+  const [checkResult, setCheckResult] = useState({ text: '', type: '' });
+  const [showInputCard, setShowInputCard] = useState(false);
+
+  useEffect(() => {
+    if (customerInfo) {
+      setPincodeInput(customerInfo.pincode || '');
+      setAddressInput(customerInfo.addressLine1 || '');
+    }
+  }, [customerInfo]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem('gb_customer_info');
+        setCustomerInfo(saved ? JSON.parse(saved) : null);
+      } catch (e) {}
+    };
+    window.addEventListener('customer-info-updated', handleUpdate);
+    return () => window.removeEventListener('customer-info-updated', handleUpdate);
+  }, []);
+
+  const checkDeliveryAvailability = async (e) => {
+    e.preventDefault();
+    if (!pincodeInput || pincodeInput.trim().length !== 6) {
+      setCheckResult({ text: 'Please enter a valid 6-digit pincode.', type: 'error' });
+      return;
+    }
+    if (!addressInput || !addressInput.trim()) {
+      setCheckResult({ text: 'Please enter your address.', type: 'error' });
+      return;
+    }
+
+    setCheckingDelivery(true);
+    setCheckResult({ text: '', type: '' });
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+        headers: { 'x-store-id': store?._id }
+      });
+      if (!settingsRes.ok) throw new Error('Failed to load delivery settings.');
+      const settings = await settingsRes.json();
+
+      const pinRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${pincodeInput.trim()}`);
+      if (!pinRes.ok) throw new Error('Invalid pincode.');
+      const pinData = await pinRes.json();
+
+      const city = pinData.city || '';
+      const state = pinData.state || '';
+
+      let allowed = false;
+      if (settings.deliveryMode === 'state') {
+        const allowedStates = (settings.allowedStates || []).map(s => s.toLowerCase());
+        allowed = allowedStates.includes(state.toLowerCase().trim());
+      } else if (settings.deliveryMode === 'pincode') {
+        const allowedPincodes = settings.allowedPincodes || [];
+        allowed = allowedPincodes.includes(pincodeInput.trim());
+      } else {
+        allowed = true;
+      }
+
+      if (allowed) {
+        const existingInfo = JSON.parse(localStorage.getItem('gb_customer_info') || '{}');
+        const updatedInfo = {
+          ...existingInfo,
+          pincode: pincodeInput.trim(),
+          addressLine1: addressInput.trim(),
+          city,
+          state
+        };
+        localStorage.setItem('gb_customer_info', JSON.stringify(updatedInfo));
+        setCheckResult({ text: 'Delivery is available!', type: 'success' });
+        window.dispatchEvent(new Event('customer-info-updated'));
+        setTimeout(() => {
+          setShowInputCard(false);
+          setCheckResult({ text: '', type: '' });
+        }, 1500);
+      } else {
+        setCheckResult({ text: 'Delivery not available to this pincode.', type: 'error' });
+      }
+    } catch (err) {
+      setCheckResult({ text: err.message || 'Verification failed. Try again.', type: 'error' });
+    } finally {
+      setCheckingDelivery(false);
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
   }, [cart]);
@@ -164,22 +263,139 @@ const StoreHome = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
+      
+      {/* Mobile-only Delivery Check */}
+      <div className="block md:hidden bg-slate-50 border-b border-gray-150 p-4">
+        {customerInfo?.pincode ? (
+          <div className="flex justify-between items-center bg-white border border-gray-200 rounded-xl p-3 shadow-sm text-left">
+            <div className="flex items-center gap-2">
+              <span className="text-[#76b900]">📍</span>
+              <div className="text-left">
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Delivering to</p>
+                <p className="text-xs font-semibold text-slate-800">{customerInfo.pincode} - {customerInfo.city || 'Saved Address'}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowInputCard(true)}
+              className="text-[10px] font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-2.5 py-1.5 rounded-lg transition"
+            >
+              Change
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm text-left">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-gray-400 text-base">📍</span>
+              <h4 className="font-bold text-slate-800 text-xs">Enter Pincode and Address to Check Delivery</h4>
+            </div>
+            <form onSubmit={checkDeliveryAvailability} className="space-y-3">
+              <div>
+                <input 
+                  type="text" 
+                  placeholder="Enter 6-digit Pincode"
+                  maxLength="6"
+                  required
+                  value={pincodeInput}
+                  onChange={e => setPincodeInput(e.target.value.replace(/\D/g, ''))}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]"
+                />
+              </div>
+              <div>
+                <textarea 
+                  placeholder="Enter Full Address details"
+                  required
+                  rows="2"
+                  value={addressInput}
+                  onChange={e => setAddressInput(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] resize-none"
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={checkingDelivery}
+                className="w-full py-2 bg-[#76b900] text-white font-bold rounded-xl text-xs transition shadow-md shadow-green-50 disabled:opacity-50"
+              >
+                {checkingDelivery ? 'Checking availability...' : 'Check Delivery'}
+              </button>
+              {checkResult.text && (
+                <p className={`text-[10px] font-bold mt-2 ${checkResult.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                  {checkResult.text}
+                </p>
+              )}
+            </form>
+          </div>
+        )}
+
+        {/* Change address modal overlay/card when already set */}
+        {customerInfo?.pincode && showInputCard && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-2xl w-full max-w-sm p-5 border shadow-xl text-left">
+              <h4 className="font-bold text-slate-800 text-sm mb-3">Change Delivery Location</h4>
+              <form onSubmit={checkDeliveryAvailability} className="space-y-3">
+                <div>
+                  <input 
+                    type="text" 
+                    placeholder="Enter 6-digit Pincode"
+                    maxLength="6"
+                    required
+                    value={pincodeInput}
+                    onChange={e => setPincodeInput(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]"
+                  />
+                </div>
+                <div>
+                  <textarea 
+                    placeholder="Enter Full Address"
+                    required
+                    rows="2"
+                    value={addressInput}
+                    onChange={e => setAddressInput(e.target.value)}
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] resize-none"
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowInputCard(false)}
+                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={checkingDelivery}
+                    className="flex-1 py-1.5 bg-[#76b900] text-white hover:opacity-95 rounded-xl text-xs font-semibold transition"
+                  >
+                    {checkingDelivery ? 'Checking...' : 'Check & Save'}
+                  </button>
+                </div>
+                {checkResult.text && (
+                  <p className={`text-xs font-bold mt-2 ${checkResult.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                    {checkResult.text}
+                  </p>
+                )}
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+
       <Banner bannerUrl={store.banner} storeName={store.name} />
 
       {(categoriesLoading || categories.length > 0) && (
-        <div className="max-w-5xl mx-auto w-full px-8 sm:px-12 lg:px-16 pt-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Collections</h2>
+        <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 pt-8 md:pt-16">
+          <div className="text-center mb-6 md:mb-10">
+            <h2 className="text-lg md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Collections</h2>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 justify-items-center">
+          <div className="grid grid-cols-4 gap-3 sm:gap-6 md:gap-12 justify-items-center">
             {categoriesLoading ? (
               [...Array(4)].map((_, i) => (
-                <div key={i} className="w-full max-w-[220px] h-48 bg-gray-200/50 rounded-2xl animate-pulse"></div>
+                <div key={i} className="w-full aspect-square bg-gray-200/50 rounded-full animate-pulse"></div>
               ))
             ) : (
               categories.slice(0, 12).map(c => (
-                <div key={c._id} className="w-full max-w-[220px]">
+                <div key={c._id} className="w-full">
                   <CategoryCard category={c} onClick={(cat) => navigate(`/category/${cat.slug || cat._id}`)} />
                 </div>
               ))

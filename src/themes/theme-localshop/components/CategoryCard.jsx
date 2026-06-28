@@ -53,7 +53,7 @@ const CategoryCard = ({ category, onClick }) => {
           <span className="text-3xl md:text-5xl uppercase font-black text-[#76b900] tracking-wider transform group-hover:scale-110 transition-transform duration-500">{initials}</span>
         )}
       </div>
-      <span className="text-sm md:text-base lg:text-lg uppercase font-bold text-gray-700 group-hover:text-[#76b900] text-center text-balance line-clamp-2 leading-tight transition-colors w-full px-1">
+      <span className="text-[10px] sm:text-sm md:text-base lg:text-lg uppercase font-bold text-gray-700 group-hover:text-[#76b900] text-center text-balance line-clamp-2 leading-tight transition-colors w-full px-1">
         {category.name}
       </span>
     </div>
