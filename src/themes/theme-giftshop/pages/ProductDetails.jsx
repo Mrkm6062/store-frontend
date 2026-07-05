@@ -676,6 +676,36 @@ const ProductDetails = () => {
               </div>
             )}
 
+            {/* Key Features */}
+            {product.keyFeaturesEnabled && product.keyFeatures && product.keyFeatures.length > 0 && (
+              <div className="mt-6 border-t border-gray-100 pt-6 text-left">
+                <h4 className="font-semibold text-gray-900 mb-3">Key Features</h4>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                  {product.keyFeatures.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span style={{ color: primaryColor }} className="font-bold mt-0.5">✓</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Specifications */}
+            {product.specificationsEnabled && product.specifications && product.specifications.length > 0 && (
+              <div className="mt-6 border-t border-gray-100 pt-6 text-left">
+                <h4 className="font-semibold text-gray-900 mb-3">Specifications</h4>
+                <div className="border border-gray-200 rounded-xl overflow-hidden text-sm">
+                  {product.specifications.map((spec, idx) => (
+                    <div key={idx} className={`flex justify-between p-3 ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'} border-b border-gray-100 last:border-b-0`}>
+                      <span className="font-semibold text-gray-700">{spec.name}</span>
+                      <span className="text-gray-600 text-right">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Mobile / Desktop Action Bar */}
             <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-white p-3 sm:p-4 border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-40 lg:static lg:p-0 lg:border-none lg:shadow-none pb-safe lg:mt-6">
               <div className="flex items-stretch gap-2 sm:gap-4 max-w-7xl mx-auto">
