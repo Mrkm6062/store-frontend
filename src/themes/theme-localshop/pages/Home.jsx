@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
-import { getPublicCategories } from '../../../services/api';
+import { getPublicCategories, getPublicOfferCategories } from '../../../services/api';
 import StoreLayout from '../Layout';
 import Banner from '../components/Banner';
 import ProductGrid from '../components/ProductGrid';
@@ -22,6 +22,8 @@ const StoreHome = () => {
   const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [offerCategories, setOfferCategories] = useState([]);
+  const [offerCategoriesLoading, setOfferCategoriesLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -91,6 +93,16 @@ const StoreHome = () => {
       .catch(err => {
         console.error(err);
         setCategoriesLoading(false);
+      });
+
+    getPublicOfferCategories()
+      .then(data => {
+        setOfferCategories(data);
+        setOfferCategoriesLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setOfferCategoriesLoading(false);
       });
   }, []);
 
@@ -336,6 +348,57 @@ const StoreHome = () => {
                       }}
                     >
                       View All Products
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+            {/* Offer Categories */}
+            {offerCategories
+              .map(oc => {
+                const offerProducts = products.filter(p => 
+                  p.offerCategories && p.offerCategories.some(id => (id._id || id) === oc._id)
+                );
+                return { offerCategory: oc, products: offerProducts };
+              })
+              .filter(item => item.products.length > 0)
+              .map(({ offerCategory, products: offerProducts }) => (
+                <div key={offerCategory._id} className="border-b border-gray-100 pb-10 last:border-b-0 last:pb-0">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-3">
+                      <span style={{ backgroundColor: offerCategory.color }} className="w-3.5 h-3.5 rounded-full inline-block"></span>
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-left">
+                        {offerCategory.name}
+                      </h2>
+                    </div>
+                  </div>
+                  
+                  <ProductGrid 
+                    products={offerProducts.slice(0, 4)} 
+                    onAddToCart={handleAddToCart} 
+                    cart={cart}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemoveFromCart={handleRemoveFromCart}
+                  />
+
+                  <div className="mt-6 flex justify-center w-full">
+                    <button 
+                      onClick={() => navigate(`/offers?id=${offerCategory._id}`)}
+                      className="w-full md:w-auto px-8 py-3 bg-white border-2 font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:text-white text-center"
+                      style={{
+                        borderColor: primaryColor,
+                        color: primaryColor,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = primaryColor;
+                        e.currentTarget.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = primaryColor;
+                      }}
+                    >
+                      View All {offerCategory.name}
                     </button>
                   </div>
                 </div>

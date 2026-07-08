@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import { getPublicOfferCategories } from '../../../services/api';
@@ -13,6 +13,7 @@ const OffersPage = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const navigate = useNavigate();
+  const location = useLocation();
   const customization = useContext(ThemeCustomizationContext);
   const primaryColor = customization?.global?.primaryColor || '#76b900';
 
@@ -49,13 +50,20 @@ const OffersPage = () => {
       .then(data => {
         setOfferCategories(data);
         setLoadingOffers(false);
-        setSelectedOfferId('all');
+        
+        const queryParams = new URLSearchParams(location.search);
+        const idFromQuery = queryParams.get('id') || location.state?.selectedOfferId;
+        if (idFromQuery && data.some(oc => oc._id === idFromQuery)) {
+          setSelectedOfferId(idFromQuery);
+        } else {
+          setSelectedOfferId('all');
+        }
       })
       .catch(err => {
         console.error(err);
         setLoadingOffers(false);
       });
-  }, []);
+  }, [location.search, location.state]);
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
