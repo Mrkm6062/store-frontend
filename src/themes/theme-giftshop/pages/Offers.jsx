@@ -230,12 +230,13 @@ const OffersPage = () => {
 
       {/* Cart Sidebar Drawer */}
       <CartSidebar 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)}
+        isCartOpen={isCartOpen}
+        setIsCartOpen={setIsCartOpen}
         cart={cart}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveFromCart={handleRemoveFromCart}
         cartTotal={cartTotal}
+        primaryColor={primaryColor}
       />
     </StoreLayout>
   );
