@@ -280,7 +280,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
   }, [searchQuery]);
 
   return (
-    <header className="shadow-sm sticky top-0 z-50 transition-colors duration-300" style={{ backgroundColor: headerSettings.bgColor || '#ffffff', color: headerSettings.textColor || '#000000' }}>
+    <header className={`shadow-sm sticky top-0 transition-colors duration-300 ${showAddressModal ? 'z-[200]' : 'z-50'}`} style={{ backgroundColor: headerSettings.bgColor || '#ffffff', color: headerSettings.textColor || '#000000' }}>
       {/* Offer Header or Store Closed Notice */}
       {!storeOpenStatus.isOpen ? (
         <div 
@@ -332,7 +332,6 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
 
             {/* Desktop Location Bar - Hidden on mobile, visible on desktop */}
             <div className="hidden md:flex items-center gap-2 text-left">
-              <MapPin className="text-[#76b900] shrink-0" size={16} />
               {customerInfo?.pincode ? (
                 <div className="flex items-center gap-2 max-w-[200px] lg:max-w-[300px]">
                   <div className="truncate">
@@ -343,20 +342,19 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
                   </div>
                   <button 
                     onClick={() => setShowAddressModal(true)}
-                    className="text-[10px] font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-2 py-1 rounded transition shrink-0"
+                    className="text-[10px] font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-2 py-1 rounded transition shrink-0 flex items-center gap-1"
                   >
+                    <MapPin size={12} />
                     Change
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-500 font-semibold truncate max-w-[150px] lg:max-w-[200px]">
-                    Check delivery availability
-                  </span>
                   <button 
                     onClick={() => setShowAddressModal(true)}
-                    className="px-2.5 py-1 bg-[#76b900] text-white text-[10px] font-bold rounded shadow-sm hover:opacity-95 transition shrink-0 whitespace-nowrap"
+                    className="px-2.5 py-1 bg-[#76b900] text-white text-[10px] font-bold rounded shadow-sm hover:opacity-95 transition shrink-0 whitespace-nowrap flex items-center gap-1.5"
                   >
+                    <MapPin size={12} />
                     Check Delivery
                   </button>
                 </div>
@@ -737,7 +735,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
+              <div className="flex gap-3 pt-4 border-t border-slate-100 pb-20 sm:pb-4">
                 <button 
                   type="button" 
                   onClick={() => setShowAddressModal(false)} 
