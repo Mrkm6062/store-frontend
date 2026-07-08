@@ -222,16 +222,11 @@ const StoreHome = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
-              <div className="flex items-center justify-center gap-1.5 text-center">
-                <MapPin className="text-gray-400" size={18} />
-                <span className="text-xs text-slate-600 font-semibold animate-pulse">
-                  Please add your address to check delivery availability and shipping charges.
-                </span>
-              </div>
               <button 
                 onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
-                className="px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center"
+                className="px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center flex items-center justify-center gap-1.5 mx-auto"
               >
+                <MapPin size={16} />
                 Check Delivery
               </button>
             </div>
