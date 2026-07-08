@@ -215,25 +215,6 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
   const [customerToken, setCustomerToken] = useState(() => localStorage.getItem('gb_customer_token'));
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('gb_customer_name') || '');
 
-  const [customerInfo, setCustomerInfo] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gb_customer_info');
-      return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      return null;
-    }
-  });
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      try {
-        const saved = localStorage.getItem('gb_customer_info');
-        setCustomerInfo(saved ? JSON.parse(saved) : null);
-      } catch (e) {}
-    };
-    window.addEventListener('customer-info-updated', handleUpdate);
-    return () => window.removeEventListener('customer-info-updated', handleUpdate);
-  }, []);
 
   useEffect(() => {
     const handleCustomerUpdate = () => {
