@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Package, User } from 'lucide-react';
+import { Home, ShoppingCart, Package, User, Percent } from 'lucide-react';
 import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
 
 const BottomNav = ({ cartCount, onCartClick }) => {
@@ -24,6 +24,16 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         >
           <Home size={20} />
           <span className="text-[10px] font-bold">Home</span>
+        </Link>
+
+        {/* Offers */}
+        <Link 
+          to="/offers" 
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/offers') ? '' : 'text-gray-500 hover:text-gray-900'}`} 
+          style={isActive('/offers') ? { color: activeColor } : {}}
+        >
+          <Percent size={20} />
+          <span className="text-[10px] font-bold">Offers</span>
         </Link>
         
         {/* Track Orders */}

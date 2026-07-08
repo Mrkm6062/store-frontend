@@ -69,6 +69,11 @@ export const getPublicCategories = () => {
   return request("/api/categories/public");
 };
 
+// ✅ Offer Categories API
+export const getPublicOfferCategories = () => {
+  return request("/api/offercategories/public");
+};
+
 // ✅ Image Optimization helpers
 export const getOptimizedImageUrl = (url, width) => {
   if (!url) return '';

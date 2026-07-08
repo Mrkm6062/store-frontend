@@ -213,7 +213,7 @@ const Footer = ({ storeName }) => {
             <ul className="space-y-3">
               {['Home', 'Shop Categories', 'Today\'s Offers', 'Track Order', 'Contact Us'].map((link, idx) => (
                 <li key={idx}>
-                  <Link to={link === 'Home' ? '/' : link === 'Shop Categories' ? '/categories' : link === 'Track Order' ? '/track' : '#'} className="text-sm opacity-80 hover:opacity-100 transition font-medium flex items-center gap-2 group w-fit">
+                  <Link to={link === 'Home' ? '/' : link === 'Shop Categories' ? '/categories' : link === 'Today\'s Offers' ? '/offers' : link === 'Track Order' ? '/track' : '#'} className="text-sm opacity-80 hover:opacity-100 transition font-medium flex items-center gap-2 group w-fit">
                     <ChevronRight size={14} className="opacity-50 group-hover:opacity-100 transition-colors" />
                     {link}
                   </Link>
