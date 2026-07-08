@@ -10,6 +10,7 @@ import CategoryCard from '../components/CategoryCard';
 import Story from '../components/story';
 import CartSidebar from '../components/CartSidebar';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { MapPin } from 'lucide-react';
 
 const StoreHome = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
@@ -313,7 +314,7 @@ const StoreHome = () => {
           {customerInfo?.pincode ? (
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-left">
-                <span className="text-[#76b900]">📍</span>
+                <MapPin className="text-[#76b900]" size={18} />
                 <div>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden sm:block">Delivering to</p>
                   <p className="text-xs sm:text-sm font-bold text-slate-800">
@@ -331,16 +332,16 @@ const StoreHome = () => {
           ) : (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-left">
               <div className="flex items-start sm:items-center gap-2">
-                <span className="text-gray-400">📍</span>
+                <MapPin className="text-gray-400" size={18} />
                 <span className="text-xs sm:text-sm text-slate-600 font-semibold">
-                  Please add your address to check delivery availability and shipping charges.
+                  check delivery availability
                 </span>
               </div>
               <button 
                 onClick={() => setShowAddressModal(true)}
                 className="w-full sm:w-auto px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md shadow-green-100 hover:opacity-95 transition shrink-0 text-center animate-pulse"
               >
-                Add address to check delivery
+                Add Address
               </button>
             </div>
           )}

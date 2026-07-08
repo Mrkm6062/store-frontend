@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, ChevronRight, Home, Heart, Package } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, ChevronRight, Home, Heart, Package, Clock, AlertTriangle } from 'lucide-react';
 import { getPublicCategories, getOptimizedImageUrl } from '../../../services/api';
 import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
 import { useProducts } from '../../../services/useProducts';
@@ -47,11 +47,21 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
 
   const getClosedText = () => {
     if (!storeOpenStatus.nextOpen) {
-      return "⚠️ Store is currently closed today and not accepting orders.";
+      return (
+        <span className="flex items-center justify-center gap-1.5">
+          <AlertTriangle size={16} />
+          Store is currently closed today and not accepting orders.
+        </span>
+      );
     }
     const { day, date, time } = storeOpenStatus.nextOpen;
     const dayStr = day === "Tomorrow" ? "tomorrow" : `on ${day} (${date})`;
-    return `⚠️ Store is closed today. Kindly order ${dayStr} at ${time}`;
+    return (
+      <span className="flex items-center justify-center gap-1.5">
+        <AlertTriangle size={16} />
+        Store is closed today. Kindly order {dayStr} at {time}
+      </span>
+    );
   };
   const [wishlistCount, setWishlistCount] = useState(0);
   const [customerToken, setCustomerToken] = useState(() => localStorage.getItem('gb_customer_token'));
@@ -386,8 +396,8 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
       {showClosedPopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative border border-slate-100 animate-scaleUp">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-              ⏰
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={32} />
             </div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">Store is Closed Today</h3>
             <p className="text-sm text-slate-600 mb-6 text-left">
