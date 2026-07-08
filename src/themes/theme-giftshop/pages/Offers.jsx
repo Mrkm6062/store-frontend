@@ -119,7 +119,7 @@ const OffersPage = () => {
     <StoreLayout 
       store={store} 
       cartCount={cart.reduce((sum, item) => sum + item.qty, 0)}
-      onOpenCart={() => setIsCartOpen(true)}
+      onCartClick={() => setIsCartOpen(true)}
     >
       {/* Toast Alert */}
       {toast && (

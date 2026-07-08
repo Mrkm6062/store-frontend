@@ -110,6 +110,7 @@ const CheckoutPage = () => {
   const calculateOfferDiscount = (cartItems) => {
     let totalDiscount = 0;
     const offerGroupItems = {};
+    const promoNamesMap = {};
 
     for (const item of cartItems) {
       const activeOffers = (item.offerCategories || []).filter(oc => {
@@ -123,6 +124,8 @@ const CheckoutPage = () => {
       if (activeOffers.length > 0) {
         const bestOffer = activeOffers.find(oc => oc.offerType === 'B1G1') || activeOffers[0];
         const offerId = bestOffer._id || bestOffer;
+        const offerName = bestOffer.name || 'Promo';
+        promoNamesMap[offerId] = offerName;
         
         if (!offerGroupItems[offerId]) {
           offerGroupItems[offerId] = {
@@ -138,30 +141,43 @@ const CheckoutPage = () => {
       }
     }
 
+    const appliedPromos = [];
+
     for (const offerId in offerGroupItems) {
       const group = offerGroupItems[offerId];
       group.prices.sort((a, b) => b - a);
 
       const count = group.prices.length;
+      let groupDiscount = 0;
       if (group.offerType === 'B1G1') {
         const freeCount = Math.floor(count / 2);
         if (freeCount > 0) {
           const cheapestItems = group.prices.slice(-freeCount);
-          totalDiscount += cheapestItems.reduce((sum, p) => sum + p, 0);
+          groupDiscount = cheapestItems.reduce((sum, p) => sum + p, 0);
         }
       } else if (group.offerType === 'B2G1') {
         const freeCount = Math.floor(count / 3);
         if (freeCount > 0) {
           const cheapestItems = group.prices.slice(-freeCount);
-          totalDiscount += cheapestItems.reduce((sum, p) => sum + p, 0);
+          groupDiscount = cheapestItems.reduce((sum, p) => sum + p, 0);
+        }
+      }
+
+      if (groupDiscount > 0) {
+        totalDiscount += groupDiscount;
+        if (promoNamesMap[offerId]) {
+          appliedPromos.push(promoNamesMap[offerId]);
         }
       }
     }
 
-    return totalDiscount;
+    return {
+      totalDiscount,
+      appliedPromoNames: appliedPromos
+    };
   };
 
-  const offerDiscount = calculateOfferDiscount(cart);
+  const { totalDiscount: offerDiscount, appliedPromoNames } = calculateOfferDiscount(cart);
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const discountedTotal = Math.max(0, cartTotal - discountAmount - offerDiscount);
 
@@ -633,7 +649,7 @@ const CheckoutPage = () => {
 
               <div className="space-y-2 mb-4 text-sm text-gray-600">
                 <div className="flex justify-between"><span>Subtotal:</span><span className="font-bold text-gray-800">₹{cartTotal}</span></div>
-                {offerDiscount > 0 && <div className="flex justify-between text-orange-600 font-bold"><span>Promo Discount:</span><span>-₹{offerDiscount}</span></div>}
+                {offerDiscount > 0 && <div className="flex justify-between text-orange-600 font-bold"><span>Promo Discount ({appliedPromoNames.join(', ')}):</span><span>-₹{offerDiscount}</span></div>}
                 {appliedCoupon && <div className="flex justify-between text-green-600 font-bold"><span>Discount ({appliedCoupon.code}):</span><span>-₹{discountAmount}</span></div>}
                 <div className="flex justify-between"><span>Shipping:</span><span className="font-bold text-gray-800">{shippingCharge > 0 ? `₹${shippingCharge}` : 'Free'}</span></div>
               </div>
