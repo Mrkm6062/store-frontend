@@ -38,48 +38,7 @@ const StoreHome = () => {
     }
   });
 
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [modalName, setModalName] = useState('');
-  const [modalPhone, setModalPhone] = useState('');
-  const [modalEmail, setModalEmail] = useState('');
-  const [modalAddress, setModalAddress] = useState('');
-  const [modalLandmark, setModalLandmark] = useState('');
-  const [modalPincode, setModalPincode] = useState('');
-  const [modalAlternate, setModalAlternate] = useState('');
-  const [modalCity, setModalCity] = useState('');
-  const [modalState, setModalState] = useState('');
 
-  const [checkingDelivery, setCheckingDelivery] = useState(false);
-  const [checkResult, setCheckResult] = useState({ text: '', type: '' });
-  const [deliverySettings, setDeliverySettings] = useState(null);
-
-  useEffect(() => {
-    if (store?._id) {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
-      fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
-        headers: { 'x-store-id': store?._id }
-      })
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data) setDeliverySettings(data);
-        })
-        .catch(console.error);
-    }
-  }, [store]);
-
-  useEffect(() => {
-    if (customerInfo) {
-      setModalName(customerInfo.customerName || '');
-      setModalPhone(customerInfo.customerPhone || '');
-      setModalEmail(customerInfo.customerEmail || '');
-      setModalAddress(customerInfo.addressLine1 || '');
-      setModalLandmark(customerInfo.landmark || '');
-      setModalPincode(customerInfo.pincode || '');
-      setModalAlternate(customerInfo.alternateNumber || '');
-      setModalCity(customerInfo.city || '');
-      setModalState(customerInfo.state || '');
-    }
-  }, [customerInfo]);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -92,84 +51,7 @@ const StoreHome = () => {
     return () => window.removeEventListener('customer-info-updated', handleUpdate);
   }, []);
 
-  useEffect(() => {
-    const fetchCityState = async () => {
-      if (modalPincode && modalPincode.trim().length === 6) {
-        try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
-          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${modalPincode.trim()}`);
-          if (response.ok) {
-            const data = await response.json();
-            setModalCity(data.city || '');
-            setModalState(data.state || '');
-          }
-        } catch (e) {}
-      }
-    };
-    fetchCityState();
-  }, [modalPincode]);
 
-  const handleSaveAddress = async (e) => {
-    e.preventDefault();
-    if (!modalPhone || modalPhone.trim().length < 10) {
-      setCheckResult({ text: 'Mobile number must be at least 10 digits.', type: 'error' });
-      return;
-    }
-    if (!modalPincode || modalPincode.trim().length !== 6) {
-      setCheckResult({ text: 'Pincode must be exactly 6 digits.', type: 'error' });
-      return;
-    }
-
-    setCheckingDelivery(true);
-    setCheckResult({ text: '', type: '' });
-
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
-      const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
-        headers: { 'x-store-id': store?._id }
-      });
-      if (!settingsRes.ok) throw new Error('Failed to load store delivery settings.');
-      const settings = await settingsRes.json();
-
-      let allowed = false;
-      if (settings.deliveryMode === 'state') {
-        const allowedStates = (settings.allowedStates || []).map(s => s.toLowerCase());
-        allowed = allowedStates.includes(modalState.toLowerCase().trim());
-      } else if (settings.deliveryMode === 'pincode') {
-        const allowedPincodes = settings.allowedPincodes || [];
-        allowed = allowedPincodes.includes(modalPincode.trim());
-      } else {
-        allowed = true;
-      }
-
-      if (allowed) {
-        const updatedInfo = {
-          customerName: modalName.trim(),
-          customerPhone: modalPhone.trim(),
-          customerEmail: modalEmail.trim(),
-          addressLine1: modalAddress.trim(),
-          landmark: modalLandmark.trim(),
-          pincode: modalPincode.trim(),
-          alternateNumber: modalAlternate.trim(),
-          city: modalCity.trim(),
-          state: modalState.trim()
-        };
-        localStorage.setItem('gb_customer_info', JSON.stringify(updatedInfo));
-        setCheckResult({ text: 'Delivery is available! Address saved.', type: 'success' });
-        window.dispatchEvent(new Event('customer-info-updated'));
-        setTimeout(() => {
-          setShowAddressModal(false);
-          setCheckResult({ text: '', type: '' });
-        }, 1500);
-      } else {
-        setCheckResult({ text: `Sorry, we do not deliver to this location (${modalPincode}).`, type: 'error' });
-      }
-    } catch (err) {
-      setCheckResult({ text: err.message || 'Verification failed. Try again.', type: 'error' });
-    } finally {
-      setCheckingDelivery(false);
-    }
-  };
 
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
@@ -306,211 +188,44 @@ const StoreHome = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideBottomNav={showAddressModal}>
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideBottomNav={false}>
       
-      {/* Top Location Bar */}
-      <div className="bg-slate-50 border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 py-3 sm:px-12 lg:px-16">
+      {/* Top Location Bar - Mobile only (hidden on desktop) */}
+      <div className="bg-slate-50 border-b border-gray-200 md:hidden block">
+        <div className="max-w-5xl mx-auto px-4 py-3 text-center flex flex-col justify-center items-center gap-1.5">
           {customerInfo?.pincode ? (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-left">
+            <div className="flex flex-col items-center justify-center gap-1.5 w-full text-center">
+              <div className="flex items-center justify-center gap-1.5 text-center">
                 <MapPin className="text-[#76b900]" size={18} />
-                <div>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden sm:block">Delivering to</p>
-                  <p className="text-xs sm:text-sm font-bold text-slate-800">
-                    {customerInfo.customerName} - {customerInfo.addressLine1}, {customerInfo.city} ({customerInfo.pincode})
-                  </p>
-                </div>
+                <span className="text-xs font-bold text-slate-800">
+                  {customerInfo.customerName} - {customerInfo.addressLine1}, {customerInfo.city} ({customerInfo.pincode})
+                </span>
               </div>
               <button 
-                onClick={() => setShowAddressModal(true)}
-                className="text-xs font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-3 py-1.5 rounded-lg transition shrink-0"
+                onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
+                className="text-xs font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-3 py-1 rounded-lg transition"
               >
-                Change
+                Change Location
               </button>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-left">
+            <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
+              <div className="flex items-center justify-center gap-1.5 text-center">
+                <MapPin className="text-gray-400" size={18} />
+                <span className="text-xs text-slate-600 font-semibold animate-pulse">
+                  Please add your address to check delivery availability and shipping charges.
+                </span>
+              </div>
               <button 
-                onClick={() => setShowAddressModal(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md shadow-green-100 hover:opacity-95 transition shrink-0 text-center"
+                onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
+                className="px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center"
               >
-                <MapPin className="text-black" size={18} /> check delivery availability
+                Check Delivery
               </button>
             </div>
           )}
         </div>
       </div>
-
-      {/* Address & Delivery Modal */}
-      {showAddressModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fadeIn">
-          {/* Backdrop click close */}
-          <div className="absolute inset-0" onClick={() => setShowAddressModal(false)} />
-          
-          <div className="bg-white w-full rounded-t-3xl sm:rounded-2xl sm:max-w-lg shadow-2xl border-t sm:border border-slate-100 flex flex-col h-[90vh] sm:h-auto sm:max-h-[85vh] overflow-hidden relative z-10 animate-slideUp sm:animate-zoomIn">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
-              <div className="text-left">
-                <h3 className="text-base sm:text-lg font-bold text-slate-800">Check Delivery Address</h3>
-                <p className="text-[10px] text-gray-500">Enter details to verify availability</p>
-              </div>
-              <button 
-                onClick={() => setShowAddressModal(false)} 
-                className="text-slate-400 hover:text-red-500 transition-colors text-2xl font-bold leading-none p-1"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Scrollable Form */}
-            <form onSubmit={handleSaveAddress} className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Contact Details */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1 text-left">Contact Details</h4>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder=" " 
-                    value={modalName} 
-                    onChange={e => setModalName(e.target.value)} 
-                    className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                  />
-                  <label className="floating-label">Full Name</label>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <input 
-                      type="tel" 
-                      required 
-                      placeholder=" " 
-                      maxLength="10" 
-                      value={modalPhone} 
-                      onChange={e => setModalPhone(e.target.value.replace(/[^0-9]/g, ''))} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">Mobile Number</label>
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="email" 
-                      required 
-                      placeholder=" " 
-                      value={modalEmail} 
-                      onChange={e => setModalEmail(e.target.value)} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">Email Address</label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Address */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1 text-left">Delivery Address</h4>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder=" " 
-                    value={modalAddress} 
-                    onChange={e => setModalAddress(e.target.value)} 
-                    className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                  />
-                  <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
-                </div>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder=" " 
-                    value={modalLandmark} 
-                    onChange={e => setModalLandmark(e.target.value)} 
-                    className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                  />
-                  <label className="floating-label">Landmark</label>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      required 
-                      placeholder=" " 
-                      maxLength="6" 
-                      value={modalPincode} 
-                      onChange={e => setModalPincode(e.target.value.replace(/[^0-9]/g, ''))} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">Pincode</label>
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="tel" 
-                      required 
-                      placeholder=" " 
-                      maxLength="10" 
-                      value={modalAlternate} 
-                      onChange={e => setModalAlternate(e.target.value.replace(/[^0-9]/g, ''))} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">Alternate Mobile</label>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      required 
-                      placeholder=" " 
-                      value={modalCity} 
-                      onChange={e => setModalCity(e.target.value)} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">City</label>
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      required 
-                      placeholder=" " 
-                      value={modalState} 
-                      onChange={e => setModalState(e.target.value)} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">State</label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status and Action Buttons */}
-              <div className="pt-2">
-                {checkResult.text && (
-                  <div className={`p-3 rounded-xl text-xs font-bold mb-4 text-left ${checkResult.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
-                    {checkResult.type === 'success' ? '✅' : '⚠️'} {checkResult.text}
-                  </div>
-                )}
-                <div className="flex gap-3">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowAddressModal(false)}
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-600 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={checkingDelivery}
-                    className="flex-1 py-3 bg-[#76b900] text-white font-bold rounded-xl text-sm transition shadow-md shadow-green-50 disabled:opacity-50"
-                  >
-                    {checkingDelivery ? 'Checking...' : 'Check & Save'}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <style>{`
         @keyframes slideUp {
