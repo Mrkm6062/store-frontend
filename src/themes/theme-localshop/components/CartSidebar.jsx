@@ -185,7 +185,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                 {isShippingFree ? (
                   <span>Free delivery unlocked! 🎉</span>
                 ) : (
-                  <span>Add ₹{amountNeededForFreeDelivery} more to get free delivery / shipping charges zero</span>
+                  <span>Add ₹{amountNeededForFreeDelivery} For Free Delivery</span>
                 )}
               </div>
             )}
