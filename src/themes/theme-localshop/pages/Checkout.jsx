@@ -690,23 +690,30 @@ const CheckoutPage = () => {
               <div className="flex justify-between items-center font-bold text-xl mb-6 border-t pt-4 text-gray-800"><span>Total:</span><span className="text-green-600">₹{finalTotal}</span></div>
               
               {/* Store Hours Check */}
-              {!storeOpenStatus.isOpen && (
+              {store?.subscriptionStatus === 'expired' ? (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
+                  <span>⚠️</span>
+                  <span>
+                    Orders cannot be placed at this time because the store's subscription plan has expired.
+                  </span>
+                </div>
+              ) : !storeOpenStatus.isOpen ? (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
                   <span>⚠️</span>
                   <span>
                     {storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}
                   </span>
                 </div>
-              )}
+              ) : null}
 
               <button 
                 type="submit" 
                 form="checkout-form" 
-                disabled={isPlacingOrder || !storeOpenStatus.isOpen} 
-                style={{ backgroundColor: storeOpenStatus.isOpen ? primaryColor : '#94a3b8' }} 
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen || store?.subscriptionStatus === 'expired'} 
+                style={{ backgroundColor: (storeOpenStatus.isOpen && store?.subscriptionStatus !== 'expired') ? primaryColor : '#94a3b8' }} 
                 className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? 'Processing...' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order')}
+                {isPlacingOrder ? 'Processing...' : (store?.subscriptionStatus === 'expired' ? 'Subscription Expired' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order'))}
               </button>
             </div>
           </div>
@@ -835,24 +842,31 @@ const CheckoutPage = () => {
               </div>
 
               {/* Store Hours Check */}
-              {!storeOpenStatus.isOpen && (
+              {store?.subscriptionStatus === 'expired' ? (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
+                  <span>⚠️</span>
+                  <span>
+                    Orders cannot be placed at this time because the store's subscription plan has expired.
+                  </span>
+                </div>
+              ) : !storeOpenStatus.isOpen ? (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
                   <span>⚠️</span>
                   <span>
                     {storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}
                   </span>
                 </div>
-              )}
+              ) : null}
 
               {/* 4. Action Button */}
               <button 
                 type="submit" 
                 form="checkout-form" 
-                disabled={isPlacingOrder || !storeOpenStatus.isOpen} 
-                style={{ backgroundColor: storeOpenStatus.isOpen ? primaryColor : '#94a3b8' }} 
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen || store?.subscriptionStatus === 'expired'} 
+                style={{ backgroundColor: (storeOpenStatus.isOpen && store?.subscriptionStatus !== 'expired') ? primaryColor : '#94a3b8' }} 
                 className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-base sm:text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? 'Processing...' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order')}
+                {isPlacingOrder ? 'Processing...' : (store?.subscriptionStatus === 'expired' ? 'Subscription Expired' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order'))}
               </button>
             </>
           ) : (
