@@ -37,9 +37,21 @@ const StoreHome = () => {
       return null;
     }
   });
+  const [deliverySettings, setDeliverySettings] = useState(null);
 
-
-
+  useEffect(() => {
+    if (store?._id) {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+        headers: { 'x-store-id': store?._id }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) setDeliverySettings(data);
+        })
+        .catch(console.error);
+    }
+  }, [store]);
   useEffect(() => {
     const handleUpdate = () => {
       try {
