@@ -14,7 +14,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
     const fetchSettings = async () => {
       if (store?._id) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
           const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
             headers: { 'x-store-id': store?._id }
           });

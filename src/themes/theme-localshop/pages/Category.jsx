@@ -32,7 +32,7 @@ const CategoryPage = () => {
 
   useEffect(() => {
     if (store?._id) {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
       fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
         headers: { 'x-store-id': store?._id }
       })

@@ -23,7 +23,7 @@ const TrackOrder = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     if (store) {

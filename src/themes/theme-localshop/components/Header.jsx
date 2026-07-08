@@ -41,7 +41,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
 
   useEffect(() => {
     if (store?._id) {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
       fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
         headers: { 'x-store-id': store?._id }
       })
@@ -88,7 +88,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
     const fetchCityState = async () => {
       if (modalPincode && modalPincode.trim().length === 6) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
           const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${modalPincode.trim()}`);
           if (response.ok) {
             const data = await response.json();
@@ -116,7 +116,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
     setCheckResult({ text: '', type: '' });
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
       const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
         headers: { 'x-store-id': store?._id }
       });
@@ -167,7 +167,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
     if (!store?._id) return;
     const fetchStatus = async () => {
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '';
         const res = await fetch(`${API_BASE_URL}/api/store-hours/public/status`, {
           headers: { 'x-store-id': store._id }
         });

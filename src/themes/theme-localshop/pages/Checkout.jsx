@@ -136,7 +136,7 @@ const CheckoutPage = () => {
     const fetchEditCityState = async () => {
       if (editPincode && editPincode.trim().length === 6) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
           const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${editPincode.trim()}`);
           if (response.ok) {
             const data = await response.json();
@@ -154,7 +154,7 @@ const CheckoutPage = () => {
       if (!store?._id) return;
       setLoadingOpenStatus(true);
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '';
         const res = await fetch(`${API_BASE_URL}/api/store-hours/public/status`, {
           headers: { 'x-store-id': store._id }
         });
@@ -186,7 +186,7 @@ const CheckoutPage = () => {
     setModalResult({ text: '', type: '' });
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
       const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
         headers: { 'x-store-id': store?._id }
       });
@@ -330,7 +330,7 @@ const CheckoutPage = () => {
       document.title = `Checkout - ${store.websiteTitle || store.name}`;
       const fetchDeliverySettings = async () => {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
           const [delRes, chkRes] = await Promise.all([
             fetch(`${API_BASE_URL}/api/delivery-settings/public`, { headers: { 'x-store-id': store._id } }),
             fetch(`${API_BASE_URL}/api/checkout-settings/public`, { headers: { 'x-store-id': store._id } })
@@ -354,7 +354,7 @@ const CheckoutPage = () => {
     const fetchPincodeDetails = async () => {
       if (formData.pincode && formData.pincode.trim().length === 6) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
           const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${formData.pincode.trim()}`);
           if (response.ok) {
             const data = await response.json();
@@ -378,7 +378,7 @@ const CheckoutPage = () => {
     setCouponMessage({ text: '', type: '' });
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${API_BASE_URL}/api/coupons/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-store-id': store._id },
@@ -457,7 +457,7 @@ const CheckoutPage = () => {
             uploadData.append('storeId', store._id);
             uploadData.append('images', fileToUpload, 'custom_print.jpg');
 
-            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+            const API_BASE_URL = import.meta.env.VITE_API_URL || '';
             const uploadRes = await fetch(`${API_BASE_URL}/api/upload/public`, { method: 'POST', body: uploadData });
 
             if (uploadRes.ok) {
@@ -517,7 +517,7 @@ const CheckoutPage = () => {
           order_id: razorpayOrder.id,
           handler: async function (paymentResponse) {
             try {
-              const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+              const API_BASE_URL = import.meta.env.VITE_API_URL || '';
               const verifyRes = await fetch(`${API_BASE_URL}/api/orders/verify-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

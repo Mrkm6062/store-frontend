@@ -45,7 +45,7 @@ const TrackOrder = () => {
     return () => window.removeEventListener('cart-updated', handleCartUpdate);
   }, []);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3011';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     if (store) {
