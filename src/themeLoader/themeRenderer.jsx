@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import DynamicRouteLoader from './DynamicRouteLoader.jsx';
 
 // Import theme-free components
 export const isLightColor = (color) => {
@@ -237,7 +238,7 @@ const ThemeRenderer = () => {
     <ThemeCustomizationContext.Provider value={customization}>
       <Router>
           <Routes>
-            <Route path="/" element={<ActiveTheme.Home />} />
+            <Route path="/" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Home" />} />
             <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
             <Route path="/categories" element={<ActiveTheme.Categories />} />
             <Route path="/offers" element={<ActiveTheme.Offers />} />
@@ -247,7 +248,7 @@ const ThemeRenderer = () => {
             <Route path="/checkout" element={<ActiveTheme.Checkout />} />
             <Route path="/review/:orderId/:productId" element={<ActiveTheme.WriteReview />} />
             <Route path="/product/:productId" element={<ActiveTheme.ProductDetails />} />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="NotFound" />} />
           </Routes>
       </Router>
     </ThemeCustomizationContext.Provider>
