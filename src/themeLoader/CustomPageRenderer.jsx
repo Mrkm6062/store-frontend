@@ -1,10 +1,26 @@
 import React, { useEffect, useState } from 'react';
 
 const CustomPageRenderer = ({ pageData }) => {
+  const [storeData, setStoreData] = useState(null);
   const [trackingSettings, setTrackingSettings] = useState(null);
-  const [pwaSettings, setPwaSettings] = useState(null);
 
   useEffect(() => {
+    const fetchStorePublic = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const headers = {
+          'x-store-domain': window.location.hostname,
+          'x-forwarded-host': window.location.hostname
+        };
+        const res = await fetch(`${API_URL}/api/store/public`, { headers });
+        if (res.ok) {
+          setStoreData(await res.json());
+        }
+      } catch (err) {
+        console.error("Failed to load store public settings in CustomPageRenderer:", err);
+      }
+    };
+
     const fetchTracking = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || '';
@@ -21,24 +37,8 @@ const CustomPageRenderer = ({ pageData }) => {
       }
     };
 
-    const fetchPwa = async () => {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '';
-        const headers = {
-          'x-store-domain': window.location.hostname,
-          'x-forwarded-host': window.location.hostname
-        };
-        const res = await fetch(`${API_URL}/api/pwa/public`, { headers });
-        if (res.ok) {
-          setPwaSettings(await res.json());
-        }
-      } catch (err) {
-        console.error("Failed to load PWA settings in CustomPageRenderer:", err);
-      }
-    };
-
+    fetchStorePublic();
     fetchTracking();
-    fetchPwa();
   }, []);
 
   useEffect(() => {
@@ -242,7 +242,15 @@ const CustomPageRenderer = ({ pageData }) => {
 
   // Inject PWA settings to parent window (for mobile app capabilities)
   useEffect(() => {
-    if (!pwaSettings || !pwaSettings.enabled) return;
+    const pwa = storeData?.pwa;
+    if (!pwa || !pwa.enabled) {
+      let manifestLink = document.querySelector('link[rel="manifest"]');
+      if (manifestLink) manifestLink.remove();
+
+      let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeColorMeta) themeColorMeta.remove();
+      return;
+    }
 
     const cleanupElements = [];
 
@@ -254,7 +262,7 @@ const CustomPageRenderer = ({ pageData }) => {
       document.head.appendChild(themeColorMeta);
       cleanupElements.push(themeColorMeta);
     }
-    themeColorMeta.content = pwaSettings.themeColor;
+    themeColorMeta.content = pwa.themeColor || '#16A34A';
 
     // 2. Apple mobile capabilities
     let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
@@ -273,7 +281,7 @@ const CustomPageRenderer = ({ pageData }) => {
       document.head.appendChild(appleTitleMeta);
       cleanupElements.push(appleTitleMeta);
     }
-    appleTitleMeta.content = pwaSettings.shortName;
+    appleTitleMeta.content = pwa.shortName || pwa.appName;
 
     // 3. Apple touch icon
     let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
@@ -283,7 +291,7 @@ const CustomPageRenderer = ({ pageData }) => {
       document.head.appendChild(appleIcon);
       cleanupElements.push(appleIcon);
     }
-    appleIcon.href = pwaSettings.icon192;
+    appleIcon.href = pwa.icon192;
 
     // 4. Manifest link (same-origin relative URL)
     let manifestLink = document.querySelector('link[rel="manifest"]');
@@ -293,7 +301,7 @@ const CustomPageRenderer = ({ pageData }) => {
       document.head.appendChild(manifestLink);
       cleanupElements.push(manifestLink);
     }
-    manifestLink.href = "/manifest.json";
+    manifestLink.href = "/manifest.webmanifest";
 
     // Register PWA Service Worker on parent window
     if ('serviceWorker' in navigator) {
@@ -309,7 +317,7 @@ const CustomPageRenderer = ({ pageData }) => {
         }
       });
     };
-  }, [pwaSettings]);
+  }, [storeData]);
 
   const compileSource = () => {
     if (!pageData) return '';
@@ -388,14 +396,15 @@ const CustomPageRenderer = ({ pageData }) => {
     // PWA settings compiled for iframe
     let pwaMetaTags = '';
     let pwaManifestLink = '';
-    if (pwaSettings && pwaSettings.enabled) {
+    const pwa = storeData?.pwa;
+    if (pwa && pwa.enabled) {
       pwaMetaTags = `
-        <meta name="theme-color" content="${pwaSettings.themeColor}">
+        <meta name="theme-color" content="${pwa.themeColor || '#16A34A'}">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-title" content="${pwaSettings.shortName}">
-        <link rel="apple-touch-icon" href="${pwaSettings.icon192}">
+        <meta name="apple-mobile-web-app-title" content="${pwa.shortName || pwa.appName}">
+        <link rel="apple-touch-icon" href="${pwa.icon192}">
       `;
-      pwaManifestLink = `<link rel="manifest" href="/manifest.json">`;
+      pwaManifestLink = `<link rel="manifest" href="/manifest.webmanifest">`;
     }
 
 
