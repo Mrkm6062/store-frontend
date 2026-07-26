@@ -22,6 +22,22 @@ const DynamicRouteLoader = ({ ActiveTheme, componentName }) => {
 
       const path = location.pathname;
 
+      // Immediately bypass reserved system files so React Router or CMS never intercepts them
+      const slug = path.toLowerCase().replace(/^\/|\/$/g, '');
+      const reservedSlugs = [
+        "manifest.webmanifest",
+        "manifest.json",
+        "sw.js",
+        "robots.txt",
+        "sitemap.xml",
+        "favicon.ico",
+        "llms.txt"
+      ];
+      if (reservedSlugs.includes(slug)) {
+        setLoading(false);
+        return;
+      }
+
       try {
         if (path === '/') {
           // 1. Check if there is a custom homepage configured

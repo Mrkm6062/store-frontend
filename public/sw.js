@@ -35,30 +35,31 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle local HTTP/HTTPS requests
-  if (!event.request.url.startsWith('http')) return;
+  // Skip cross-origin and non-GET requests to prevent service worker errors
+  if (!event.request.url.startsWith(self.location.origin) || event.request.method !== 'GET') {
+    return;
+  }
 
-  // Network-first for HTML pages (so visitors always see latest price / stock updates)
+  // Network-first for navigation pages (HTML)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Cache a copy of the page
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
           return response;
         })
         .catch(() => {
-          // If offline, try loading page from cache
           return caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // If page is not in cache, show beautiful offline fallback page
             return new Response(OFFLINE_HTML, {
-              headers: { 'Content-Type': 'text/html' }
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
             });
           });
         })
@@ -66,31 +67,41 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for JS, CSS, Fonts, Images, and static assets
+  // Cache-first for JS, CSS, Fonts, and Images
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Fetch in background to update cache (stale-while-revalidate)
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
-            });
-          }
-        }).catch(() => {}); // ignore network update errors when offline
-
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((networkResponse) => {
-        if (networkResponse.status === 200 && event.request.method === 'GET') {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+    caches.match(event.request)
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          // Quietly update the cache in the background
+          fetch(event.request).then((networkResponse) => {
+            if (networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, networkResponse);
+              });
+            }
+          }).catch(() => {}); // Ignore background updates failure when offline
+          
+          return cachedResponse;
         }
-        return networkResponse;
-      });
-    })
+
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse.status === 200) {
+              const responseClone = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseClone);
+              });
+            }
+            return networkResponse;
+          })
+          .catch((err) => {
+            // Return a valid Response to prevent "Failed to convert value to Response" browser crashes
+            return new Response('Asset not available offline', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/plain' }
+            });
+          });
+      })
   );
 });
