@@ -91,10 +91,12 @@ self.addEventListener('fetch', (event) => {
         .then((cachedResponse) => {
           if (cachedResponse) {
             // Quietly update the cache in the background
-            fetch(event.request).then((networkResponse) => {
-              if (networkResponse.status === 200) {
-                caches.open(CACHE_NAME).then((cache) => {
-                  cache.put(event.request, networkResponse);
+             fetch(event.request).then((networkResponse) => {
+                 if (networkResponse.ok) {
+                 const clone = networkResponse.clone();
+
+                 caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, clone);
                 });
               }
             }).catch(() => {}); // Ignore background updates failure when offline
