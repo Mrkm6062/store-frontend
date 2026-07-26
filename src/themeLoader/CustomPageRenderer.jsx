@@ -312,6 +312,13 @@ const CustomPageRenderer = ({ pageData }) => {
     }
     manifestLink.href = manifestURL;
 
+    // Register PWA Service Worker on parent window
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('PWA Service Worker registered from CustomPageRenderer:', reg.scope))
+        .catch(err => console.error('PWA Service Worker registration failed:', err));
+    }
+
     return () => {
       cleanupElements.forEach(el => {
         if (el && el.parentNode) {

@@ -336,6 +336,13 @@ const ThemeRenderer = () => {
                 document.head.appendChild(manifestLink);
               }
               manifestLink.href = manifestURL;
+
+              // Register PWA Service Worker
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(reg => console.log('PWA Service Worker registered:', reg.scope))
+                  .catch(err => console.error('PWA Service Worker registration failed:', err));
+              }
             }
           }
         } catch (pwaErr) {
