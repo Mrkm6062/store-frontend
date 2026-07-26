@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gb-pwa-cache-v2'; // Incremented version to clear old stale caches
+const CACHE_NAME = 'gb-pwa-cache-v3'; // Increment version to enforce new filtering rules
 const OFFLINE_HTML = `
 <!DOCTYPE html>
 <html lang="en">
@@ -26,6 +26,11 @@ const OFFLINE_HTML = `
 </html>
 `;
 
+// Helper to identify static asset requests that should be cached
+const isStaticAsset = (url) => {
+  return url.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i);
+};
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -47,7 +52,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin and non-GET requests to prevent service worker errors
+  // Skip cross-origin and non-GET requests
   if (!event.request.url.startsWith(self.location.origin) || event.request.method !== 'GET') {
     return;
   }
@@ -79,41 +84,45 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for JS, CSS, Fonts, and Images
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          // Quietly update the cache in the background
-          fetch(event.request).then((networkResponse) => {
-            if (networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse);
-              });
-            }
-          }).catch(() => {}); // Ignore background updates failure when offline
-          
-          return cachedResponse;
-        }
+  // Cache-first ONLY for static assets (JS, CSS, Fonts, Images)
+  if (isStaticAsset(event.request.url)) {
+    event.respondWith(
+      caches.match(event.request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            // Quietly update the cache in the background
+            fetch(event.request).then((networkResponse) => {
+              if (networkResponse.status === 200) {
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, networkResponse);
+                });
+              }
+            }).catch(() => {}); // Ignore background updates failure when offline
+            
+            return cachedResponse;
+          }
 
-        return fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseClone);
+          return fetch(event.request)
+            .then((networkResponse) => {
+              if (networkResponse.status === 200) {
+                const responseClone = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, responseClone);
+                });
+              }
+              return networkResponse;
+            })
+            .catch((err) => {
+              // Return a valid Response to prevent "Failed to convert value to Response" browser crashes
+              return new Response('Asset not available offline', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'text/plain' }
               });
-            }
-            return networkResponse;
-          })
-          .catch((err) => {
-            // Return a valid Response to prevent "Failed to convert value to Response" browser crashes
-            return new Response('Asset not available offline', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: { 'Content-Type': 'text/plain' }
             });
-          });
-      })
-  );
+        })
+    );
+  }
+  // All other requests (such as dynamic /api/ requests) are NOT intercepted 
+  // and will load natively from the network.
 });
