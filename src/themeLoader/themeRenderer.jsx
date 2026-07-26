@@ -319,7 +319,11 @@ const ThemeRenderer = () => {
           // Register PWA Service Worker
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-              .then(reg => console.log('PWA Service Worker registered:', reg.scope))
+              .then(reg => {
+                console.log('PWA Service Worker registered:', reg.scope);
+                // Force an update check to immediately fetch the new sw.js version on mobile
+                reg.update();
+              })
               .catch(err => console.error('PWA Service Worker registration failed:', err));
           }
         } else {
