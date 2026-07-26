@@ -2,10 +2,13 @@ import React, { createContext, useEffect, useState } from 'react';
 
 export const InstallPromptContext = createContext(null);
 
+// Module-level variable to hold the deferred prompt event securely
+let deferredPrompt = null;
+
 export const InstallProvider = ({ children }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPopup, setShowInstallPopup] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
     // Check if already marked installed
@@ -22,8 +25,9 @@ export const InstallProvider = ({ children }) => {
     }
 
     const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+      e.preventDefault();          // Prevent Chrome's default mini-infobar
+      deferredPrompt = e;          // Save the event
+      setIsInstallable(true);
       
       // Delay showing the popup for a premium user experience (10 seconds)
       setTimeout(() => {
@@ -34,11 +38,12 @@ export const InstallProvider = ({ children }) => {
     };
 
     const handleAppInstalled = () => {
-      console.log('[PWA] Installed successfully');
+      console.log('PWA Installed');
       localStorage.setItem('pwa-installed', 'true');
       setIsInstalled(true);
       setShowInstallPopup(false);
-      setDeferredPrompt(null);
+      setIsInstallable(false);
+      deferredPrompt = null;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -52,15 +57,22 @@ export const InstallProvider = ({ children }) => {
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    setShowInstallPopup(false);
-    await deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult.outcome === 'accepted') {
-      console.log('[PWA] User accepted installation');
+
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      console.log('User installed the app');
       localStorage.setItem('pwa-installed', 'true');
       setIsInstalled(true);
+    } else {
+      console.log('User dismissed the install prompt');
     }
-    setDeferredPrompt(null);
+
+    deferredPrompt = null;
+    setIsInstallable(false);
+    setShowInstallPopup(false);
   };
 
   const handleLater = () => {
@@ -69,7 +81,8 @@ export const InstallProvider = ({ children }) => {
 
   return (
     <InstallPromptContext.Provider value={{
-      deferredPrompt,
+      deferredPrompt: isInstallable, // Map to isInstallable so buttons can check it
+      isInstallable,
       showInstallPopup,
       setShowInstallPopup,
       isInstalled,
@@ -80,3 +93,4 @@ export const InstallProvider = ({ children }) => {
     </InstallPromptContext.Provider>
   );
 };
+export default InstallProvider;
