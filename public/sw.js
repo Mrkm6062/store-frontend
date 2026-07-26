@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gb-pwa-cache-v1';
+const CACHE_NAME = 'gb-pwa-cache-v2'; // Incremented version to clear old stale caches
 const OFFLINE_HTML = `
 <!DOCTYPE html>
 <html lang="en">
@@ -30,8 +30,20 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate event - claim clients and clean up old caches dynamically
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('[PWA SW] Clearing old stale cache:', cache);
+            return caches.delete(cache);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
