@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 const CustomPageRenderer = ({ pageData }) => {
   const [trackingSettings, setTrackingSettings] = useState(null);
+  const [pwaSettings, setPwaSettings] = useState(null);
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -19,7 +20,25 @@ const CustomPageRenderer = ({ pageData }) => {
         console.error("Failed to load tracking settings in CustomPageRenderer:", err);
       }
     };
+
+    const fetchPwa = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const headers = {
+          'x-store-domain': window.location.hostname,
+          'x-forwarded-host': window.location.hostname
+        };
+        const res = await fetch(`${API_URL}/api/pwa/public`, { headers });
+        if (res.ok) {
+          setPwaSettings(await res.json());
+        }
+      } catch (err) {
+        console.error("Failed to load PWA settings in CustomPageRenderer:", err);
+      }
+    };
+
     fetchTracking();
+    fetchPwa();
   }, []);
 
   useEffect(() => {
@@ -192,7 +211,7 @@ const CustomPageRenderer = ({ pageData }) => {
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};
           if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
+          n.queue[];t=b.createElement(e);t.async=!0;
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
@@ -220,6 +239,87 @@ const CustomPageRenderer = ({ pageData }) => {
       });
     };
   }, [trackingSettings]);
+
+  // Inject PWA settings to parent window (for mobile app capabilities)
+  useEffect(() => {
+    if (!pwaSettings || !pwaSettings.enabled) return;
+
+    const cleanupElements = [];
+
+    // 1. theme-color meta tag
+    let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeColorMeta) {
+      themeColorMeta = document.createElement('meta');
+      themeColorMeta.name = 'theme-color';
+      document.head.appendChild(themeColorMeta);
+      cleanupElements.push(themeColorMeta);
+    }
+    themeColorMeta.content = pwaSettings.themeColor;
+
+    // 2. Apple mobile capabilities
+    let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
+    if (!appleMeta) {
+      appleMeta = document.createElement('meta');
+      appleMeta.name = 'apple-mobile-web-app-capable';
+      appleMeta.content = 'yes';
+      document.head.appendChild(appleMeta);
+      cleanupElements.push(appleMeta);
+    }
+
+    let appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!appleTitleMeta) {
+      appleTitleMeta = document.createElement('meta');
+      appleTitleMeta.name = 'apple-mobile-web-app-title';
+      document.head.appendChild(appleTitleMeta);
+      cleanupElements.push(appleTitleMeta);
+    }
+    appleTitleMeta.content = pwaSettings.shortName;
+
+    // 3. Apple touch icon
+    let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+    if (!appleIcon) {
+      appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      document.head.appendChild(appleIcon);
+      cleanupElements.push(appleIcon);
+    }
+    appleIcon.href = pwaSettings.icon192;
+
+    // 4. Manifest link Blob
+    const manifest = {
+      name: pwaSettings.appName,
+      short_name: pwaSettings.shortName,
+      theme_color: pwaSettings.themeColor,
+      background_color: pwaSettings.backgroundColor,
+      display: "standalone",
+      orientation: "portrait",
+      scope: "/",
+      start_url: window.location.origin + "/",
+      icons: [
+        { src: pwaSettings.icon192, sizes: "192x192", type: "image/png" },
+        { src: pwaSettings.icon512, sizes: "512x512", type: "image/png" }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const manifestURL = URL.createObjectURL(blob);
+    
+    let manifestLink = document.querySelector('link[rel="manifest"]');
+    if (!manifestLink) {
+      manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      document.head.appendChild(manifestLink);
+      cleanupElements.push(manifestLink);
+    }
+    manifestLink.href = manifestURL;
+
+    return () => {
+      cleanupElements.forEach(el => {
+        if (el && el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+    };
+  }, [pwaSettings]);
 
   const compileSource = () => {
     if (!pageData) return '';
@@ -295,6 +395,36 @@ const CustomPageRenderer = ({ pageData }) => {
       `;
     }
 
+    // PWA settings compiled for iframe
+    let pwaMetaTags = '';
+    let pwaManifestLink = '';
+    if (pwaSettings && pwaSettings.enabled) {
+      const manifest = {
+        name: pwaSettings.appName,
+        short_name: pwaSettings.shortName,
+        theme_color: pwaSettings.themeColor,
+        background_color: pwaSettings.backgroundColor,
+        display: "standalone",
+        orientation: "portrait",
+        scope: "/",
+        start_url: window.location.origin + "/",
+        icons: [
+          { src: pwaSettings.icon192, sizes: "192x192", type: "image/png" },
+          { src: pwaSettings.icon512, sizes: "512x512", type: "image/png" }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const manifestURL = URL.createObjectURL(blob);
+
+      pwaMetaTags = `
+        <meta name="theme-color" content="${pwaSettings.themeColor}">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="${pwaSettings.shortName}">
+        <link rel="apple-touch-icon" href="${pwaSettings.icon192}">
+      `;
+      pwaManifestLink = `<link rel="manifest" href="${manifestURL}">`;
+    }
+
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -305,6 +435,8 @@ const CustomPageRenderer = ({ pageData }) => {
           ${gaScript}
           ${gtmHeadScript}
           ${fbPixelHeadScript}
+          ${pwaMetaTags}
+          ${pwaManifestLink}
           ${pageData.headHTML || ''}
           <style>
             ${pageData.customCSS || ''}

@@ -259,6 +259,88 @@ const ThemeRenderer = () => {
         } catch (trackErr) {
           console.error("Failed to load or inject tracking tags", trackErr);
         }
+
+        // 5. Fetch and Inject PWA Settings
+        try {
+          const pwaRes = await fetch(`${API_URL}/api/pwa/public`, { headers });
+          if (pwaRes.ok) {
+            const pwaData = await pwaRes.json();
+            if (pwaData && pwaData.enabled) {
+              // Generate dynamic manifest JSON
+              const manifest = {
+                name: pwaData.appName,
+                short_name: pwaData.shortName,
+                theme_color: pwaData.themeColor,
+                background_color: pwaData.backgroundColor,
+                display: "standalone",
+                orientation: "portrait",
+                scope: "/",
+                start_url: window.location.origin + "/",
+                icons: [
+                  {
+                    src: pwaData.icon192,
+                    sizes: "192x192",
+                    type: "image/png"
+                  },
+                  {
+                    src: pwaData.icon512,
+                    sizes: "512x512",
+                    type: "image/png"
+                  }
+                ]
+              };
+
+              // Inject theme-color meta tag
+              let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+              if (!themeColorMeta) {
+                themeColorMeta = document.createElement('meta');
+                themeColorMeta.name = 'theme-color';
+                document.head.appendChild(themeColorMeta);
+              }
+              themeColorMeta.content = pwaData.themeColor;
+
+              // Inject Apple mobile web app capabilities
+              let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
+              if (!appleMeta) {
+                appleMeta = document.createElement('meta');
+                appleMeta.name = 'apple-mobile-web-app-capable';
+                appleMeta.content = 'yes';
+                document.head.appendChild(appleMeta);
+              }
+
+              let appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+              if (!appleTitleMeta) {
+                appleTitleMeta = document.createElement('meta');
+                appleTitleMeta.name = 'apple-mobile-web-app-title';
+                document.head.appendChild(appleTitleMeta);
+              }
+              appleTitleMeta.content = pwaData.shortName;
+
+              // Inject Apple touch icons
+              let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+              if (!appleIcon) {
+                appleIcon = document.createElement('link');
+                appleIcon.rel = 'apple-touch-icon';
+                document.head.appendChild(appleIcon);
+              }
+              appleIcon.href = pwaData.icon192;
+
+              // Build and inject manifest as dynamic Blob URL
+              const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+              const manifestURL = URL.createObjectURL(blob);
+              
+              let manifestLink = document.querySelector('link[rel="manifest"]');
+              if (!manifestLink) {
+                manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                document.head.appendChild(manifestLink);
+              }
+              manifestLink.href = manifestURL;
+            }
+          }
+        } catch (pwaErr) {
+          console.error("Failed to load or inject PWA manifest", pwaErr);
+        }
       } catch (err) {
         console.error("Failed to load store theme. Falling back to theme-free.", err);
       } finally {
