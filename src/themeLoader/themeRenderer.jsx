@@ -307,14 +307,14 @@ const ThemeRenderer = () => {
           }
           appleIcon.href = pwa.icon192;
 
-          // Inject same-origin manifest link (using manifest.webmanifest as requested)
+          // Inject dynamic manifest link (pointing to API domain with storeId parameter to resolve Nginx static blocks)
           let manifestLink = document.querySelector('link[rel="manifest"]');
           if (!manifestLink) {
             manifestLink = document.createElement('link');
             manifestLink.rel = 'manifest';
             document.head.appendChild(manifestLink);
           }
-          manifestLink.href = "/manifest.webmanifest";
+          manifestLink.href = `${API_URL}/manifest.webmanifest?storeId=${storeData._id}`;
 
           // Register PWA Service Worker
           if ('serviceWorker' in navigator) {
