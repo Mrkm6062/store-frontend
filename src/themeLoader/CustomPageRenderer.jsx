@@ -285,24 +285,7 @@ const CustomPageRenderer = ({ pageData }) => {
     }
     appleIcon.href = pwaSettings.icon192;
 
-    // 4. Manifest link Blob
-    const manifest = {
-      name: pwaSettings.appName,
-      short_name: pwaSettings.shortName,
-      theme_color: pwaSettings.themeColor,
-      background_color: pwaSettings.backgroundColor,
-      display: "standalone",
-      orientation: "portrait",
-      scope: "/",
-      start_url: window.location.origin + "/",
-      icons: [
-        { src: pwaSettings.icon192, sizes: "192x192", type: "image/png" },
-        { src: pwaSettings.icon512, sizes: "512x512", type: "image/png" }
-      ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    const manifestURL = URL.createObjectURL(blob);
-    
+    // 4. Manifest link (same-origin relative URL)
     let manifestLink = document.querySelector('link[rel="manifest"]');
     if (!manifestLink) {
       manifestLink = document.createElement('link');
@@ -310,7 +293,7 @@ const CustomPageRenderer = ({ pageData }) => {
       document.head.appendChild(manifestLink);
       cleanupElements.push(manifestLink);
     }
-    manifestLink.href = manifestURL;
+    manifestLink.href = "/manifest.json";
 
     // Register PWA Service Worker on parent window
     if ('serviceWorker' in navigator) {
@@ -406,31 +389,15 @@ const CustomPageRenderer = ({ pageData }) => {
     let pwaMetaTags = '';
     let pwaManifestLink = '';
     if (pwaSettings && pwaSettings.enabled) {
-      const manifest = {
-        name: pwaSettings.appName,
-        short_name: pwaSettings.shortName,
-        theme_color: pwaSettings.themeColor,
-        background_color: pwaSettings.backgroundColor,
-        display: "standalone",
-        orientation: "portrait",
-        scope: "/",
-        start_url: window.location.origin + "/",
-        icons: [
-          { src: pwaSettings.icon192, sizes: "192x192", type: "image/png" },
-          { src: pwaSettings.icon512, sizes: "512x512", type: "image/png" }
-        ]
-      };
-      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-      const manifestURL = URL.createObjectURL(blob);
-
       pwaMetaTags = `
         <meta name="theme-color" content="${pwaSettings.themeColor}">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-title" content="${pwaSettings.shortName}">
         <link rel="apple-touch-icon" href="${pwaSettings.icon192}">
       `;
-      pwaManifestLink = `<link rel="manifest" href="${manifestURL}">`;
+      pwaManifestLink = `<link rel="manifest" href="/manifest.json">`;
     }
+
 
     return `
       <!DOCTYPE html>

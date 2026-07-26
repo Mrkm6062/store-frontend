@@ -266,30 +266,6 @@ const ThemeRenderer = () => {
           if (pwaRes.ok) {
             const pwaData = await pwaRes.json();
             if (pwaData && pwaData.enabled) {
-              // Generate dynamic manifest JSON
-              const manifest = {
-                name: pwaData.appName,
-                short_name: pwaData.shortName,
-                theme_color: pwaData.themeColor,
-                background_color: pwaData.backgroundColor,
-                display: "standalone",
-                orientation: "portrait",
-                scope: "/",
-                start_url: window.location.origin + "/",
-                icons: [
-                  {
-                    src: pwaData.icon192,
-                    sizes: "192x192",
-                    type: "image/png"
-                  },
-                  {
-                    src: pwaData.icon512,
-                    sizes: "512x512",
-                    type: "image/png"
-                  }
-                ]
-              };
-
               // Inject theme-color meta tag
               let themeColorMeta = document.querySelector('meta[name="theme-color"]');
               if (!themeColorMeta) {
@@ -325,17 +301,14 @@ const ThemeRenderer = () => {
               }
               appleIcon.href = pwaData.icon192;
 
-              // Build and inject manifest as dynamic Blob URL
-              const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-              const manifestURL = URL.createObjectURL(blob);
-              
+              // Inject same-origin manifest link (fixes CSP block)
               let manifestLink = document.querySelector('link[rel="manifest"]');
               if (!manifestLink) {
                 manifestLink = document.createElement('link');
                 manifestLink.rel = 'manifest';
                 document.head.appendChild(manifestLink);
               }
-              manifestLink.href = manifestURL;
+              manifestLink.href = "/manifest.json";
 
               // Register PWA Service Worker
               if ('serviceWorker' in navigator) {
