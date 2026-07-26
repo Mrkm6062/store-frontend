@@ -264,7 +264,16 @@ const CustomPageRenderer = ({ pageData }) => {
     }
     themeColorMeta.content = pwa.themeColor || '#16A34A';
 
-    // 2. Apple mobile capabilities
+    // 2. Mobile app capabilities (standards-compliant and legacy Apple)
+    let mobileMeta = document.querySelector('meta[name="mobile-web-app-capable"]');
+    if (!mobileMeta) {
+      mobileMeta = document.createElement('meta');
+      mobileMeta.name = 'mobile-web-app-capable';
+      mobileMeta.content = 'yes';
+      document.head.appendChild(mobileMeta);
+      cleanupElements.push(mobileMeta);
+    }
+
     let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
     if (!appleMeta) {
       appleMeta = document.createElement('meta');

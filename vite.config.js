@@ -61,6 +61,14 @@ export default defineConfig({
       '/llms.txt': {
         target: 'http://localhost:3011',
         changeOrigin: true
+      },
+      '/manifest.webmanifest': {
+        target: 'http://localhost:3011',
+        changeOrigin: true
+      },
+      '/manifest.json': {
+        target: 'http://localhost:3011',
+        changeOrigin: true
       }
     }
   }

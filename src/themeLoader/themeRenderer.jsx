@@ -273,7 +273,15 @@ const ThemeRenderer = () => {
           }
           themeColorMeta.content = pwa.themeColor || '#16A34A';
 
-          // Inject Apple mobile web app capabilities
+          // Inject mobile web app capabilities (standards-compliant and legacy Apple)
+          let mobileMeta = document.querySelector('meta[name="mobile-web-app-capable"]');
+          if (!mobileMeta) {
+            mobileMeta = document.createElement('meta');
+            mobileMeta.name = 'mobile-web-app-capable';
+            mobileMeta.content = 'yes';
+            document.head.appendChild(mobileMeta);
+          }
+
           let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
           if (!appleMeta) {
             appleMeta = document.createElement('meta');
