@@ -29,12 +29,10 @@ export const InstallProvider = ({ children }) => {
       deferredPrompt = e;          // Save the event
       setIsInstallable(true);
       
-      // Delay showing the popup for a premium user experience (10 seconds)
-      setTimeout(() => {
-        if (localStorage.getItem('pwa-installed') !== 'true') {
-          setShowInstallPopup(true);
-        }
-      }, 10000);
+      // Show custom install popup immediately if not marked installed
+      if (localStorage.getItem('pwa-installed') !== 'true') {
+        setShowInstallPopup(true);
+      }
     };
 
     const handleAppInstalled = () => {
