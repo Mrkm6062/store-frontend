@@ -324,6 +324,29 @@ const CustomPageRenderer = ({ pageData }) => {
               return true;
             };
 
+            // Safe polyfill for localStorage / sessionStorage to prevent sandboxed SecurityError
+            (function() {
+              try {
+                var testKey = '__test_ls__';
+                window.localStorage.setItem(testKey, testKey);
+                window.localStorage.removeItem(testKey);
+              } catch (e) {
+                var store = {};
+                var mockStorage = {
+                  getItem: function(k) { return store[k] !== undefined ? store[k] : null; },
+                  setItem: function(k, v) { store[k] = String(v); },
+                  removeItem: function(k) { delete store[k]; },
+                  clear: function() { store = {}; },
+                  key: function(i) { return Object.keys(store)[i] || null; },
+                  get length() { return Object.keys(store).length; }
+                };
+                try {
+                  Object.defineProperty(window, 'localStorage', { value: mockStorage, configurable: true, enumerable: true });
+                  Object.defineProperty(window, 'sessionStorage', { value: mockStorage, configurable: true, enumerable: true });
+                } catch(err) {}
+              }
+            })();
+
             // Intercept internal link clicks to navigate the top-level parent window instead of inside the iframe
             document.addEventListener('click', function(e) {
               var target = e.target.closest('a');
@@ -360,7 +383,7 @@ const CustomPageRenderer = ({ pageData }) => {
       <iframe
         title={pageData.title}
         srcDoc={compileSource()}
-        sandbox="allow-scripts allow-forms allow-popups allow-top-navigation allow-modals"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-modals"
         className="w-full h-full border-none m-0 p-0"
       />
     </div>
