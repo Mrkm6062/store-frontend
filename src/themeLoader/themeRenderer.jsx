@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DynamicRouteLoader from './DynamicRouteLoader.jsx';
 
 // Import theme-free components
@@ -98,6 +98,19 @@ const themesMap = {
 
 
 export const ThemeCustomizationContext = createContext(null);
+
+const NavigationExposer = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    window.navigateToStorePath = (path) => {
+      navigate(path);
+    };
+    return () => {
+      delete window.navigateToStorePath;
+    };
+  }, [navigate]);
+  return null;
+};
 
 const ThemeRenderer = () => {
   const [themeFolder, setThemeFolder] = useState('theme-free');
@@ -410,8 +423,9 @@ const ThemeRenderer = () => {
   return (
     <ThemeCustomizationContext.Provider value={customization}>
       <Router>
-          <Routes>
-            <Route path="/" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Home" />} />
+        <NavigationExposer />
+        <Routes>
+          <Route path="/" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Home" />} />
             <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
             <Route path="/categories" element={<ActiveTheme.Categories />} />
             <Route path="/offers" element={<ActiveTheme.Offers />} />

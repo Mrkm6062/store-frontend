@@ -304,6 +304,7 @@ const CustomPageRenderer = ({ pageData }) => {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <base href="${window.location.origin}/">
           ${verificationMeta}
           ${gaScript}
           ${gtmHeadScript}
@@ -329,9 +330,15 @@ const CustomPageRenderer = ({ pageData }) => {
               if (target && target.href && !target.target && target.target !== '_blank') {
                 try {
                   var url = new URL(target.href);
-                  if (url.origin === window.location.origin) {
+                  if (url.origin === window.parent.location.origin) {
                     e.preventDefault();
-                    window.parent.location.href = target.href;
+                    
+                    var path = url.pathname + url.search + url.hash;
+                    if (window.parent && typeof window.parent.navigateToStorePath === 'function') {
+                      window.parent.navigateToStorePath(path);
+                    } else {
+                      window.parent.location.href = target.href;
+                    }
                   }
                 } catch (err) {
                   // Ignore parsing errors
