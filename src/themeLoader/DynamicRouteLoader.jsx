@@ -10,17 +10,37 @@ const DynamicRouteLoader = ({ ActiveTheme, componentName }) => {
 
   useEffect(() => {
     const checkCustomPage = async () => {
-      setLoading(true);
-      setIsCustomPage(false);
-      setCustomPage(null);
+      const path = location.pathname;
+      const cacheKey = `gbs_custom_page_${path}`;
+
+      // 1. Try to load from cache first for instant rendering
+      let hasCache = false;
+      try {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (parsed && parsed._id) {
+            setCustomPage(parsed);
+            setIsCustomPage(true);
+            setLoading(false);
+            hasCache = true;
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to read custom page cache:", e);
+      }
+
+      if (!hasCache) {
+        setLoading(true);
+        setIsCustomPage(false);
+        setCustomPage(null);
+      }
 
       const API_URL = import.meta.env.VITE_API_URL || '';
       const headers = {
         'x-store-domain': window.location.hostname,
         'x-forwarded-host': window.location.hostname
       };
-
-      const path = location.pathname;
 
       // Immediately bypass reserved system files so React Router or CMS never intercepts them
       const slug = path.toLowerCase().replace(/^\/|\/$/g, '');
@@ -39,27 +59,35 @@ const DynamicRouteLoader = ({ ActiveTheme, componentName }) => {
       }
 
       try {
+        let page = null;
         if (path === '/') {
           // 1. Check if there is a custom homepage configured
           const res = await fetch(`${API_URL}/api/custom-pages/homepage`, { headers });
           if (res.ok) {
-            const page = await res.json();
-            if (page && page._id) {
-              setCustomPage(page);
-              setIsCustomPage(true);
-            }
+            page = await res.json();
           }
         } else {
           // 2. Check if there is a custom page matching this slug
           const slug = path.toLowerCase().replace(/^\/|\/$/g, '');
           const res = await fetch(`${API_URL}/api/custom-pages/page/${slug}`, { headers });
           if (res.ok) {
-            const page = await res.json();
-            if (page && page._id) {
-              setCustomPage(page);
-              setIsCustomPage(true);
-            }
+            page = await res.json();
           }
+        }
+
+        if (page && page._id) {
+          setCustomPage(page);
+          setIsCustomPage(true);
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(page));
+          } catch (e) {
+            console.error("Failed to write custom page cache:", e);
+          }
+        } else {
+          // Clear cache if page is no longer custom/active
+          setCustomPage(null);
+          setIsCustomPage(false);
+          localStorage.removeItem(cacheKey);
         }
       } catch (err) {
         console.error("Error checking custom page:", err);

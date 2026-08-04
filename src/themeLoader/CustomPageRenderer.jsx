@@ -304,7 +304,7 @@ const CustomPageRenderer = ({ pageData }) => {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <base href="${window.location.origin}/">
+          <base href="${window.location.href}">
           ${verificationMeta}
           ${gaScript}
           ${gtmHeadScript}
@@ -327,21 +327,28 @@ const CustomPageRenderer = ({ pageData }) => {
             // Intercept internal link clicks to navigate the top-level parent window instead of inside the iframe
             document.addEventListener('click', function(e) {
               var target = e.target.closest('a');
-              if (target && target.href && !target.target && target.target !== '_blank') {
-                try {
-                  var url = new URL(target.href);
-                  if (url.origin === window.parent.location.origin) {
-                    e.preventDefault();
-                    
-                    var path = url.pathname + url.search + url.hash;
-                    if (window.parent && typeof window.parent.navigateToStorePath === 'function') {
-                      window.parent.navigateToStorePath(path);
-                    } else {
-                      window.parent.location.href = target.href;
+              if (target && target.href) {
+                var hrefAttr = target.getAttribute('href') || '';
+                if (hrefAttr.startsWith('#') || hrefAttr.startsWith('javascript:')) {
+                  return; // Let local anchors and js links execute inside the iframe
+                }
+
+                if (!target.target || target.target === '_self') {
+                  try {
+                    var url = new URL(target.href);
+                    if (url.origin === window.parent.location.origin) {
+                      e.preventDefault();
+                      
+                      var path = url.pathname + url.search + url.hash;
+                      if (window.parent && typeof window.parent.navigateToStorePath === 'function') {
+                        window.parent.navigateToStorePath(path);
+                      } else {
+                        window.parent.location.href = target.href;
+                      }
                     }
+                  } catch (err) {
+                    // Ignore parsing errors
                   }
-                } catch (err) {
-                  // Ignore parsing errors
                 }
               }
             });
