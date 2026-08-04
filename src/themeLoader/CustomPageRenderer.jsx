@@ -298,18 +298,29 @@ const CustomPageRenderer = ({ pageData }) => {
       `;
     }
 
+    const cleanHeadHTML = (pageData.headHTML || '').replace(/<link[^>]*href=["'][^"']*docs\.galibrand\.cloud\/style\.css["'][^>]*>/gi, '');
+    const cleanBodyHTML = (pageData.bodyHTML || '').replace(/<link[^>]*href=["'][^"']*docs\.galibrand\.cloud\/style\.css["'][^>]*>/gi, '');
+
     return `
       <!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <base href="${window.location.href}">
+          <base href="${window.location.origin}/">
+          <script>
+            // Suppress invalid stylesheet MIME type load errors
+            window.addEventListener('error', function(e) {
+              if (e.target && e.target.tagName === 'LINK' && e.target.rel === 'stylesheet') {
+                e.stopImmediatePropagation();
+              }
+            }, true);
+          </script>
           ${verificationMeta}
           ${gaScript}
           ${gtmHeadScript}
           ${fbPixelHeadScript}
-          ${pageData.headHTML || ''}
+          ${cleanHeadHTML}
           <style>
             ${pageData.customCSS || ''}
           </style>
@@ -317,35 +328,12 @@ const CustomPageRenderer = ({ pageData }) => {
         <body>
           ${gtmBodyScript}
           ${fbPixelBodyScript}
-          ${pageData.bodyHTML || ''}
+          ${cleanBodyHTML}
           <script>
             window.onerror = function(message, source, lineno, colno, error) {
               console.error(message + " on line " + lineno);
               return true;
             };
-
-            // Safe polyfill for localStorage / sessionStorage to prevent sandboxed SecurityError
-            (function() {
-              try {
-                var testKey = '__test_ls__';
-                window.localStorage.setItem(testKey, testKey);
-                window.localStorage.removeItem(testKey);
-              } catch (e) {
-                var store = {};
-                var mockStorage = {
-                  getItem: function(k) { return store[k] !== undefined ? store[k] : null; },
-                  setItem: function(k, v) { store[k] = String(v); },
-                  removeItem: function(k) { delete store[k]; },
-                  clear: function() { store = {}; },
-                  key: function(i) { return Object.keys(store)[i] || null; },
-                  get length() { return Object.keys(store).length; }
-                };
-                try {
-                  Object.defineProperty(window, 'localStorage', { value: mockStorage, configurable: true, enumerable: true });
-                  Object.defineProperty(window, 'sessionStorage', { value: mockStorage, configurable: true, enumerable: true });
-                } catch(err) {}
-              }
-            })();
 
             // Intercept internal link clicks to navigate the top-level parent window instead of inside the iframe
             document.addEventListener('click', function(e) {
@@ -383,7 +371,6 @@ const CustomPageRenderer = ({ pageData }) => {
       <iframe
         title={pageData.title}
         srcDoc={compileSource()}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-modals"
         className="w-full h-full border-none m-0 p-0"
       />
     </div>
