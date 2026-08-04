@@ -335,19 +335,10 @@ const CustomPageRenderer = ({ pageData }) => {
 
                 if (!target.target || target.target === '_self') {
                   try {
-                    var url = new URL(target.href);
-                    if (url.origin === window.parent.location.origin) {
-                      e.preventDefault();
-                      
-                      var path = url.pathname + url.search + url.hash;
-                      if (window.parent && typeof window.parent.navigateToStorePath === 'function') {
-                        window.parent.navigateToStorePath(path);
-                      } else {
-                        window.parent.location.href = target.href;
-                      }
-                    }
+                    e.preventDefault();
+                    window.top.location.href = target.href;
                   } catch (err) {
-                    // Ignore parsing errors
+                    // Ignore navigation errors
                   }
                 }
               }
@@ -369,7 +360,7 @@ const CustomPageRenderer = ({ pageData }) => {
       <iframe
         title={pageData.title}
         srcDoc={compileSource()}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-modals"
+        sandbox="allow-scripts allow-forms allow-popups allow-top-navigation allow-modals"
         className="w-full h-full border-none m-0 p-0"
       />
     </div>
