@@ -322,6 +322,23 @@ const CustomPageRenderer = ({ pageData }) => {
               console.error(message + " on line " + lineno);
               return true;
             };
+
+            // Intercept internal link clicks to navigate the top-level parent window instead of inside the iframe
+            document.addEventListener('click', function(e) {
+              var target = e.target.closest('a');
+              if (target && target.href && !target.target && target.target !== '_blank') {
+                try {
+                  var url = new URL(target.href);
+                  if (url.origin === window.location.origin) {
+                    e.preventDefault();
+                    window.parent.location.href = target.href;
+                  }
+                } catch (err) {
+                  // Ignore parsing errors
+                }
+              }
+            });
+
             try {
               ${pageData.customJS || ''}
             } catch(e) {
@@ -338,7 +355,7 @@ const CustomPageRenderer = ({ pageData }) => {
       <iframe
         title={pageData.title}
         srcDoc={compileSource()}
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-modals"
         className="w-full h-full border-none m-0 p-0"
       />
     </div>
