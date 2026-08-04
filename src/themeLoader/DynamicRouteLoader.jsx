@@ -4,45 +4,40 @@ import CustomPageRenderer from './CustomPageRenderer.jsx';
 
 const DynamicRouteLoader = ({ ActiveTheme, componentName }) => {
   const location = useLocation();
-  const [customPage, setCustomPage] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isCustomPage, setIsCustomPage] = useState(false);
+
+  const [customPage, setCustomPage] = useState(() => {
+    try {
+      const path = location.pathname;
+      const cached = localStorage.getItem(`gbs_custom_page_${path}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed._id) return parsed;
+      }
+    } catch (e) {}
+    return null;
+  });
+
+  const [isCustomPage, setIsCustomPage] = useState(!!customPage);
 
   useEffect(() => {
+    let isMounted = true;
     const checkCustomPage = async () => {
       const path = location.pathname;
       const cacheKey = `gbs_custom_page_${path}`;
 
-      // 1. Try to load from cache first for instant rendering
-      let hasCache = false;
+      // Check synchronous cache first
       try {
         const cachedData = localStorage.getItem(cacheKey);
         if (cachedData) {
           const parsed = JSON.parse(cachedData);
-          if (parsed && parsed._id) {
+          if (parsed && parsed._id && isMounted) {
             setCustomPage(parsed);
             setIsCustomPage(true);
-            setLoading(false);
-            hasCache = true;
           }
         }
-      } catch (e) {
-        console.warn("Failed to read custom page cache:", e);
-      }
+      } catch (e) {}
 
-      if (!hasCache) {
-        setLoading(true);
-        setIsCustomPage(false);
-        setCustomPage(null);
-      }
-
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      const headers = {
-        'x-store-domain': window.location.hostname,
-        'x-forwarded-host': window.location.hostname
-      };
-
-      // Immediately bypass reserved system files so React Router or CMS never intercepts them
+      // Bypass reserved system files
       const slug = path.toLowerCase().replace(/^\/|\/$/g, '');
       const reservedSlugs = [
         "manifest.webmanifest",
@@ -53,62 +48,51 @@ const DynamicRouteLoader = ({ ActiveTheme, componentName }) => {
         "favicon.ico",
         "llms.txt"
       ];
-      if (reservedSlugs.includes(slug)) {
-        setLoading(false);
-        return;
-      }
+      if (reservedSlugs.includes(slug)) return;
+
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const headers = {
+        'x-store-domain': window.location.hostname,
+        'x-forwarded-host': window.location.hostname
+      };
 
       try {
         let page = null;
         if (path === '/') {
-          // 1. Check if there is a custom homepage configured
           const res = await fetch(`${API_URL}/api/custom-pages/homepage`, { headers });
-          if (res.ok) {
-            page = await res.json();
-          }
+          if (res.ok) page = await res.json();
         } else {
-          // 2. Check if there is a custom page matching this slug
-          const slug = path.toLowerCase().replace(/^\/|\/$/g, '');
           const res = await fetch(`${API_URL}/api/custom-pages/page/${slug}`, { headers });
-          if (res.ok) {
-            page = await res.json();
-          }
+          if (res.ok) page = await res.json();
         }
+
+        if (!isMounted) return;
 
         if (page && page._id) {
           setCustomPage(page);
           setIsCustomPage(true);
           try {
             localStorage.setItem(cacheKey, JSON.stringify(page));
-          } catch (e) {
-            console.error("Failed to write custom page cache:", e);
-          }
+          } catch (e) {}
         } else {
-          // Clear cache if page is no longer custom/active
           setCustomPage(null);
           setIsCustomPage(false);
           localStorage.removeItem(cacheKey);
         }
       } catch (err) {
         console.error("Error checking custom page:", err);
-      } finally {
-        setLoading(false);
       }
     };
 
     checkCustomPage();
+    return () => { isMounted = false; };
   }, [location.pathname]);
-
-  if (loading) {
-    // Return a clean blank loading state to prevent page flicker while resolving the router
-    return <div className="min-h-screen bg-white"></div>;
-  }
 
   if (isCustomPage && customPage) {
     return <CustomPageRenderer pageData={customPage} />;
   }
 
-  // Fallback to active theme components
+  // Render theme components instantly with zero delay or white screen
   switch (componentName) {
     case 'Home':
       return <ActiveTheme.Home />;

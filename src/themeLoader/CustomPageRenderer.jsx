@@ -341,7 +341,7 @@ const CustomPageRenderer = ({ pageData }) => {
               return true;
             };
 
-            // Intercept internal link clicks to navigate the top-level parent window instead of inside the iframe
+            // Intercept internal link clicks to navigate via React Router without hard refresh
             document.addEventListener('click', function(e) {
               var target = e.target.closest('a');
               if (target && target.href) {
@@ -352,8 +352,19 @@ const CustomPageRenderer = ({ pageData }) => {
 
                 if (!target.target || target.target === '_self') {
                   try {
-                    e.preventDefault();
-                    window.top.location.href = target.href;
+                    var url = new URL(target.href, window.location.href);
+                    if (url.hostname === window.top.location.hostname || url.origin === window.top.location.origin) {
+                      e.preventDefault();
+                      var path = url.pathname + url.search + url.hash;
+                      
+                      if (window.parent && typeof window.parent.navigateToStorePath === 'function') {
+                        window.parent.navigateToStorePath(path);
+                      } else if (window.top && typeof window.top.navigateToStorePath === 'function') {
+                        window.top.navigateToStorePath(path);
+                      } else {
+                        window.top.location.href = target.href;
+                      }
+                    }
                   } catch (err) {
                     // Ignore navigation errors
                   }

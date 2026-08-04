@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
 import { getPublicCategories, getOptimizedImageUrl } from '../../../services/api';
 import { ThemeCustomizationContext, isLightColor } from '../../../themeLoader/themeRenderer.jsx';
