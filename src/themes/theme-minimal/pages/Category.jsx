@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
@@ -6,30 +6,70 @@ import { getPublicCategories } from '../../../services/api';
 import StoreLayout from '../Layout';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
+import CartSidebar from '../components/CartSidebar';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import { LayoutGrid, ArrowLeft, Search } from 'lucide-react';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
+  const customization = useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [category, setCategory] = useState(null);
+  const [allCategories, setAllCategories] = useState([]);
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
     return saved ? JSON.parse(saved) : [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [deliverySettings, setDeliverySettings] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (store?._id) {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+      fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+        headers: { 'x-store-id': store?._id }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) setDeliverySettings(data);
+        })
+        .catch(console.error);
+    }
+  }, [store]);
 
   useEffect(() => {
     localStorage.setItem('gb_store_cart', JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
+    const handleCartUpdate = () => {
+      const saved = localStorage.getItem('gb_store_cart');
+      if (saved) {
+        try { setCart(JSON.parse(saved)); } catch(e) {}
+      } else {
+        setCart([]);
+      }
+    };
+    window.addEventListener('cart-updated', handleCartUpdate);
+    return () => window.removeEventListener('cart-updated', handleCartUpdate);
+  }, []);
+
+  useEffect(() => {
     getPublicCategories().then(categories => {
-      const currentCategory = categories.find(c => c._id === categoryId);
-      setCategory(currentCategory);
+      setAllCategories(categories);
+      if (categoryId === 'all') {
+        setCategory(null);
+      } else {
+        const currentCategory = categories.find(c => c.slug === categoryId || c._id === categoryId);
+        setCategory(currentCategory);
+      }
     }).catch(console.error);
   }, [categoryId]);
 
@@ -83,16 +123,19 @@ const CategoryPage = () => {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
   useEffect(() => {
-    if (store && category) {
-      document.title = `${category.name} - ${store.websiteTitle || store.name}`;
+    if (store) {
+      document.title = category 
+        ? `${category.name} - ${store.websiteTitle || store.name}`
+        : `All Products - ${store.websiteTitle || store.name}`;
     }
   }, [store, category]);
 
-  const filteredProducts = products.filter(p => p.category === categoryId);
+  const filteredProducts = (category ? products.filter(p => p.category === category._id) : products)
+    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   if (storeLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-green-600 font-bold text-xl tracking-wide">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 font-bold text-xl tracking-wide" style={{ color: primaryColor }}>
         <span className="animate-pulse">Loading Store...</span>
       </div>
     );
@@ -109,20 +152,104 @@ const CategoryPage = () => {
   }
 
   return (
-    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)}>
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10">
-          <button onClick={() => navigate('/')} className="text-sm font-bold text-slate-500 hover:text-slate-800 mb-4">&larr; Back to All Products</button>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            {category ? `Products in ${category.name}` : 'Loading Category...'}
-          </h2>
-          {category?.description && <p className="text-gray-500 mt-2 text-lg">{category.description}</p>}
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideFooter={true} hideHeader={true}>
+      <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 pt-0 pb-12">
+        {/* Style block to hide scrollbars */}
+        <style>{`
+          .scrollbar-none::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+
+        {/* Back navigation to Home */}
+        <div className="flex items-center gap-2 mb-4 pt-4 text-left">
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shadow-sm"
+            title="Go to Home"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <span className="text-xs font-bold text-slate-400">Home</span>
+        </div>
+
+        {/* Horizontal Category Selector */}
+        <div className="border-b border-gray-200/80 bg-white sticky top-0 z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-6 py-4 shadow-sm backdrop-blur-md bg-white/95">
+          <div className="max-w-5xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-none snap-x pb-1">
+            {/* "All Products" Button */}
+            <button
+              onClick={() => navigate('/category/all')}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
+                !category 
+                  ? 'text-white shadow-md shadow-green-150 scale-105' 
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+              style={{ backgroundColor: !category ? primaryColor : undefined, borderColor: !category ? primaryColor : undefined }}
+            >
+              <LayoutGrid size={16} />
+              <span>All Products</span>
+            </button>
+
+            {/* Other Categories */}
+            {allCategories.map(c => {
+              const isActive = category && category._id === c._id;
+              return (
+                <button
+                  key={c._id}
+                  onClick={() => navigate(`/category/${c.slug || c._id}`)}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
+                    isActive 
+                      ? 'text-white shadow-md shadow-green-150 scale-105' 
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                  style={{ backgroundColor: isActive ? primaryColor : undefined, borderColor: isActive ? primaryColor : undefined }}
+                >
+                  {c.image?.url ? (
+                    <img 
+                      src={c.image.url} 
+                      alt={c.name} 
+                      className="w-6 h-6 rounded-lg object-cover border border-slate-200/50" 
+                    />
+                  ) : (
+                    <span className="text-base">📦</span>
+                  )}
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Real-time Search Input */}
+        <div className="mb-8 relative text-left">
+          <input
+            type="text"
+            placeholder="Search products in this collection..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onFocus={e => e.target.style.borderColor = primaryColor}
+            onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+            className="w-full px-4 py-3 pl-11 border border-slate-200 rounded-2xl focus:outline-none text-sm bg-white shadow-sm transition-colors duration-250"
+          />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Search className="text-gray-400" size={24} /></span>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-600 text-lg font-bold"
+            >
+              &times;
+            </button>
+          )}
         </div>
 
         {productsLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[260px] sm:h-[340px] animate-pulse">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-[260px] sm:h-[340px] w-full max-w-[260px] animate-pulse">
                 <div className="w-full h-32 sm:h-48 bg-gray-200"></div>
                 <div className="p-3 sm:p-5 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-6 bg-gray-200 rounded w-1/4"></div><div className="h-8 sm:h-10 bg-gray-200 rounded-xl w-full mt-2 sm:mt-4"></div></div>
               </div>
@@ -155,98 +282,46 @@ const CategoryPage = () => {
 
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
-        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex justify-between items-center pb-safe">
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
-            <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
+        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex flex-col gap-2 pb-safe">
+          {deliverySettings?.freeShippingThreshold > 0 && (
+            <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeShippingThreshold ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
+              {cartTotal >= deliverySettings.freeShippingThreshold ? (
+                <span>Free delivery unlocked! 🎉</span>
+              ) : (
+                <span>Add ₹{deliverySettings.freeShippingThreshold - cartTotal} more to get free delivery</span>
+              )}
+            </div>
+          )}
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
+              <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
+            </div>
+            <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg transition">
+              View Cart &rarr;
+            </button>
           </div>
-          <button onClick={() => setIsCartOpen(true)} className="bg-[#76b900] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#659e00] shadow-lg shadow-green-200 transition">
-            View Cart &rarr;
-          </button>
         </div>
       )}
 
-      {/* Cart Sidebar Overlay */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
-            onClick={() => setIsCartOpen(false)}
-          ></div>
-          
-          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
-              <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
-                &times;
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-5">
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                  <div className="text-6xl mb-4">🛒</div>
-                  <p className="text-lg font-medium">Your cart is empty.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cart.map((item) => (
-                    <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
-                          {(item.images?.length > 0 ? item.images[0] : item.image) ? (
-                            <img src={item.images?.length > 0 ? item.images[0] : item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-medium">No Img</div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
-                          <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty} {item.unitType || ''}</span></p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
-                          <button type="button" onClick={() => handleUpdateQuantity(item._id, -1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">-</button>
-                          <span className="px-2 font-semibold text-sm">{item.qty}</span>
-                          <button type="button" onClick={() => handleUpdateQuantity(item._id, 1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">+</button>
-                        </div>
-                        <button onClick={() => handleRemoveFromCart(item._id)} className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg transition">
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {cart.length > 0 && (
-              <div className="p-5 border-t border-gray-100 bg-white">
-                <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-                  <span>Subtotal:</span>
-                  <span>₹{cartTotal}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-                  <span>Shipping & Discounts:</span>
-                  <span>Calculated at checkout</span>
-                </div>
-                <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800">
-                  <span>Estimated Total:</span>
-                  <span className="text-green-600">₹{cartTotal}</span>
-                </div>
-                <button key="btn-proceed" type="button" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} className="w-full bg-[#76b900] text-white font-bold py-4 rounded-xl hover:bg-[#659e00] transition text-lg shadow-lg shadow-green-200">
-                  Proceed to Checkout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <CartSidebar 
+        isCartOpen={isCartOpen}
+        setIsCartOpen={setIsCartOpen}
+        cart={cart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveFromCart={handleRemoveFromCart}
+        cartTotal={cartTotal}
+        primaryColor={primaryColor}
+        store={store}
+        deliverySettings={deliverySettings}
+      />
 
       {/* Custom Toast Notification */}
       {toast && (
-        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 transition-all animate-fadeIn ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-[#76b900] text-white'}`}>
+        <div 
+          className="fixed top-10 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 transition-all animate-fadeIn text-white"
+          style={{ backgroundColor: toast.type === 'error' ? '#ef4444' : primaryColor }}
+        >
           <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
           {toast.message}
         </div>

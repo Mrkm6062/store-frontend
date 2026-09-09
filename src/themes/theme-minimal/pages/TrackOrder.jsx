@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Package, Truck, CheckCircle, XCircle, ArrowLeft, RefreshCcw, Key, LogOut } from 'lucide-react';
 import { useStore } from '../../../services/useStore';
+import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
+import StoreLayout from '../Layout';
 
 const TrackOrder = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
+  const customization = useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [customerToken, setCustomerToken] = useState(localStorage.getItem('gb_customer_token') || null);
   const [customerEmail, setCustomerEmail] = useState(localStorage.getItem('gb_customer_email') || '');
@@ -22,6 +26,24 @@ const TrackOrder = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
+
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('gb_store_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      const saved = localStorage.getItem('gb_store_cart');
+      if (saved) {
+        try { setCart(JSON.parse(saved)); } catch(e) {}
+      } else {
+        setCart([]);
+      }
+    };
+    window.addEventListener('cart-updated', handleCartUpdate);
+    return () => window.removeEventListener('cart-updated', handleCartUpdate);
+  }, []);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -103,6 +125,8 @@ const TrackOrder = () => {
         const data = await response.json();
         setOrders(data);
         if (data.length > 0) {
+          localStorage.setItem('gb_customer_name', data[0].customerName || '');
+          window.dispatchEvent(new Event('customer-login-updated'));
           if (orderId) {
             const found = data.find(o => o._id === orderId);
             setSelectedOrder(found || data[0]);
@@ -129,6 +153,8 @@ const TrackOrder = () => {
   const handleLogout = () => {
     localStorage.removeItem('gb_customer_token');
     localStorage.removeItem('gb_customer_email');
+    localStorage.removeItem('gb_customer_name');
+    window.dispatchEvent(new Event('customer-login-updated'));
     setCustomerToken(null);
     setCustomerEmail('');
     setAuthStep('email');
@@ -136,14 +162,14 @@ const TrackOrder = () => {
     setSelectedOrder(null);
   };
 
-  if (storeLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-[#76b900] font-bold"><RefreshCcw className="animate-spin mr-2" /> Loading Store...</div>;
+  if (storeLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-bold" style={{ color: primaryColor }}><RefreshCcw className="animate-spin mr-2" /> Loading Store...</div>;
 
   if (storeError || !store) return <div className="min-h-screen flex items-center justify-center">Store not found.</div>;
 
   const renderAuth = () => (
     <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-200 mt-12">
       <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-green-50 text-[#76b900] rounded-full flex items-center justify-center mx-auto mb-4"><Key size={32} /></div>
+        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4" style={{ color: primaryColor }}><Key size={32} /></div>
         <h2 className="text-2xl font-extrabold text-slate-800">Track Your Orders</h2>
         <p className="text-slate-500 mt-2">{authStep === 'email' ? 'Enter your email to view your order history and tracking details.' : `Enter the verification code sent to ${customerEmail}`}</p>
       </div>
@@ -155,7 +181,7 @@ const TrackOrder = () => {
             <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
             <input required type="email" value={emailInput} onChange={e => setEmailInput(e.target.value)} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" placeholder="you@example.com" />
           </div>
-          <button type="submit" disabled={authLoading} className="w-full py-3 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition disabled:opacity-50 shadow-lg shadow-green-100">{authLoading ? 'Sending...' : 'Send OTP'}</button>
+          <button type="submit" disabled={authLoading} style={{ backgroundColor: primaryColor }} className="w-full py-3 text-white font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50 shadow-lg">{authLoading ? 'Sending...' : 'Send OTP'}</button>
         </form>
       ) : (
         <form onSubmit={handleVerifyOtp} className="space-y-4">
@@ -163,7 +189,7 @@ const TrackOrder = () => {
             <label className="block text-sm font-bold text-slate-700 mb-1">6-Digit OTP</label>
             <input required type="text" maxLength="6" value={otpInput} onChange={e => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-center text-2xl tracking-[0.5em] font-mono" placeholder="••••••" />
           </div>
-          <button type="submit" disabled={authLoading || otpInput.length !== 6} className="w-full py-3 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition disabled:opacity-50 shadow-lg shadow-green-100">{authLoading ? 'Verifying...' : 'Verify & View Orders'}</button>
+          <button type="submit" disabled={authLoading || otpInput.length !== 6} style={{ backgroundColor: primaryColor }} className="w-full py-3 text-white font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50 shadow-lg">{authLoading ? 'Verifying...' : 'Verify & View Orders'}</button>
           <button type="button" onClick={() => setAuthStep('email')} className="w-full py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Use a different email</button>
         </form>
       )}
@@ -178,8 +204,8 @@ const TrackOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
-      <div className="max-w-6xl mx-auto">
+    <StoreLayout store={store} cartCount={cart.length} onCartClick={() => navigate('/')} hideFooter={true}>
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-6">
           <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
             <ArrowLeft size={16} className="mr-1" /> Back to Store
@@ -192,13 +218,13 @@ const TrackOrder = () => {
         </div>
 
         {authStep !== 'tracking' ? renderAuth() : loadingData ? (
-          <div className="text-center py-20 text-[#76b900] font-bold flex items-center justify-center"><RefreshCcw className="animate-spin mr-2" /> Loading Orders...</div>
+          <div className="text-center py-20 font-bold flex items-center justify-center" style={{ color: primaryColor }}><RefreshCcw className="animate-spin mr-2" /> Loading Orders...</div>
         ) : orders.length === 0 ? (
           <div className="text-center bg-white p-12 rounded-3xl shadow-sm border border-slate-200 mt-12">
             <Package size={64} className="mx-auto text-slate-300 mb-4" />
             <h2 className="text-2xl font-bold text-slate-800">No Orders Found</h2>
             <p className="text-slate-500 mt-2 mb-6">We couldn't find any orders placed with {customerEmail}.</p>
-            <Link to="/" className="px-6 py-3 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00]">Start Shopping</Link>
+            <Link to="/" style={{ backgroundColor: primaryColor }} className="px-6 py-3 text-white font-bold rounded-xl hover:opacity-90">Start Shopping</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -303,6 +329,11 @@ const TrackOrder = () => {
                             <div>
                               <p className="font-bold text-slate-800">{item.name}</p>
                               <p className="text-slate-500">Qty: {item.qty} x ₹{item.price}</p>
+                              {item.customText && (
+                                <div className="mt-1 text-xs text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-100 w-fit">
+                                  <span className="font-semibold">Text:</span> {item.customText}
+                                </div>
+                              )}
                             </div>
                             <div className="font-bold text-slate-800">₹{item.qty * item.price}</div>
                           </div>
@@ -341,7 +372,7 @@ const TrackOrder = () => {
           </div>
         )}
       </div>
-    </div>
+    </StoreLayout>
   );
 };
 

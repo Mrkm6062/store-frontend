@@ -23,43 +23,32 @@ const SocialIcon = ({ platform, size = 26, className }) => {
   );
 };
 
-const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
+import WishlistSidebar from './components/WishlistSidebar';
+import { ThemeCustomizationContext } from '../../themeLoader/themeRenderer.jsx';
+
+const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hideHeader, hideBottomNav }) => {
   const [socialLinks, setSocialLinks] = useState([]);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const customization = React.useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   useEffect(() => {
     getPublicSocialMedia().then(setSocialLinks).catch(console.error);
   }, []);
 
   const isProductPage = typeof window !== 'undefined' && window.location.pathname.includes('/product/');
+  const isHomePage = typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '');
+  const shouldShowFooter = isHomePage && !hideFooter;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip">
-      <Header store={store} cartCount={cartCount} onCartClick={onCartClick} />
+    <div className={`min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip ${cartCount > 0 && !hideBottomNav ? 'pb-36' : (!hideBottomNav ? 'pb-16' : '')} md:pb-0`}>
+      {!hideHeader && <Header store={store} cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       <main className="flex-1 w-full flex flex-col">
         {children}
       </main>
+      {shouldShowFooter && <Footer storeName={store?.name || 'Store'} />}
+      {!hideBottomNav && <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       
-      {/* Social Media Footer Section */}
-      {socialLinks.length > 0 && (
-        <div className="bg-white border-t border-gray-200 py-8 mt-10">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5">
-            <h3 className="text-gray-500 font-bold text-sm uppercase tracking-widest">Connect with us</h3>
-            <div className="flex gap-6">
-              {socialLinks.map(link => {
-                return (
-                  <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#76b900] hover:scale-110 transform transition-all duration-300">
-                    <SocialIcon platform={link.platform} size={26} />
-                  </a>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Footer storeName={store?.name || 'Store'} />
-      <BottomNav cartCount={cartCount} onCartClick={onCartClick} />
-
       {store?.whatsappSupportEnabled && store?.whatsappNumber && (
         <a
           href={`https://wa.me/${store.whatsappNumber.replace(/[^0-9]/g, '')}`}
@@ -83,6 +72,8 @@ const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
           </svg>
         </a>
       )}
+
+      <WishlistSidebar isWishlistOpen={isWishlistOpen} setIsWishlistOpen={setIsWishlistOpen} primaryColor={primaryColor} />
     </div>
   );
 };
