@@ -606,15 +606,45 @@ const CheckoutPage = () => {
     setIsPlacingOrder(true);
     
     if (!formData.pincode || formData.pincode.trim().length < 6) return showToast('Pincode must be exactly 6 digits.'), setIsPlacingOrder(false);
+    if (!formData.locality || !formData.locality.trim()) return showToast('Please select a delivery area.'), setIsPlacingOrder(false);
     if (!formData.customerName || !formData.customerName.trim()) return showToast('Full Name is required.'), setIsPlacingOrder(false);
-    if (!formData.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail.trim())) return showToast('Please enter a valid email address.'), setIsPlacingOrder(false);
+    if (!formData.customerEmail || !isEmailValid(formData.customerEmail)) return showToast('Please enter a valid email address.'), setIsPlacingOrder(false);
     if (!formData.customerPhone || formData.customerPhone.trim().length < 10) return showToast('Mobile Number must be at least 10 digits.'), setIsPlacingOrder(false);
     if (!formData.addressLine1 || !formData.addressLine1.trim()) return showToast('Address is required.'), setIsPlacingOrder(false);
     if (!formData.city || !formData.city.trim()) return showToast('City/District is required.'), setIsPlacingOrder(false);
     if (!formData.state || !formData.state.trim()) return showToast('State is required.'), setIsPlacingOrder(false);
 
-    if (!calculatedDelivery.available) {
-      showToast(calculatedDelivery.message || `Sorry, we do not deliver to pincode ${formData.pincode} at the moment.`);
+    // Live Backend Delivery Verification before order creation
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+      const checkRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-store-id': store?._id },
+        body: JSON.stringify({
+          storeId: store?._id,
+          state: formData.state.trim(),
+          district: formData.city.trim(),
+          pincode: formData.pincode.trim(),
+          postOffice: (formData.postOffice || '').trim(),
+          locality: (formData.locality || '').trim(),
+          subtotal: discountedTotal
+        })
+      });
+
+      let liveCalc = { available: false };
+      if (checkRes.ok) {
+        liveCalc = await checkRes.json();
+      }
+
+      setCalculatedDelivery(liveCalc);
+
+      if (!liveCalc.available) {
+        showToast(liveCalc.message || `Pincode ${formData.pincode} is not deliverable.`);
+        setIsPlacingOrder(false);
+        return;
+      }
+    } catch (err) {
+      showToast('Delivery verification failed. Please try again.');
       setIsPlacingOrder(false);
       return;
     }
@@ -867,7 +897,11 @@ const CheckoutPage = () => {
                         placeholder=" " 
                         maxLength="6" 
                         value={formData.pincode} 
-                        onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} 
+                        onChange={e => {
+                          const newPin = e.target.value.replace(/[^0-9]/g, '');
+                          setFormData(prev => ({ ...prev, pincode: newPin, locality: '', postOffice: '' }));
+                          setCalculatedDelivery({ available: false, charge: 0, isFreeShipping: false, matchedLocationName: '', message: 'Checking pincode...' });
+                        }} 
                         className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800" 
                       />
                       <label className="floating-label">Enter 6-Digit Pincode *</label>
@@ -1189,7 +1223,12 @@ const CheckoutPage = () => {
                         placeholder=" " 
                         maxLength="6" 
                         value={editPincode} 
-                        onChange={e => setEditPincode(e.target.value.replace(/[^0-9]/g, ''))} 
+                        onChange={e => {
+                          const newPin = e.target.value.replace(/[^0-9]/g, '');
+                          setEditPincode(newPin);
+                          setEditLocality('');
+                          setEditPostOffice('');
+                        }} 
                         className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800" 
                       />
                       <label className="floating-label">6-Digit Pincode *</label>
