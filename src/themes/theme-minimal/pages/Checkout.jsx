@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
+import { useProducts } from '../../../services/useProducts';
 import { placeOrder } from '../../../services/api';
 import StoreLayout from '../Layout';
-import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle, ArrowLeft, MapPin } from 'lucide-react';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 // Helper to dynamically load razorpay
@@ -107,6 +108,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [customFiles, setCustomFiles] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
+  
   const [editName, setEditName] = useState(formData.customerName || '');
   const [editPhone, setEditPhone] = useState(formData.customerPhone || '');
   const [editEmail, setEditEmail] = useState(formData.customerEmail || '');
@@ -119,10 +121,14 @@ const CheckoutPage = () => {
   const [editPostOffice, setEditPostOffice] = useState(formData.postOffice || '');
   const [editLocality, setEditLocality] = useState(formData.locality || '');
 
+  const [inlineOffices, setInlineOffices] = useState([]);
+  const [availableOffices, setAvailableOffices] = useState([]);
+
   const [calculatedDelivery, setCalculatedDelivery] = useState({
     available: true,
     charge: 0,
     isFreeShipping: false,
+    matchedLocationName: '',
     message: ''
   });
 
@@ -143,8 +149,36 @@ const CheckoutPage = () => {
     setEditLocality(formData.locality || '');
   }, [formData]);
 
+  // Inline Pincode Auto-fetch
   useEffect(() => {
-    const fetchEditCityState = async () => {
+    const fetchInlinePincodeDetails = async () => {
+      if (formData.pincode && formData.pincode.trim().length === 6) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${formData.pincode.trim()}`);
+          if (response.ok) {
+            const data = await response.json();
+            const fetchedOffices = data.offices || [];
+            setInlineOffices(fetchedOffices);
+            setFormData(prev => ({
+              ...prev,
+              city: data.city || prev.city,
+              state: data.state || prev.state,
+              postOffice: prev.postOffice || (fetchedOffices.length > 0 ? fetchedOffices[0] : ''),
+              locality: prev.locality || (fetchedOffices.length > 0 ? fetchedOffices[0] : '')
+            }));
+          }
+        } catch (error) {}
+      } else {
+        setInlineOffices([]);
+      }
+    };
+    fetchInlinePincodeDetails();
+  }, [formData.pincode]);
+
+  // Edit Modal Pincode Auto-fetch
+  useEffect(() => {
+    const fetchEditPincodeDetails = async () => {
       if (editPincode && editPincode.trim().length === 6) {
         try {
           const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -153,11 +187,19 @@ const CheckoutPage = () => {
             const data = await response.json();
             setEditCity(data.city || '');
             setEditState(data.state || '');
+            const fetchedOffices = data.offices || [];
+            setAvailableOffices(fetchedOffices);
+            if (fetchedOffices.length > 0 && !editPostOffice) {
+              setEditPostOffice(fetchedOffices[0]);
+              setEditLocality(fetchedOffices[0]);
+            }
           }
         } catch (e) {}
+      } else {
+        setAvailableOffices([]);
       }
     };
-    fetchEditCityState();
+    fetchEditPincodeDetails();
   }, [editPincode]);
 
   useEffect(() => {
@@ -184,12 +226,12 @@ const CheckoutPage = () => {
 
   const handleSaveEditedAddress = async (e) => {
     e.preventDefault();
-    if (!editPhone || editPhone.trim().length < 10) {
-      setModalResult({ text: 'Mobile number must be at least 10 digits.', type: 'error' });
-      return;
-    }
     if (!editPincode || editPincode.trim().length !== 6) {
       setModalResult({ text: 'Pincode must be exactly 6 digits.', type: 'error' });
+      return;
+    }
+    if (!editPhone || editPhone.trim().length < 10) {
+      setModalResult({ text: 'Mobile number must be at least 10 digits.', type: 'error' });
       return;
     }
 
@@ -234,7 +276,7 @@ const CheckoutPage = () => {
         localStorage.setItem('gb_customer_info', JSON.stringify(updatedInfo));
         setFormData(updatedInfo);
         setCalculatedDelivery(calcData);
-        setModalResult({ text: 'Address updated & delivery verified!', type: 'success' });
+        setModalResult({ text: 'Address updated & delivery fee updated!', type: 'success' });
         window.dispatchEvent(new Event('customer-info-updated'));
         setTimeout(() => {
           setShowEditModal(false);
@@ -326,6 +368,7 @@ const CheckoutPage = () => {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const discountedTotal = Math.max(0, cartTotal - discountAmount - offerDiscount);
 
+  // Dynamic Calculate Delivery API call
   useEffect(() => {
     const calcDelivery = async () => {
       if (!store?._id) return;
@@ -391,22 +434,6 @@ const CheckoutPage = () => {
     }
   }, [store]);
 
-  useEffect(() => {
-    const fetchPincodeDetails = async () => {
-      if (formData.pincode && formData.pincode.trim().length === 6) {
-        try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-          const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${formData.pincode.trim()}`);
-          if (response.ok) {
-            const data = await response.json();
-            setFormData(prev => ({ ...prev, city: data.city || prev.city, state: data.state || prev.state }));
-          }
-        } catch (error) {}
-      }
-    };
-    fetchPincodeDetails();
-  }, [formData.pincode]);
-
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -446,27 +473,18 @@ const CheckoutPage = () => {
     e.preventDefault();
     setIsPlacingOrder(true);
     
+    if (!formData.pincode || formData.pincode.trim().length < 6) return showToast('Pincode must be exactly 6 digits.'), setIsPlacingOrder(false);
     if (!formData.customerName || !formData.customerName.trim()) return showToast('Full Name is required.'), setIsPlacingOrder(false);
     if (!formData.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail.trim())) return showToast('Please enter a valid email address.'), setIsPlacingOrder(false);
-    if (!formData.customerPhone || formData.customerPhone.trim().length < 10) return showToast('Mobile Number must be exactly 10 digits.'), setIsPlacingOrder(false);
+    if (!formData.customerPhone || formData.customerPhone.trim().length < 10) return showToast('Mobile Number must be at least 10 digits.'), setIsPlacingOrder(false);
     if (!formData.addressLine1 || !formData.addressLine1.trim()) return showToast('Address is required.'), setIsPlacingOrder(false);
-    if (!formData.landmark || !formData.landmark.trim()) return showToast('Landmark is required.'), setIsPlacingOrder(false);
-    if (!formData.city || !formData.city.trim()) return showToast('City is required.'), setIsPlacingOrder(false);
+    if (!formData.city || !formData.city.trim()) return showToast('City/District is required.'), setIsPlacingOrder(false);
     if (!formData.state || !formData.state.trim()) return showToast('State is required.'), setIsPlacingOrder(false);
-    if (!formData.pincode || formData.pincode.trim().length < 6) return showToast('Pincode must be exactly 6 digits.'), setIsPlacingOrder(false);
-    if (!formData.alternateNumber || formData.alternateNumber.trim().length < 10) return showToast('Alternate Mobile Number must be exactly 10 digits.'), setIsPlacingOrder(false);
 
-    if (deliverySettings) {
-      if (deliverySettings.deliveryMode === 'state') {
-        const allowed = deliverySettings.allowedStates.map(s => s.toLowerCase());
-        if (!allowed.includes((formData.state || '').toLowerCase().trim())) {
-          return showToast(`Sorry, we do not deliver to ${formData.state} at the moment.`), setIsPlacingOrder(false);
-        }
-      } else if (deliverySettings.deliveryMode === 'pincode') {
-        if (!deliverySettings.allowedPincodes.includes((formData.pincode || '').trim())) {
-          return showToast(`Sorry, we do not deliver to pincode ${formData.pincode} at the moment.`), setIsPlacingOrder(false);
-        }
-      }
+    if (!calculatedDelivery.available) {
+      showToast(calculatedDelivery.message || `Sorry, we do not deliver to pincode ${formData.pincode} at the moment.`);
+      setIsPlacingOrder(false);
+      return;
     }
 
     try {
@@ -518,33 +536,58 @@ const CheckoutPage = () => {
 
       const response = await placeOrder({
         customerName: formData.customerName, customerEmail: formData.customerEmail, customerPhone: formData.customerPhone,
-        address: { addressLine1: formData.addressLine1, landmark: formData.landmark, city: formData.city, state: formData.state, pincode: formData.pincode, mobileNumber: formData.customerPhone, alternateNumber: formData.alternateNumber },
-        orderItems, totalAmount: finalTotal, couponCode: appliedCoupon ? appliedCoupon.code : null, discountAmount, shippingCharge, paymentMethod,
-        WhasAppOrder: paymentMethod === 'whatsapp'
+        address: { addressLine1: formData.addressLine1, landmark: formData.landmark, city: formData.city, state: formData.state, pincode: formData.pincode, alternateNumber: formData.alternateNumber, postOffice: formData.postOffice, locality: formData.locality },
+        orderItems, totalAmount: finalTotal, discountAmount: (discountAmount + offerDiscount), appliedCoupon: appliedCoupon ? appliedCoupon.code : null, paymentMethod, shippingCharge
       });
-      
-      const createdOrder = response.order || response;
-      const razorpayOrder = response.razorpayOrder;
 
-      if (paymentMethod === 'whatsapp' && checkoutSettings?.whatsappNumber) {
-        let itemsText = cart.map(item => `- ${item.qty}x ${item.name} (₹${item.price})`).join('%0A');
-        let trackingLink = `${window.location.origin}/track/${createdOrder._id}`;
-        let text = `Hello! I have placed an order (ID: ${createdOrder._id.slice(-6).toUpperCase()}).%0A%0A*Order Details:*%0A${itemsText}%0A%0ASubtotal: ₹${cartTotal}%0ADiscount: -₹${discountAmount}%0AShipping: ₹${shippingCharge}%0A*Total Amount: ₹${finalTotal}*%0A%0A*Customer Info:*%0AName: ${formData.customerName}%0APhone: ${formData.customerPhone}%0AAddress: ${formData.addressLine1}, ${formData.city}, ${formData.state} - ${formData.pincode}%0A%0A*Track Order Status:* ${trackingLink}`;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Order creation failed');
+      }
+
+      const createdOrder = await response.json();
+
+      if (paymentMethod === 'whatsapp') {
+        const storePhone = (store.supportPhoneNumbers && store.supportPhoneNumbers.length > 0) ? store.supportPhoneNumbers[0] : (store.whatsappNumber || '');
+        const cleanPhone = storePhone.replace(/[^0-9]/g, '');
         
-        let num = checkoutSettings.whatsappNumber.replace(/[^0-9]/g, '');
-        if (num.length === 10) num = '91' + num;
+        let messageText = `*New Order Placed! (Order #${createdOrder._id.slice(-6).toUpperCase()})*\n\n`;
+        messageText += `*Customer:* ${formData.customerName}\n`;
+        messageText += `*Phone:* ${formData.customerPhone}\n`;
+        messageText += `*Address:* ${formData.addressLine1}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.city}, ${formData.state} - ${formData.pincode}\n\n`;
+        messageText += `*Items Ordered:*\n`;
+        cart.forEach(item => {
+          messageText += `• ${item.name} x ${item.qty} = ₹${item.price * item.qty}\n`;
+        });
+        messageText += `\n*Subtotal:* ₹${cartTotal}\n`;
+        if (offerDiscount > 0) messageText += `*Offer Discount:* -₹${offerDiscount}\n`;
+        if (discountAmount > 0) messageText += `*Coupon Discount:* -₹${discountAmount}\n`;
+        messageText += `*Shipping Charge:* ₹${shippingCharge}\n`;
+        messageText += `*Total Payable:* ₹${finalTotal}\n`;
+
+        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
         
-        window.open(`https://wa.me/${num}?text=${text}`, '_blank');
-      } else if (paymentMethod === 'razorpay' && checkoutSettings?.razorpayEnabled) {
-        if (!razorpayOrder) {
-          showToast('Failed to initialize Razorpay checkout.', 'error');
-          setIsPlacingOrder(false);
-          return;
-        }
+        localStorage.setItem('gb_customer_info', JSON.stringify(formData));
+        setCart([]);
+        localStorage.removeItem('gb_store_cart');
+        setOrderSuccess(true);
+        window.open(whatsappUrl, '_blank');
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      if (paymentMethod === 'razorpay') {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+        const razorpayRes = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: finalTotal, currency: 'INR', orderId: createdOrder._id })
+        });
+        const razorpayOrder = await razorpayRes.json();
 
         const isLoaded = await loadRazorpay();
         if (!isLoaded) {
-          showToast('Failed to load Razorpay SDK. Check your internet connection.', 'error');
+          showToast('Failed to load Razorpay SDK. Check your internet connection.');
           setIsPlacingOrder(false);
           return;
         }
@@ -599,7 +642,7 @@ const CheckoutPage = () => {
         paymentObject.open();
         
         setIsPlacingOrder(false);
-        return; // Prevent execution of the cart clearance directly below
+        return;
       }
 
       localStorage.setItem('gb_customer_info', JSON.stringify(formData));
@@ -678,8 +721,103 @@ const CheckoutPage = () => {
           {/* Left Column: Form */}
           <div className="lg:col-span-7 space-y-6">
             <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-6">
+              
+              {/* Step 1: Delivery Location & Pincode First */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Contact Details</h3>
+                <div className="flex items-center gap-2 mb-4 border-b pb-3">
+                  <MapPin size={22} className="text-[#76b900]" />
+                  <h3 className="font-bold text-xl text-slate-800">1. Delivery Location & Pincode</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder=" " 
+                        maxLength="6" 
+                        value={formData.pincode} 
+                        onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800" 
+                      />
+                      <label className="floating-label">Enter 6-Digit Pincode *</label>
+                    </div>
+
+                    <div className="relative">
+                      {inlineOffices.length > 0 ? (
+                        <select
+                          value={formData.postOffice || formData.locality}
+                          onChange={e => setFormData({...formData, postOffice: e.target.value, locality: e.target.value})}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
+                        >
+                          <option value="">Select Area / Post Office</option>
+                          {inlineOffices.map((off, idx) => (
+                            <option key={idx} value={off}>{off}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input 
+                          type="text" 
+                          placeholder="Area / Village / Building" 
+                          value={formData.locality} 
+                          onChange={e => setFormData({...formData, locality: e.target.value, postOffice: e.target.value})} 
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-semibold" 
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder=" " 
+                        value={formData.city} 
+                        onChange={e => setFormData({...formData, city: e.target.value})} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                      />
+                      <label className="floating-label">City / District</label>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder=" " 
+                        value={formData.state} 
+                        onChange={e => setFormData({...formData, state: e.target.value})} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                      />
+                      <label className="floating-label">State</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Street Address */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">2. Street Address & Landmark</h3>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <input type="text" required placeholder=" " value={formData.addressLine1} onChange={e => setFormData({...formData, addressLine1: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input type="text" required placeholder=" " value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Landmark</label>
+                    </div>
+                    <div className="relative">
+                      <input type="tel" required placeholder=" " maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Alternate Mobile Number</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Contact Details */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">3. Customer Contact Details</h3>
                 <div className="space-y-4">
                   <div className="relative">
                     <input type="text" required placeholder=" " value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
@@ -698,40 +836,7 @@ const CheckoutPage = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Delivery Address</h3>
-                <div className="space-y-4">
-                  <div className="relative">
-                    <input type="text" required placeholder=" " value={formData.addressLine1} onChange={e => setFormData({...formData, addressLine1: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
-                  </div>
-                  <div className="relative">
-                    <input type="text" required placeholder=" " value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                    <label className="floating-label">Landmark</label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <input type="text" required placeholder=" " maxLength="6" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                      <label className="floating-label">Pincode</label>
-                    </div>
-                    <div className="relative">
-                      <input type="tel" required placeholder=" " maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                      <label className="floating-label">Alternate Mobile</label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <input type="text" required placeholder=" " value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                      <label className="floating-label">City</label>
-                    </div>
-                    <div className="relative">
-                      <input type="text" required placeholder=" " value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                      <label className="floating-label">State</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
+              {/* Payment Method */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Payment Method</h3>
                 <div className="flex flex-col gap-3">
@@ -743,11 +848,11 @@ const CheckoutPage = () => {
             </form>
           </div>
 
-          {/* Right Column: Order Summary */}
+          {/* Right Column: Order Summary Card */}
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
               <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Order Summary</h3>
-              <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {cart.map((item) => (
                   <div key={item._id} className="flex flex-col text-sm border-b border-gray-50 pb-3">
                     <div className="flex justify-between items-center">
@@ -757,39 +862,12 @@ const CheckoutPage = () => {
                         </div>
                         <div>
                           <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
-                          <p className="text-gray-500">Qty: {item.qty}</p>
-                          {item.customText && <p className="text-xs text-gray-500 mt-0.5"><span className="font-semibold text-gray-700">Text:</span> {item.customText}</p>}
+                          <p className="text-xs text-gray-500">Qty: {item.qty}</p>
+                          {item.customText && <p className="text-[10px] text-gray-500 mt-0.5"><span className="font-semibold text-gray-700">Text:</span> {item.customText}</p>}
                         </div>
                       </div>
                       <div className="font-bold text-gray-800">₹{item.price * item.qty}</div>
                     </div>
-                    {item.isCustomizable && (
-                      <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
-                        {item.customImageBase64 ? (
-                          <>
-                            <img src={item.customImageBase64} alt="Custom" className="w-12 h-12 rounded object-cover border shadow-sm" />
-                            <div className="text-xs text-green-700 font-bold flex flex-col">
-                              <span>Custom Image Uploaded</span>
-                              <span className="font-medium text-gray-500">Will be printed on item</span>
-                            </div>
-                          </>
-                        ) : (
-                           <div className="w-full">
-                            <label className="block text-xs font-bold text-gray-700 mb-2">
-                              Upload image to print on this product {!item.customText && <span className="text-red-500">*</span>}
-                              {item.customText && <span className="text-gray-400 font-normal ml-1">(Optional)</span>}
-                            </label>
-                            <input type="file" accept="image/*" required={!item.customText && !customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="primary-file-input w-full text-xs text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:text-white transition-colors cursor-pointer" />
-                            {customFiles[item._id] && (
-                              <div className="mt-2 relative inline-block">
-                                <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
-                                <button type="button" onClick={() => { const newFiles = {...customFiles}; delete newFiles[item._id]; setCustomFiles(newFiles); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
-                              </div>
-                            )}
-                           </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -800,35 +878,48 @@ const CheckoutPage = () => {
                 <div className="flex justify-between"><span>Subtotal:</span><span className="font-bold text-gray-800">₹{cartTotal}</span></div>
                 {offerDiscount > 0 && <div className="flex justify-between text-orange-600 font-bold"><span>Promo Discount ({appliedPromoNames.join(', ')}):</span><span>-₹{offerDiscount}</span></div>}
                 {appliedCoupon && <div className="flex justify-between text-green-600 font-bold"><span>Discount ({appliedCoupon.code}):</span><span>-₹{discountAmount}</span></div>}
-                <div className="flex justify-between"><span>Shipping:</span><span className="font-bold text-gray-800">{shippingCharge > 0 ? `₹${shippingCharge}` : 'Free'}</span></div>
+                
+                <div className="flex justify-between items-center">
+                  <span>Delivery Charge:</span>
+                  <span className="font-bold text-gray-800">
+                    {calculatedDelivery.isFreeShipping ? (
+                      <span className="text-green-600 font-bold">FREE</span>
+                    ) : shippingCharge > 0 ? (
+                      `₹${shippingCharge}`
+                    ) : (
+                      'FREE'
+                    )}
+                  </span>
+                </div>
+                {calculatedDelivery.matchedLocationName && (
+                  <p className="text-[11px] text-green-600 font-bold text-right -mt-1 mb-1">
+                    ✓ Matched Area: {calculatedDelivery.matchedLocationName}
+                  </p>
+                )}
               </div>
+
               <div className="flex justify-between items-center font-bold text-xl mb-6 border-t pt-4 text-gray-800"><span>Total:</span><span className="text-green-600">₹{finalTotal}</span></div>
               
-              {/* Store Hours Check */}
               {isPlanExpired ? (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
                   <span>⚠️</span>
-                  <span>
-                    Orders cannot be placed at this time because the store's subscription plan has expired.
-                  </span>
+                  <span>Orders cannot be placed at this time because the store's subscription plan has expired.</span>
                 </div>
               ) : !storeOpenStatus.isOpen ? (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
                   <span>⚠️</span>
-                  <span>
-                    {storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}
-                  </span>
+                  <span>{storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}</span>
                 </div>
               ) : null}
 
               <button 
                 type="submit" 
                 form="checkout-form" 
-                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired} 
-                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired) ? primaryColor : '#94a3b8' }} 
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired || !calculatedDelivery.available} 
+                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired && calculatedDelivery.available) ? primaryColor : '#94a3b8' }} 
                 className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? 'Processing...' : (isPlanExpired ? 'Subscription Expired' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order'))}
+                {isPlacingOrder ? 'Processing...' : (isPlanExpired ? 'Subscription Expired' : (!storeOpenStatus.isOpen ? 'Store Closed' : (!calculatedDelivery.available ? 'Delivery Not Available' : 'Confirm & Place Order')))}
               </button>
             </div>
           </div>
@@ -838,7 +929,7 @@ const CheckoutPage = () => {
         <div className="block lg:hidden space-y-6 mt-6">
           {hasSavedDetails ? (
             <>
-              {/* 1. Delivery Address Summary */}
+              {/* Delivery Address Summary */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-left">
                 <div className="flex justify-between items-center mb-4 border-b pb-3">
                   <h3 className="font-bold text-base text-slate-800">Delivery Address</h3>
@@ -847,20 +938,19 @@ const CheckoutPage = () => {
                     onClick={() => setShowEditModal(true)}
                     className="text-xs font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-3 py-1.5 rounded-lg transition"
                   >
-                    Edit
+                    Edit Location
                   </button>
                 </div>
                 <div className="space-y-2 text-xs sm:text-sm text-slate-700">
-                  <p><span className="font-semibold text-slate-500">Name:</span> {formData.customerName}</p>
-                  <p><span className="font-semibold text-slate-500">Phone:</span> {formData.customerPhone} {formData.alternateNumber ? `(Alt: ${formData.alternateNumber})` : ''}</p>
-                  <p><span className="font-semibold text-slate-500">Email:</span> {formData.customerEmail}</p>
+                  <p><span className="font-semibold text-slate-500">Pincode:</span> <span className="font-bold text-slate-900">{formData.pincode}</span></p>
+                  <p><span className="font-semibold text-slate-500">Area / Locality:</span> {formData.postOffice || formData.locality || '-'}</p>
+                  <p><span className="font-semibold text-slate-500">City / District:</span> {formData.city}, {formData.state}</p>
                   <p><span className="font-semibold text-slate-500">Address:</span> {formData.addressLine1}</p>
-                  {formData.landmark && <p><span className="font-semibold text-slate-500">Landmark:</span> {formData.landmark}</p>}
-                  <p><span className="font-semibold text-slate-500">Location:</span> {formData.city}, {formData.state} - {formData.pincode}</p>
+                  <p><span className="font-semibold text-slate-500">Customer:</span> {formData.customerName} ({formData.customerPhone})</p>
                 </div>
               </div>
 
-              {/* 2. Order Summary */}
+              {/* Order Summary */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-base text-slate-800 mb-4 border-b pb-3 text-left">Order Summary</h3>
                 <div className="space-y-4 mb-6">
@@ -874,158 +964,175 @@ const CheckoutPage = () => {
                           <div className="text-left">
                             <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
                             <p className="text-gray-500">Qty: {item.qty}</p>
-                            {item.customText && <p className="text-[10px] text-gray-500 mt-0.5"><span className="font-semibold text-gray-700">Text:</span> {item.customText}</p>}
                           </div>
                         </div>
                         <div className="font-bold text-gray-800">₹{item.price * item.qty}</div>
                       </div>
-                      {item.isCustomizable && (
-                        <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
-                          {item.customImageBase64 ? (
-                            <>
-                              <img src={item.customImageBase64} alt="Custom" className="w-12 h-12 rounded object-cover border shadow-sm" />
-                              <div className="text-[10px] text-green-700 font-bold flex flex-col text-left">
-                                <span>Custom Image Uploaded</span>
-                                <span className="font-medium text-gray-500">Will be printed on item</span>
-                              </div>
-                            </>
-                          ) : (
-                             <div className="w-full text-left">
-                              <label className="block text-[10px] font-bold text-gray-700 mb-2">
-                                Upload image to print on this product {!item.customText && !customFiles[item._id]}
-                              </label>
-                              <input type="file" accept="image/*" required={!item.customText && !customFiles[item._id]} onChange={e => { if (e.target.files[0]) setCustomFiles(prev => ({...prev, [item._id]: e.target.files[0]})); }} className="primary-file-input w-full text-[10px] text-gray-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:text-white transition-colors cursor-pointer" />
-                              {customFiles[item._id] && (
-                                <div className="mt-2 relative inline-block">
-                                  <img src={URL.createObjectURL(customFiles[item._id])} alt="Preview" className="h-16 w-16 object-cover rounded border border-gray-300 shadow-sm" />
-                                  <button type="button" onClick={() => { const newFiles = {...customFiles}; delete newFiles[item._id]; setCustomFiles(newFiles); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
-                                </div>
-                              )}
-                             </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   ))}
-                </div>
-
-                <div className="mb-6">
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="Coupon Code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} disabled={appliedCoupon} className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] font-mono uppercase text-xs" />
-                    {appliedCoupon ? (
-                      <button type="button" onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponMessage({text: '', type: ''}); }} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition text-xs">Remove</button>
-                    ) : (
-                      <button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon || !couponCode} className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition disabled:opacity-50 text-xs">{isValidatingCoupon ? '...' : 'Apply'}</button>
-                    )}
-                  </div>
-                  {couponMessage.text && <p className={`text-xs font-bold mt-2 text-left ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>{couponMessage.text}</p>}
                 </div>
 
                 <div className="space-y-2 mb-4 text-xs sm:text-sm text-gray-600 text-left">
                   <div className="flex justify-between"><span>Subtotal:</span><span className="font-bold text-gray-800">₹{cartTotal}</span></div>
                   {offerDiscount > 0 && <div className="flex justify-between text-orange-600 font-bold"><span>Promo Discount ({appliedPromoNames.join(', ')}):</span><span>-₹{offerDiscount}</span></div>}
                   {appliedCoupon && <div className="flex justify-between text-green-600 font-bold"><span>Discount ({appliedCoupon.code}):</span><span>-₹{discountAmount}</span></div>}
-                  <div className="flex justify-between"><span>Shipping:</span><span className="font-bold text-gray-800">{shippingCharge > 0 ? `₹${shippingCharge}` : 'Free'}</span></div>
+                  <div className="flex justify-between items-center">
+                    <span>Delivery Charge:</span>
+                    <span className="font-bold text-gray-800">
+                      {calculatedDelivery.isFreeShipping ? (
+                        <span className="text-green-600 font-bold">FREE</span>
+                      ) : shippingCharge > 0 ? (
+                        `₹${shippingCharge}`
+                      ) : (
+                        'FREE'
+                      )}
+                    </span>
+                  </div>
+                  {calculatedDelivery.matchedLocationName && (
+                    <p className="text-[11px] text-green-600 font-bold text-right -mt-1 mb-1">
+                      ✓ Matched Area: {calculatedDelivery.matchedLocationName}
+                    </p>
+                  )}
                 </div>
                 <div className="flex justify-between items-center font-bold text-lg mb-6 border-t pt-4 text-gray-800">
                   <span>Total:</span><span className="text-green-600">₹{finalTotal}</span>
                 </div>
               </div>
-
-              {/* 3. Payment Method */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-left">
-                <h3 className="font-bold text-base text-slate-800 mb-4 border-b pb-3">Payment Method</h3>
-                <div className="flex flex-col gap-3">
-                  {checkoutSettings?.codEnabled !== false && (
-                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'cod' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}>
-                      <input type="radio" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-[#76b900]" />
-                      <span className="font-bold text-xs sm:text-sm text-slate-800">Cash on Delivery (COD)</span>
-                    </label>
-                  )}
-                  {checkoutSettings?.whatsappEnabled && (
-                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'whatsapp' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}>
-                      <input type="radio" value="whatsapp" checked={paymentMethod === 'whatsapp'} onChange={() => setPaymentMethod('whatsapp')} className="w-5 h-5 text-[#76b900]" />
-                      <span className="font-bold text-xs sm:text-sm text-slate-800">Order via WhatsApp</span>
-                    </label>
-                  )}
-                  {checkoutSettings?.razorpayEnabled && (
-                    <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'razorpay' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}>
-                      <input type="radio" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 text-[#76b900]" />
-                      <span className="font-bold text-xs sm:text-sm text-slate-800">Pay Online (Razorpay)</span>
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              {/* Store Hours Check */}
-              {isPlanExpired ? (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
-                  <span>⚠️</span>
-                  <span>
-                    Orders cannot be placed at this time because the store's subscription plan has expired.
-                  </span>
-                </div>
-              ) : !storeOpenStatus.isOpen ? (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
-                  <span>⚠️</span>
-                  <span>
-                    {storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}
-                  </span>
-                </div>
-              ) : null}
-
-              {/* 4. Action Button */}
-              <button 
-                type="submit" 
-                form="checkout-form" 
-                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired} 
-                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired) ? primaryColor : '#94a3b8' }} 
-                className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-base sm:text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
-              >
-                {isPlacingOrder ? 'Processing...' : (isPlanExpired ? 'Subscription Expired' : (!storeOpenStatus.isOpen ? 'Store Closed' : 'Confirm & Place Order'))}
-              </button>
             </>
           ) : (
-            /* Fallback to standard form if details are not filled */
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-150 text-left">
-              <p className="text-sm font-semibold text-slate-500 mb-4">Please fill in your contact and address details to complete checkout:</p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+              <p className="text-sm font-bold text-slate-700 mb-3">Please enter your pincode and delivery address to calculate shipping and place order.</p>
               <button 
-                type="button"
-                onClick={() => setShowEditModal(true)}
-                className="w-full py-3 bg-[#76b900] text-white font-bold rounded-xl text-sm transition"
+                type="button" 
+                onClick={() => setShowEditModal(true)} 
+                className="px-6 py-3 text-white font-bold rounded-xl shadow-md text-sm"
+                style={{ backgroundColor: primaryColor }}
               >
-                📍 Fill Delivery Details
+                Enter Delivery Pincode & Address
               </button>
             </div>
           )}
         </div>
 
-        {/* Edit Address Popup Modal (Mobile/Desktop) */}
+        {/* Edit Address Modal */}
         {showEditModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fadeIn">
-            <div className="absolute inset-0" onClick={() => setShowEditModal(false)} />
-            
-            <div className="bg-white w-full rounded-t-3xl sm:rounded-2xl sm:max-w-lg shadow-2xl border-t sm:border border-slate-100 flex flex-col h-[90vh] sm:h-auto sm:max-h-[85vh] overflow-hidden relative z-10 animate-slideUp sm:animate-zoomIn text-left">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-800">Edit Delivery Address</h3>
-                  <p className="text-[10px] text-gray-500">Update your details</p>
-                </div>
-                <button 
-                  type="button"
-                  onClick={() => setShowEditModal(false)} 
-                  className="text-slate-400 hover:text-red-500 transition-colors text-2xl font-bold leading-none p-1"
-                >
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+              
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 className="text-lg font-bold text-slate-800">Enter Delivery Pincode & Location</h3>
+                <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-red-500 transition-colors text-2xl leading-none">
                   &times;
                 </button>
               </div>
 
               {/* Scrollable Form */}
               <form onSubmit={handleSaveEditedAddress} className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Contact Details */}
+                
+                {/* 1. Location & Pincode First */}
                 <div className="space-y-4">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1">Contact Details</h4>
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1">1. Delivery Location & Area</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder=" " 
+                        maxLength="6" 
+                        value={editPincode} 
+                        onChange={e => setEditPincode(e.target.value.replace(/[^0-9]/g, ''))} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800" 
+                      />
+                      <label className="floating-label">6-Digit Pincode *</label>
+                    </div>
+
+                    <div className="relative">
+                      {availableOffices.length > 0 ? (
+                        <select
+                          value={editPostOffice || editLocality}
+                          onChange={e => {
+                            setEditPostOffice(e.target.value);
+                            setEditLocality(e.target.value);
+                          }}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
+                        >
+                          <option value="">Select Area / Post Office</option>
+                          {availableOffices.map((off, idx) => (
+                            <option key={idx} value={off}>{off}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input 
+                          type="text" 
+                          placeholder="Area / Locality / Village" 
+                          value={editLocality} 
+                          onChange={e => {
+                            setEditLocality(e.target.value);
+                            setEditPostOffice(e.target.value);
+                          }} 
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold" 
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required 
+                        readOnly
+                        placeholder=" " 
+                        value={editCity} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                      />
+                      <label className="floating-label">City / District</label>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required 
+                        readOnly
+                        placeholder=" " 
+                        value={editState} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                      />
+                      <label className="floating-label">State</label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Street Address */}
+                <div className="space-y-4">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1">2. Street Address & Landmark</h4>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder=" " 
+                      value={editAddress} 
+                      onChange={e => setEditAddress(e.target.value)} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder=" " 
+                      value={editLandmark} 
+                      onChange={e => setEditLandmark(e.target.value)} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                    />
+                    <label className="floating-label">Landmark (Optional)</label>
+                  </div>
+                </div>
+
+                {/* 3. Customer Info */}
+                <div className="space-y-4">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1">3. Customer Details</h4>
                   <div className="relative">
                     <input 
                       type="text" 
@@ -1064,105 +1171,6 @@ const CheckoutPage = () => {
                   </div>
                 </div>
 
-                {/* Delivery Address */}
-                <div className="space-y-4">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b pb-1">Delivery Address</h4>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      required 
-                      placeholder=" " 
-                      value={editAddress} 
-                      onChange={e => setEditAddress(e.target.value)} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      required 
-                      placeholder=" " 
-                      value={editLandmark} 
-                      onChange={e => setEditLandmark(e.target.value)} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                    />
-                    <label className="floating-label">Landmark</label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        required 
-                        placeholder=" " 
-                        maxLength="6" 
-                        value={editPincode} 
-                        onChange={e => setEditPincode(e.target.value.replace(/[^0-9]/g, ''))} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                      />
-                      <label className="floating-label">Pincode</label>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="tel" 
-                        required 
-                        placeholder=" " 
-                        maxLength="10" 
-                        value={editAlternate} 
-                        onChange={e => setEditAlternate(e.target.value.replace(/[^0-9]/g, ''))} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                      />
-                      <label className="floating-label">Alternate Mobile</label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        required 
-                        placeholder=" " 
-                        value={editCity} 
-                        onChange={e => setEditCity(e.target.value)} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                      />
-                      <label className="floating-label">City / District</label>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        required 
-                        placeholder=" " 
-                        value={editState} 
-                        onChange={e => setEditState(e.target.value)} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                      />
-                      <label className="floating-label">State</label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder=" " 
-                        value={editPostOffice} 
-                        onChange={e => setEditPostOffice(e.target.value)} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                      />
-                      <label className="floating-label">Post Office (Optional)</label>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder=" " 
-                        value={editLocality} 
-                        onChange={e => setEditLocality(e.target.value)} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
-                      />
-                      <label className="floating-label">Village / Building / Chawl</label>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Status and Action Buttons */}
                 <div className="pt-2">
                   {modalResult.text && (
@@ -1183,7 +1191,7 @@ const CheckoutPage = () => {
                       disabled={isVerifying}
                       className="flex-1 py-3 bg-[#76b900] text-white font-bold rounded-xl text-sm transition shadow-md shadow-green-50 disabled:opacity-50"
                     >
-                      {isVerifying ? 'Checking...' : 'Save & Update'}
+                      {isVerifying ? 'Checking...' : 'Save & Check Delivery'}
                     </button>
                   </div>
                 </div>
@@ -1205,4 +1213,5 @@ const CheckoutPage = () => {
     </StoreLayout>
   );
 };
+
 export default CheckoutPage;
