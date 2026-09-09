@@ -135,8 +135,8 @@ const CheckoutPage = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [modalResult, setModalResult] = useState({ text: '', type: '' });
 
-  // Helper to get combined delivery area options from DeliveryArea model & pincode lookup
-  const getCombinedAreaOptions = (pincode, city, state, officesList, deliverySettingsObj) => {
+  // Helper to get ONLY created delivery area options from DeliveryArea model & deliveryLocations
+  const getCreatedAreaOptions = (pincode, city, state, deliverySettingsObj) => {
     const optionsMap = new Map();
     const cleanPin = (pincode || '').trim();
     const cleanCity = (city || '').toLowerCase().trim();
@@ -174,7 +174,15 @@ const CheckoutPage = () => {
       deliverySettingsObj.deliveryLocations.forEach(loc => {
         if (loc.enabled === false) return;
         const locPin = loc.pincode ? String(loc.pincode).trim() : '';
-        if (!locPin || locPin === cleanPin) {
+        const locDist = loc.district ? String(loc.district).toLowerCase().trim() : '';
+        const locState = loc.state ? String(loc.state).toLowerCase().trim() : '';
+
+        const pinMatch = cleanPin && locPin === cleanPin;
+        const distMatch = cleanCity && locDist === cleanCity;
+        const stateMatch = cleanState && locState === cleanState;
+        const isGeneralArea = !locPin && !locDist && !locState;
+
+        if (pinMatch || distMatch || stateMatch || isGeneralArea || !cleanPin) {
           if (loc.name) {
             const key = loc.name.trim();
             if (!optionsMap.has(key)) {
@@ -186,20 +194,6 @@ const CheckoutPage = () => {
               });
             }
           }
-        }
-      });
-    }
-
-    // 3. From India Post API pincode lookup
-    if (officesList && Array.isArray(officesList)) {
-      officesList.forEach(off => {
-        const officeName = (typeof off === 'string' ? off : off.name)?.trim();
-        if (officeName && !optionsMap.has(officeName)) {
-          optionsMap.set(officeName, {
-            name: officeName,
-            charge: null,
-            isModelArea: false
-          });
         }
       });
     }
@@ -233,8 +227,8 @@ const CheckoutPage = () => {
             const fetchedOffices = data.offices || [];
             setInlineOffices(fetchedOffices);
 
-            const areaOpts = getCombinedAreaOptions(formData.pincode, data.city, data.state, fetchedOffices, deliverySettings);
-            const defaultLocality = areaOpts.length > 0 ? areaOpts[0].name : (fetchedOffices.length > 0 ? fetchedOffices[0] : '');
+            const areaOpts = getCreatedAreaOptions(formData.pincode, data.city, data.state, deliverySettings);
+            const defaultLocality = areaOpts.length > 0 ? areaOpts[0].name : '';
 
             setFormData(prev => ({
               ...prev,
@@ -266,8 +260,8 @@ const CheckoutPage = () => {
             setEditState(data.state || '');
             setAvailableOffices(fetchedOffices);
 
-            const areaOpts = getCombinedAreaOptions(editPincode, data.city, data.state, fetchedOffices, deliverySettings);
-            const defaultLocality = areaOpts.length > 0 ? areaOpts[0].name : (fetchedOffices.length > 0 ? fetchedOffices[0] : '');
+            const areaOpts = getCreatedAreaOptions(editPincode, data.city, data.state, deliverySettings);
+            const defaultLocality = areaOpts.length > 0 ? areaOpts[0].name : '';
 
             if (!editPostOffice) {
               setEditPostOffice(defaultLocality);
@@ -825,7 +819,7 @@ const CheckoutPage = () => {
 
                     <div className="relative">
                       {(() => {
-                        const areaOpts = getCombinedAreaOptions(formData.pincode, formData.city, formData.state, inlineOffices, deliverySettings);
+                        const areaOpts = getCreatedAreaOptions(formData.pincode, formData.city, formData.state, deliverySettings);
                         return (
                           <select
                             value={formData.locality || formData.postOffice}
@@ -845,7 +839,7 @@ const CheckoutPage = () => {
                     </div>
                   </div>
 
-                  {(formData.locality === 'Other' || (!getCombinedAreaOptions(formData.pincode, formData.city, formData.state, inlineOffices, deliverySettings).length)) && (
+                  {(formData.locality === 'Other' || (!getCreatedAreaOptions(formData.pincode, formData.city, formData.state, deliverySettings).length)) && (
                     <div className="relative">
                       <input 
                         type="text" 
@@ -1147,7 +1141,7 @@ const CheckoutPage = () => {
 
                     <div className="relative">
                       {(() => {
-                        const areaOpts = getCombinedAreaOptions(editPincode, editCity, editState, availableOffices, deliverySettings);
+                        const areaOpts = getCreatedAreaOptions(editPincode, editCity, editState, deliverySettings);
                         return (
                           <select
                             value={editLocality || editPostOffice}
@@ -1170,7 +1164,7 @@ const CheckoutPage = () => {
                     </div>
                   </div>
 
-                  {(editLocality === 'Other' || (!getCombinedAreaOptions(editPincode, editCity, editState, availableOffices, deliverySettings).length)) && (
+                  {(editLocality === 'Other' || (!getCreatedAreaOptions(editPincode, editCity, editState, deliverySettings).length)) && (
                     <div className="relative">
                       <input 
                         type="text" 
