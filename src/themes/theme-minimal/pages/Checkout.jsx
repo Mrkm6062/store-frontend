@@ -91,7 +91,7 @@ const CheckoutPage = () => {
   const [formData, setFormData] = useState(() => {
     const savedInfo = localStorage.getItem('gb_customer_info');
     return savedInfo ? JSON.parse(savedInfo) : {
-      customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: ''
+      customerName: '', customerEmail: '', customerPhone: '', addressLine1: '', landmark: '', city: '', state: '', pincode: '', alternateNumber: '', postOffice: '', locality: ''
     };
   });
 
@@ -116,6 +116,15 @@ const CheckoutPage = () => {
   const [editAlternate, setEditAlternate] = useState(formData.alternateNumber || '');
   const [editCity, setEditCity] = useState(formData.city || '');
   const [editState, setEditState] = useState(formData.state || '');
+  const [editPostOffice, setEditPostOffice] = useState(formData.postOffice || '');
+  const [editLocality, setEditLocality] = useState(formData.locality || '');
+
+  const [calculatedDelivery, setCalculatedDelivery] = useState({
+    available: true,
+    charge: 0,
+    isFreeShipping: false,
+    message: ''
+  });
 
   const [isVerifying, setIsVerifying] = useState(false);
   const [modalResult, setModalResult] = useState({ text: '', type: '' });
@@ -130,6 +139,8 @@ const CheckoutPage = () => {
     setEditAlternate(formData.alternateNumber || '');
     setEditCity(formData.city || '');
     setEditState(formData.state || '');
+    setEditPostOffice(formData.postOffice || '');
+    setEditLocality(formData.locality || '');
   }, [formData]);
 
   useEffect(() => {
@@ -187,24 +198,26 @@ const CheckoutPage = () => {
 
     try {
       const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-      const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
-        headers: { 'x-store-id': store?._id }
+      const calcRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-store-id': store?._id },
+        body: JSON.stringify({
+          storeId: store?._id,
+          state: editState.trim(),
+          district: editCity.trim(),
+          pincode: editPincode.trim(),
+          postOffice: editPostOffice.trim(),
+          locality: editLocality.trim(),
+          subtotal: discountedTotal
+        })
       });
-      if (!settingsRes.ok) throw new Error('Failed to load store delivery settings.');
-      const settings = await settingsRes.json();
 
-      let allowed = false;
-      if (settings.deliveryMode === 'state') {
-        const allowedStates = (settings.allowedStates || []).map(s => s.toLowerCase());
-        allowed = allowedStates.includes(editState.toLowerCase().trim());
-      } else if (settings.deliveryMode === 'pincode') {
-        const allowedPincodes = settings.allowedPincodes || [];
-        allowed = allowedPincodes.includes(editPincode.trim());
-      } else {
-        allowed = true;
+      let calcData = { available: true };
+      if (calcRes.ok) {
+        calcData = await calcRes.json();
       }
 
-      if (allowed) {
+      if (calcData.available) {
         const updatedInfo = {
           customerName: editName.trim(),
           customerPhone: editPhone.trim(),
@@ -214,18 +227,21 @@ const CheckoutPage = () => {
           pincode: editPincode.trim(),
           alternateNumber: editAlternate.trim(),
           city: editCity.trim(),
-          state: editState.trim()
+          state: editState.trim(),
+          postOffice: editPostOffice.trim(),
+          locality: editLocality.trim()
         };
         localStorage.setItem('gb_customer_info', JSON.stringify(updatedInfo));
         setFormData(updatedInfo);
-        setModalResult({ text: 'Address updated successfully!', type: 'success' });
+        setCalculatedDelivery(calcData);
+        setModalResult({ text: 'Address updated & delivery verified!', type: 'success' });
         window.dispatchEvent(new Event('customer-info-updated'));
         setTimeout(() => {
           setShowEditModal(false);
           setModalResult({ text: '', type: '' });
-        }, 1500);
+        }, 1200);
       } else {
-        setModalResult({ text: `Sorry, we do not deliver to this location (${editPincode}).`, type: 'error' });
+        setModalResult({ text: calcData.message || `Sorry, we do not deliver to this location (${editPincode}).`, type: 'error' });
       }
     } catch (err) {
       setModalResult({ text: err.message || 'Verification failed. Try again.', type: 'error' });
@@ -310,12 +326,37 @@ const CheckoutPage = () => {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const discountedTotal = Math.max(0, cartTotal - discountAmount - offerDiscount);
 
-  let shippingCharge = 0;
-  if (deliverySettings && deliverySettings.baseCharge > 0) {
-    if (deliverySettings.freeShippingThreshold === 0 || discountedTotal < deliverySettings.freeShippingThreshold) {
-      shippingCharge = deliverySettings.baseCharge;
-    }
-  }
+  useEffect(() => {
+    const calcDelivery = async () => {
+      if (!store?._id) return;
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${API_BASE_URL}/api/delivery-settings/public/calculate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-store-id': store._id },
+          body: JSON.stringify({
+            storeId: store._id,
+            state: formData.state,
+            district: formData.city,
+            pincode: formData.pincode,
+            postOffice: formData.postOffice,
+            locality: formData.locality,
+            subtotal: discountedTotal
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCalculatedDelivery(data);
+        }
+      } catch (e) {
+        console.error("Delivery calculation failed", e);
+      }
+    };
+    calcDelivery();
+  }, [store?._id, formData.state, formData.city, formData.pincode, formData.postOffice, formData.locality, discountedTotal]);
+
+  let shippingCharge = calculatedDelivery.available ? (calculatedDelivery.charge !== undefined ? calculatedDelivery.charge : (deliverySettings?.baseCharge || 0)) : (deliverySettings?.baseCharge || 0);
+  if (calculatedDelivery.isFreeShipping) shippingCharge = 0;
   const finalTotal = discountedTotal + shippingCharge;
 
   // Redirect to home if cart is empty and order wasn't just placed
@@ -1084,7 +1125,7 @@ const CheckoutPage = () => {
                         onChange={e => setEditCity(e.target.value)} 
                         className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
                       />
-                      <label className="floating-label">City</label>
+                      <label className="floating-label">City / District</label>
                     </div>
                     <div className="relative">
                       <input 
@@ -1096,6 +1137,28 @@ const CheckoutPage = () => {
                         className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
                       />
                       <label className="floating-label">State</label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder=" " 
+                        value={editPostOffice} 
+                        onChange={e => setEditPostOffice(e.target.value)} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                      />
+                      <label className="floating-label">Post Office (Optional)</label>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder=" " 
+                        value={editLocality} 
+                        onChange={e => setEditLocality(e.target.value)} 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                      />
+                      <label className="floating-label">Village / Building / Chawl</label>
                     </div>
                   </div>
                 </div>
