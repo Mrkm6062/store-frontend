@@ -135,6 +135,78 @@ const CheckoutPage = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [modalResult, setModalResult] = useState({ text: '', type: '' });
 
+  // Helper to get combined delivery area options from DeliveryArea model & pincode lookup
+  const getCombinedAreaOptions = (pincode, city, state, officesList, deliverySettingsObj) => {
+    const optionsMap = new Map();
+    const cleanPin = (pincode || '').trim();
+    const cleanCity = (city || '').toLowerCase().trim();
+    const cleanState = (state || '').toLowerCase().trim();
+
+    // 1. From DeliveryArea model (deliverySettingsObj?.areas)
+    if (deliverySettingsObj?.areas && Array.isArray(deliverySettingsObj.areas)) {
+      deliverySettingsObj.areas.forEach(area => {
+        if (area.enabled === false) return;
+        const areaPin = area.pincode ? String(area.pincode).trim() : '';
+        const areaDist = area.district ? String(area.district).toLowerCase().trim() : '';
+        const areaState = area.state ? String(area.state).toLowerCase().trim() : '';
+
+        const pinMatch = cleanPin && areaPin === cleanPin;
+        const distMatch = cleanCity && areaDist === cleanCity;
+        const stateMatch = cleanState && areaState === cleanState;
+        const isGeneralArea = !areaPin && !areaDist && !areaState;
+
+        if (pinMatch || distMatch || stateMatch || isGeneralArea || !cleanPin) {
+          if (area.name) {
+            const key = area.name.trim();
+            optionsMap.set(key, {
+              name: key,
+              charge: area.charge !== undefined ? Number(area.charge) : null,
+              type: area.type || 'area',
+              isModelArea: true
+            });
+          }
+        }
+      });
+    }
+
+    // 2. From deliveryLocations array in deliverySettings
+    if (deliverySettingsObj?.deliveryLocations && Array.isArray(deliverySettingsObj.deliveryLocations)) {
+      deliverySettingsObj.deliveryLocations.forEach(loc => {
+        if (loc.enabled === false) return;
+        const locPin = loc.pincode ? String(loc.pincode).trim() : '';
+        if (!locPin || locPin === cleanPin) {
+          if (loc.name) {
+            const key = loc.name.trim();
+            if (!optionsMap.has(key)) {
+              optionsMap.set(key, {
+                name: key,
+                charge: loc.charge !== undefined ? Number(loc.charge) : null,
+                type: loc.type || 'location',
+                isModelArea: true
+              });
+            }
+          }
+        }
+      });
+    }
+
+    // 3. From India Post API pincode lookup
+    if (officesList && Array.isArray(officesList)) {
+      officesList.forEach(off => {
+        const officeName = (typeof off === 'string' ? off : off.name)?.trim();
+        if (officeName && !optionsMap.has(officeName)) {
+          optionsMap.set(officeName, {
+            name: officeName,
+            charge: null,
+            isModelArea: false
+          });
+        }
+      });
+    }
+
+    return Array.from(optionsMap.values());
+  };
+
   useEffect(() => {
     setEditName(formData.customerName || '');
     setEditPhone(formData.customerPhone || '');
@@ -160,12 +232,16 @@ const CheckoutPage = () => {
             const data = await response.json();
             const fetchedOffices = data.offices || [];
             setInlineOffices(fetchedOffices);
+
+            const areaOpts = getCombinedAreaOptions(formData.pincode, data.city, data.state, fetchedOffices, deliverySettings);
+            const defaultLocality = areaOpts.length > 0 ? areaOpts[0].name : (fetchedOffices.length > 0 ? fetchedOffices[0] : '');
+
             setFormData(prev => ({
               ...prev,
               city: data.city || prev.city,
               state: data.state || prev.state,
-              postOffice: prev.postOffice || (fetchedOffices.length > 0 ? fetchedOffices[0] : ''),
-              locality: prev.locality || (fetchedOffices.length > 0 ? fetchedOffices[0] : '')
+              postOffice: prev.postOffice || defaultLocality,
+              locality: prev.locality || defaultLocality
             }));
           }
         } catch (error) {}
@@ -174,7 +250,7 @@ const CheckoutPage = () => {
       }
     };
     fetchInlinePincodeDetails();
-  }, [formData.pincode]);
+  }, [formData.pincode, deliverySettings]);
 
   // Edit Modal Pincode Auto-fetch
   useEffect(() => {
@@ -185,13 +261,17 @@ const CheckoutPage = () => {
           const response = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${editPincode.trim()}`);
           if (response.ok) {
             const data = await response.json();
+            const fetchedOffices = data.offices || [];
             setEditCity(data.city || '');
             setEditState(data.state || '');
-            const fetchedOffices = data.offices || [];
             setAvailableOffices(fetchedOffices);
-            if (fetchedOffices.length > 0 && !editPostOffice) {
-              setEditPostOffice(fetchedOffices[0]);
-              setEditLocality(fetchedOffices[0]);
+
+            const areaOpts = getCombinedAreaOptions(editPincode, data.city, data.state, fetchedOffices, deliverySettings);
+            const defaultLocality = areaOpts.length > 0 ? areaOpts[0].name : (fetchedOffices.length > 0 ? fetchedOffices[0] : '');
+
+            if (!editPostOffice) {
+              setEditPostOffice(defaultLocality);
+              setEditLocality(defaultLocality);
             }
           }
         } catch (e) {}
@@ -200,7 +280,7 @@ const CheckoutPage = () => {
       }
     };
     fetchEditPincodeDetails();
-  }, [editPincode]);
+  }, [editPincode, deliverySettings]);
 
   useEffect(() => {
     const checkOpenStatus = async () => {
@@ -744,38 +824,48 @@ const CheckoutPage = () => {
                     </div>
 
                     <div className="relative">
-                      {inlineOffices.length > 0 ? (
-                        <select
-                          value={formData.postOffice || formData.locality}
-                          onChange={e => setFormData({...formData, postOffice: e.target.value, locality: e.target.value})}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
-                        >
-                          <option value="">Select Area / Post Office</option>
-                          {inlineOffices.map((off, idx) => (
-                            <option key={idx} value={off}>{off}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input 
-                          type="text" 
-                          placeholder="Area / Village / Building" 
-                          value={formData.locality} 
-                          onChange={e => setFormData({...formData, locality: e.target.value, postOffice: e.target.value})} 
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-semibold" 
-                        />
-                      )}
+                      {(() => {
+                        const areaOpts = getCombinedAreaOptions(formData.pincode, formData.city, formData.state, inlineOffices, deliverySettings);
+                        return (
+                          <select
+                            value={formData.locality || formData.postOffice}
+                            onChange={e => setFormData({...formData, postOffice: e.target.value, locality: e.target.value})}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
+                          >
+                            <option value="">Select Delivery Area / Locality *</option>
+                            {areaOpts.map((opt, idx) => (
+                              <option key={idx} value={opt.name}>
+                                {opt.name} {opt.charge !== null && opt.charge !== undefined ? `(Delivery Charge: ₹${opt.charge})` : ''}
+                              </option>
+                            ))}
+                            <option value="Other">Other / Enter Area Manually</option>
+                          </select>
+                        );
+                      })()}
                     </div>
                   </div>
+
+                  {(formData.locality === 'Other' || (!getCombinedAreaOptions(formData.pincode, formData.city, formData.state, inlineOffices, deliverySettings).length)) && (
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder="Enter Custom Area / Locality Name" 
+                        value={formData.locality === 'Other' ? '' : formData.locality} 
+                        onChange={e => setFormData({...formData, locality: e.target.value, postOffice: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-semibold text-slate-800" 
+                      />
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
                       <input 
                         type="text" 
                         required 
+                        readOnly
                         placeholder=" " 
                         value={formData.city} 
-                        onChange={e => setFormData({...formData, city: e.target.value})} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold text-slate-700 cursor-not-allowed" 
                       />
                       <label className="floating-label">City / District</label>
                     </div>
@@ -783,10 +873,10 @@ const CheckoutPage = () => {
                       <input 
                         type="text" 
                         required 
+                        readOnly
                         placeholder=" " 
                         value={formData.state} 
-                        onChange={e => setFormData({...formData, state: e.target.value})} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold text-slate-700 cursor-not-allowed" 
                       />
                       <label className="floating-label">State</label>
                     </div>
@@ -799,16 +889,23 @@ const CheckoutPage = () => {
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">2. Street Address & Landmark</h3>
                 <div className="space-y-4">
                   <div className="relative">
-                    <input type="text" required placeholder=" " value={formData.addressLine1} onChange={e => setFormData({...formData, addressLine1: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder=" " 
+                      value={formData.addressLine1} 
+                      onChange={e => setFormData({...formData, addressLine1: e.target.value})} 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm text-slate-800" 
+                    />
+                    <label className="floating-label">Address Line 1 (House No, Building, Street) *</label>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="relative">
-                      <input type="text" required placeholder=" " value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
-                      <label className="floating-label">Landmark</label>
+                      <input type="text" placeholder=" " value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <label className="floating-label">Landmark (Optional)</label>
                     </div>
                     <div className="relative">
-                      <input type="tel" required placeholder=" " maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
+                      <input type="tel" placeholder=" " maxLength="10" value={formData.alternateNumber} onChange={e => setFormData({...formData, alternateNumber: e.target.value.replace(/[^0-9]/g, '')})} className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" />
                       <label className="floating-label">Alternate Mobile Number</label>
                     </div>
                   </div>
@@ -893,7 +990,7 @@ const CheckoutPage = () => {
                 </div>
                 {calculatedDelivery.matchedLocationName && (
                   <p className="text-[11px] text-green-600 font-bold text-right -mt-1 mb-1">
-                    ✓ Matched Area: {calculatedDelivery.matchedLocationName}
+                    ✓ Matched Area: {calculatedDelivery.matchedLocationName} {shippingCharge > 0 ? `(₹${shippingCharge})` : '(Free Delivery)'}
                   </p>
                 )}
               </div>
@@ -990,7 +1087,7 @@ const CheckoutPage = () => {
                   </div>
                   {calculatedDelivery.matchedLocationName && (
                     <p className="text-[11px] text-green-600 font-bold text-right -mt-1 mb-1">
-                      ✓ Matched Area: {calculatedDelivery.matchedLocationName}
+                      ✓ Matched Area: {calculatedDelivery.matchedLocationName} {shippingCharge > 0 ? `(₹${shippingCharge})` : '(Free Delivery)'}
                     </p>
                   )}
                 </div>
@@ -1049,34 +1146,44 @@ const CheckoutPage = () => {
                     </div>
 
                     <div className="relative">
-                      {availableOffices.length > 0 ? (
-                        <select
-                          value={editPostOffice || editLocality}
-                          onChange={e => {
-                            setEditPostOffice(e.target.value);
-                            setEditLocality(e.target.value);
-                          }}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
-                        >
-                          <option value="">Select Area / Post Office</option>
-                          {availableOffices.map((off, idx) => (
-                            <option key={idx} value={off}>{off}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input 
-                          type="text" 
-                          placeholder="Area / Locality / Village" 
-                          value={editLocality} 
-                          onChange={e => {
-                            setEditLocality(e.target.value);
-                            setEditPostOffice(e.target.value);
-                          }} 
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold" 
-                        />
-                      )}
+                      {(() => {
+                        const areaOpts = getCombinedAreaOptions(editPincode, editCity, editState, availableOffices, deliverySettings);
+                        return (
+                          <select
+                            value={editLocality || editPostOffice}
+                            onChange={e => {
+                              setEditPostOffice(e.target.value);
+                              setEditLocality(e.target.value);
+                            }}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
+                          >
+                            <option value="">Select Delivery Area / Locality *</option>
+                            {areaOpts.map((opt, idx) => (
+                              <option key={idx} value={opt.name}>
+                                {opt.name} {opt.charge !== null && opt.charge !== undefined ? `(Delivery Charge: ₹${opt.charge})` : ''}
+                              </option>
+                            ))}
+                            <option value="Other">Other / Enter Area Manually</option>
+                          </select>
+                        );
+                      })()}
                     </div>
                   </div>
+
+                  {(editLocality === 'Other' || (!getCombinedAreaOptions(editPincode, editCity, editState, availableOffices, deliverySettings).length)) && (
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder="Enter Custom Area / Locality Name" 
+                        value={editLocality === 'Other' ? '' : editLocality} 
+                        onChange={e => {
+                          setEditLocality(e.target.value);
+                          setEditPostOffice(e.target.value);
+                        }} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-semibold text-slate-800" 
+                      />
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
@@ -1086,7 +1193,7 @@ const CheckoutPage = () => {
                         readOnly
                         placeholder=" " 
                         value={editCity} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold text-slate-700 cursor-not-allowed" 
                       />
                       <label className="floating-label">City / District</label>
                     </div>
@@ -1097,7 +1204,7 @@ const CheckoutPage = () => {
                         readOnly
                         placeholder=" " 
                         value={editState} 
-                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold" 
+                        className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-slate-50 text-sm font-semibold text-slate-700 cursor-not-allowed" 
                       />
                       <label className="floating-label">State</label>
                     </div>
@@ -1114,9 +1221,9 @@ const CheckoutPage = () => {
                       placeholder=" " 
                       value={editAddress} 
                       onChange={e => setEditAddress(e.target.value)} 
-                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm" 
+                      className="floating-input w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm text-slate-800" 
                     />
-                    <label className="floating-label">Address Line 1 (House No, Building, Street)</label>
+                    <label className="floating-label">Address Line 1 (House No, Building, Street) *</label>
                   </div>
                   <div className="relative">
                     <input 
