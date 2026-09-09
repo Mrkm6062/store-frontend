@@ -159,7 +159,11 @@ const CheckoutPage = () => {
           if (area.name) {
             const key = area.name.trim();
             optionsMap.set(key, {
+              _id: area._id,
               name: key,
+              pincode: area.pincode || '',
+              state: area.state || '',
+              district: area.district || '',
               charge: area.charge !== undefined ? Number(area.charge) : null,
               type: area.type || 'area',
               isModelArea: true
@@ -188,6 +192,9 @@ const CheckoutPage = () => {
             if (!optionsMap.has(key)) {
               optionsMap.set(key, {
                 name: key,
+                pincode: loc.pincode || '',
+                state: loc.state || '',
+                district: loc.district || '',
                 charge: loc.charge !== undefined ? Number(loc.charge) : null,
                 type: loc.type || 'location',
                 isModelArea: true
@@ -200,6 +207,57 @@ const CheckoutPage = () => {
 
     return Array.from(optionsMap.values());
   };
+
+  const handleAreaSelect = (areaName, isModal = false) => {
+    if (!areaName) {
+      if (isModal) {
+        setEditPostOffice('');
+        setEditLocality('');
+      } else {
+        setFormData(prev => ({ ...prev, postOffice: '', locality: '' }));
+      }
+      return;
+    }
+
+    const currentPin = isModal ? editPincode : formData.pincode;
+    const currentCity = isModal ? editCity : formData.city;
+    const currentState = isModal ? editState : formData.state;
+    const options = getCreatedAreaOptions(currentPin, currentCity, currentState, deliverySettings);
+    const matchedArea = options.find(o => o.name === areaName);
+
+    if (isModal) {
+      setEditPostOffice(areaName);
+      setEditLocality(areaName);
+      if (matchedArea) {
+        if (matchedArea.pincode) setEditPincode(matchedArea.pincode);
+        if (matchedArea.state) setEditState(matchedArea.state);
+        if (matchedArea.district) setEditCity(matchedArea.district);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        postOffice: areaName,
+        locality: areaName,
+        ...(matchedArea?.pincode && { pincode: matchedArea.pincode }),
+        ...(matchedArea?.state && { state: matchedArea.state }),
+        ...(matchedArea?.district && { city: matchedArea.district })
+      }));
+    }
+  };
+
+  const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || '').trim());
+
+  const isCheckoutFormValid = !!(
+    formData.pincode && formData.pincode.trim().length === 6 &&
+    formData.locality && formData.locality.trim() !== '' && formData.locality !== 'Other' &&
+    formData.city && formData.city.trim() !== '' &&
+    formData.state && formData.state.trim() !== '' &&
+    formData.addressLine1 && formData.addressLine1.trim() !== '' &&
+    formData.customerName && formData.customerName.trim() !== '' &&
+    formData.customerPhone && formData.customerPhone.trim().length >= 10 &&
+    isEmailValid(formData.customerEmail) &&
+    calculatedDelivery.available
+  );
 
   useEffect(() => {
     setEditName(formData.customerName || '');
@@ -821,33 +879,20 @@ const CheckoutPage = () => {
                         return (
                           <select
                             value={formData.locality || formData.postOffice}
-                            onChange={e => setFormData({...formData, postOffice: e.target.value, locality: e.target.value})}
+                            onChange={e => handleAreaSelect(e.target.value, false)}
                             className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
                           >
-                            <option value="">Select Delivery Area / Locality *</option>
+                            <option value="">-- Select Created Delivery Area * --</option>
                             {areaOpts.map((opt, idx) => (
                               <option key={idx} value={opt.name}>
                                 {opt.name} {opt.charge !== null && opt.charge !== undefined ? `(Delivery Charge: ₹${opt.charge})` : ''}
                               </option>
                             ))}
-                            <option value="Other">Other / Enter Area Manually</option>
                           </select>
                         );
                       })()}
                     </div>
                   </div>
-
-                  {(formData.locality === 'Other' || (!getCreatedAreaOptions(formData.pincode, formData.city, formData.state, deliverySettings).length)) && (
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder="Enter Custom Area / Locality Name" 
-                        value={formData.locality === 'Other' ? '' : formData.locality} 
-                        onChange={e => setFormData({...formData, locality: e.target.value, postOffice: e.target.value})} 
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-semibold text-slate-800" 
-                      />
-                    </div>
-                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
@@ -999,16 +1044,29 @@ const CheckoutPage = () => {
                   <span>⚠️</span>
                   <span>{storeOpenStatus.reason || "We are currently closed and not accepting orders. Please try again during our store hours."}</span>
                 </div>
+              ) : (formData.pincode && formData.pincode.trim().length === 6 && !calculatedDelivery.available) ? (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
+                  <span>⚠️</span>
+                  <span>Pincode is not deliverable. Please select a valid delivery area or pincode.</span>
+                </div>
               ) : null}
 
               <button 
                 type="submit" 
                 form="checkout-form" 
-                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired || !calculatedDelivery.available} 
-                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired && calculatedDelivery.available) ? primaryColor : '#94a3b8' }} 
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired || !isCheckoutFormValid} 
+                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired && isCheckoutFormValid) ? primaryColor : '#94a3b8' }} 
                 className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? 'Processing...' : (isPlanExpired ? 'Subscription Expired' : (!storeOpenStatus.isOpen ? 'Store Closed' : (!calculatedDelivery.available ? 'Delivery Not Available' : 'Confirm & Place Order')))}
+                {isPlacingOrder ? 'Processing...' : 
+                 isPlanExpired ? 'Subscription Expired' : 
+                 !storeOpenStatus.isOpen ? 'Store Closed' : 
+                 (formData.pincode && formData.pincode.trim().length === 6 && !calculatedDelivery.available) ? 'Pincode is not deliverable' : 
+                 !formData.pincode || formData.pincode.trim().length < 6 ? 'Enter 6-Digit Pincode' : 
+                 !formData.locality ? 'Select Delivery Area' : 
+                 !formData.addressLine1 ? 'Enter Street Address' : 
+                 (!formData.customerName || !formData.customerPhone || !isEmailValid(formData.customerEmail)) ? 'Fill Contact Details' : 
+                 'Confirm & Place Order'}
               </button>
             </div>
           </div>
@@ -1143,39 +1201,20 @@ const CheckoutPage = () => {
                         return (
                           <select
                             value={editLocality || editPostOffice}
-                            onChange={e => {
-                              setEditPostOffice(e.target.value);
-                              setEditLocality(e.target.value);
-                            }}
+                            onChange={e => handleAreaSelect(e.target.value, true)}
                             className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-bold text-slate-800"
                           >
-                            <option value="">Select Delivery Area / Locality *</option>
+                            <option value="">-- Select Created Delivery Area * --</option>
                             {areaOpts.map((opt, idx) => (
                               <option key={idx} value={opt.name}>
                                 {opt.name} {opt.charge !== null && opt.charge !== undefined ? `(Delivery Charge: ₹${opt.charge})` : ''}
                               </option>
                             ))}
-                            <option value="Other">Other / Enter Area Manually</option>
                           </select>
                         );
                       })()}
                     </div>
                   </div>
-
-                  {(editLocality === 'Other' || (!getCreatedAreaOptions(editPincode, editCity, editState, deliverySettings).length)) && (
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder="Enter Custom Area / Locality Name" 
-                        value={editLocality === 'Other' ? '' : editLocality} 
-                        onChange={e => {
-                          setEditLocality(e.target.value);
-                          setEditPostOffice(e.target.value);
-                        }} 
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none bg-white text-sm font-semibold text-slate-800" 
-                      />
-                    </div>
-                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
