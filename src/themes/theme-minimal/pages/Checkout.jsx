@@ -614,12 +614,10 @@ const CheckoutPage = () => {
         orderItems, totalAmount: finalTotal, discountAmount: (discountAmount + offerDiscount), appliedCoupon: appliedCoupon ? appliedCoupon.code : null, paymentMethod, shippingCharge
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Order creation failed');
+      const createdOrder = response?.order || response;
+      if (!createdOrder || !createdOrder._id) {
+        throw new Error(response?.message || 'Order creation failed');
       }
-
-      const createdOrder = await response.json();
 
       if (paymentMethod === 'whatsapp') {
         const storePhone = (store.supportPhoneNumbers && store.supportPhoneNumbers.length > 0) ? store.supportPhoneNumbers[0] : (store.whatsappNumber || '');
