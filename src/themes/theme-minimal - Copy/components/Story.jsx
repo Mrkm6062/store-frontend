@@ -7,7 +7,7 @@ import { getOptimizedImageUrl } from '../../../services/api';
 const Story = () => {
   const customization = useContext(ThemeCustomizationContext);
   const whyChooseUs = customization?.whyChooseUs || {};
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
@@ -77,11 +77,10 @@ const Story = () => {
   const itemTextColor = whyChooseUs.itemTextColor || '#111111';
 
   return (
-    <div ref={sectionRef} className="py-14 md:py-20 transition-colors duration-300 overflow-hidden" style={{ backgroundColor: whyChooseUs.bgColor || '#fff1df' }}>
+    <div ref={sectionRef} className="py-12 transition-colors duration-300 overflow-hidden" style={{ backgroundColor: whyChooseUs.bgColor || '#f9fafb' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <span className="mb-3 block text-[10px] font-extrabold uppercase tracking-[0.2em]" style={{ color: primaryColor }}>The Nasta Corner promise</span>
-          <h2 className="text-3xl md:text-4xl font-black mb-4" style={{ color: sectionTextColor }}>{whyChooseUs.title || "Why Choose Us"}</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-4" style={{ color: sectionTextColor }}>{whyChooseUs.title || "Why Choose Us"}</h2>
           {whyChooseUs.subtitle && (
             <p className="max-w-2xl mx-auto text-sm md:text-base opacity-90" style={{ color: sectionTextColor }}>{whyChooseUs.subtitle}</p>
           )}
@@ -94,7 +93,7 @@ const Story = () => {
                 transitionDuration: '300ms',
                 transitionDelay: `${index * 100}ms`
               }}
-              className={`flex flex-col items-center text-center p-6 md:p-7 rounded-[1.35rem] border transition-all transform group ${cardBgClass} ${
+              className={`flex flex-col items-center text-center p-6 rounded-2xl border transition-all transform group ${cardBgClass} ${
                 isVisible 
                   ? 'opacity-100 scale-100' 
                   : 'opacity-0 scale-[0.85]'
@@ -105,7 +104,7 @@ const Story = () => {
                   transitionDuration: '300ms',
                   transitionDelay: `${index * 100 + 50}ms`
                 }}
-                className={`w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-1 transition-all transform overflow-hidden ${
+                className={`w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-1 transition-all transform overflow-hidden ${
                   feature.icon && typeof feature.icon === 'string' ? 'p-0' : 'p-3'
                 } ${
                   isVisible ? 'scale-100' : 'scale-[0.9]'

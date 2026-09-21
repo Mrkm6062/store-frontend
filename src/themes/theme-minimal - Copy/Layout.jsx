@@ -30,7 +30,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hide
   const [socialLinks, setSocialLinks] = useState([]);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const customization = React.useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   useEffect(() => {
     getPublicSocialMedia().then(setSocialLinks).catch(console.error);
@@ -41,7 +41,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hide
   const shouldShowFooter = isHomePage && !hideFooter;
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#fffaf3] font-sans text-slate-900 w-full overflow-clip selection:bg-orange-200 selection:text-stone-900 ${cartCount > 0 && !hideBottomNav ? 'pb-36' : (!hideBottomNav ? 'pb-16' : '')} md:pb-0`}>
+    <div className={`min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip ${cartCount > 0 && !hideBottomNav ? 'pb-36' : (!hideBottomNav ? 'pb-16' : '')} md:pb-0`}>
       {!hideHeader && <Header store={store} cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       <main className="flex-1 w-full flex flex-col">
         {children}
@@ -54,7 +54,7 @@ const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hide
           href={`https://wa.me/${store.whatsappNumber.replace(/[^0-9]/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className={`fixed ${isProductPage ? 'bottom-36' : 'bottom-20'} md:bottom-6 right-6 z-40 bg-[#25D366] text-white p-3.5 rounded-2xl shadow-[0_12px_28px_rgba(37,211,102,0.28)] hover:bg-[#20ba5a] transition-all duration-300 hover:-translate-y-1 hover:scale-105 flex items-center justify-center border border-white/30`}
+          className={`fixed ${isProductPage ? 'bottom-36' : 'bottom-20'} md:bottom-6 right-6 z-40 bg-[#25D366] text-white p-3.5 rounded-full shadow-2xl hover:bg-[#20ba5a] transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/20`}
           aria-label="Contact Support on WhatsApp"
         >
           <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg whitespace-nowrap tracking-wide flex items-center gap-1 border border-white/10">

@@ -17,7 +17,7 @@ const StoreHome = () => {
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [categories, setCategories] = useState([]);
@@ -215,19 +215,19 @@ const StoreHome = () => {
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideBottomNav={false}>
       
       {/* Top Location Bar - Mobile only (hidden on desktop) */}
-      <div className="bg-[#fff5e8] border-b border-orange-100 md:hidden block">
-        <div className="max-w-6xl mx-auto px-4 py-3 text-center flex flex-col justify-center items-center gap-1.5">
+      <div className="bg-slate-50 border-b border-gray-200 md:hidden block">
+        <div className="max-w-5xl mx-auto px-4 py-3 text-center flex flex-col justify-center items-center gap-1.5">
           {customerInfo?.pincode ? (
             <div className="flex flex-col items-center justify-center gap-1.5 w-full text-center">
               <div className="flex items-center justify-center gap-1.5 text-center">
-                <MapPin className="text-[#e85d04]" size={18} />
+                <MapPin className="text-[#76b900]" size={18} />
                 <span className="text-xs font-bold text-slate-800">
                   {customerInfo.customerName} - {customerInfo.addressLine1}, {customerInfo.city} ({customerInfo.pincode})
                 </span>
               </div>
               <button 
                 onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
-                className="text-xs font-bold text-[#c94710] bg-white hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-100 transition"
+                className="text-xs font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-3 py-1 rounded-lg transition"
               >
                 Change Location
               </button>
@@ -236,8 +236,7 @@ const StoreHome = () => {
             <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
               <button 
                 onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
-                className="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center flex items-center justify-center gap-1.5 mx-auto"
-                style={{ backgroundColor: primaryColor }}
+                className="px-4 py-2 bg-[#76b900] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center flex items-center justify-center gap-1.5 mx-auto"
               >
                 <MapPin size={16} />
                 Check Delivery
@@ -274,14 +273,12 @@ const StoreHome = () => {
       <Banner bannerUrl={store.banner} storeName={store.name} />
 
       {(categoriesLoading || categories.length > 0) && (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-10 pt-9 md:pt-14">
-          <div className="flex flex-col items-center text-center mb-7 md:mb-10">
-            <span className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#c94710]">Taste the tradition</span>
-            <h2 className="text-2xl md:text-4xl font-black text-stone-900 tracking-tight text-center">Pick your favourite</h2>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-stone-500">Fresh snacks and familiar flavours, chosen just the way you like them.</p>
+        <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 pt-8 md:pt-16">
+          <div className="text-center mb-6 md:mb-10">
+            <h2 className="text-lg md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">Our Collections</h2>
           </div>
-
-          <div className="grid grid-cols-4 gap-3 sm:gap-5 md:gap-8 lg:gap-10 justify-items-center">
+          
+          <div className="grid grid-cols-4 gap-3 sm:gap-6 md:gap-12 justify-items-center">
             {categoriesLoading ? (
               [...Array(4)].map((_, i) => (
                 <div key={i} className="w-full aspect-square bg-gray-200/50 rounded-full animate-pulse"></div>
@@ -297,7 +294,7 @@ const StoreHome = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-10 py-12 md:py-16">
+      <div className="max-w-5xl mx-auto w-full px-3 sm:px-12 lg:px-16 py-12">
         {productsLoading || categoriesLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8 justify-items-center">
             {[...Array(8)].map((_, i) => (
@@ -310,7 +307,7 @@ const StoreHome = () => {
         ) : productsError ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
         ) : (
-          <div className="space-y-14 md:space-y-20">
+          <div className="space-y-16">
             {categories
               .map(c => {
                 const categoryProducts = products.filter(p => p.category === c._id);
@@ -318,15 +315,11 @@ const StoreHome = () => {
               })
               .filter(item => item.products.length > 0)
               .map(({ category, products: categoryProducts }) => (
-                <div key={category._id} className="border-b border-orange-100/70 pb-12 last:border-b-0 last:pb-0">
-                  <div className="flex justify-between items-end gap-4 mb-6 md:mb-7">
-                    <div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#c94710]">Freshly prepared</span>
-                      <h2 className="mt-1 text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 tracking-tight">
-                        {category.name}
-                      </h2>
-                    </div>
-                    <button onClick={() => navigate(`/category/${category.slug || category._id}`)} className="hidden sm:inline-flex shrink-0 items-center rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-extrabold text-[#c94710] shadow-sm transition hover:border-orange-300 hover:bg-orange-50">View all</button>
+                <div key={category._id} className="border-b border-gray-100 pb-10 last:border-b-0 last:pb-0">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+                      {category.name}
+                    </h2>
                   </div>
                   
                   <ProductGrid 
@@ -340,7 +333,7 @@ const StoreHome = () => {
                   <div className="mt-6 flex justify-center w-full">
                     <button 
                       onClick={() => navigate(`/category/${category.slug || category._id}`)}
-                      className="w-full md:w-auto px-8 py-3 rounded-xl border-2 bg-white text-sm font-extrabold transition-all duration-300 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:text-white text-center"
+                      className="w-full md:w-auto px-8 py-3 bg-white border-2 font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:text-white text-center"
                       style={{
                         borderColor: primaryColor,
                         color: primaryColor,
@@ -370,11 +363,11 @@ const StoreHome = () => {
               })
               .filter(item => item.products.length > 0)
               .map(({ offerCategory, products: offerProducts }) => (
-                <div key={offerCategory._id} className="border-b border-orange-100/70 pb-12 last:border-b-0 last:pb-0">
+                <div key={offerCategory._id} className="border-b border-gray-100 pb-10 last:border-b-0 last:pb-0">
                   <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-3">
                       <span style={{ backgroundColor: offerCategory.color }} className="w-3.5 h-3.5 rounded-full inline-block"></span>
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 tracking-tight text-left">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-left">
                         {offerCategory.name}
                       </h2>
                     </div>
@@ -391,7 +384,7 @@ const StoreHome = () => {
                   <div className="mt-6 flex justify-center w-full">
                     <button 
                       onClick={() => navigate(`/offers?id=${offerCategory._id}`)}
-                      className="w-full md:w-auto px-8 py-3 rounded-xl border-2 bg-white text-sm font-extrabold transition-all duration-300 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:text-white text-center"
+                      className="w-full md:w-auto px-8 py-3 bg-white border-2 font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:text-white text-center"
                       style={{
                         borderColor: primaryColor,
                         color: primaryColor,
@@ -419,7 +412,7 @@ const StoreHome = () => {
 
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
-        <div className="md:hidden fixed bottom-[4.25rem] left-0 right-0 bg-[#fffdf9]/95 backdrop-blur-xl border-t border-orange-100 shadow-[0_-10px_26px_rgba(91,45,19,0.08)] p-3.5 z-40 flex flex-col gap-2 pb-safe">
+        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex flex-col gap-2 pb-safe">
           {deliverySettings?.freeShippingThreshold > 0 && (
             <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeShippingThreshold ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
               {cartTotal >= deliverySettings.freeShippingThreshold ? (
@@ -432,9 +425,9 @@ const StoreHome = () => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>
-              <p className="text-xl font-extrabold text-[#9f2d19]">₹{cartTotal}</p>
+              <p className="text-xl font-extrabold text-green-600">₹{cartTotal}</p>
             </div>
-            <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-7 py-3 rounded-xl text-sm font-extrabold hover:opacity-90 shadow-lg transition">
+            <button onClick={() => setIsCartOpen(true)} style={{ backgroundColor: primaryColor }} className="text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 shadow-lg transition">
               View Cart &rarr;
             </button>
           </div>

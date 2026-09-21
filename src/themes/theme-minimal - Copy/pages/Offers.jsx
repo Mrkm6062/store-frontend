@@ -15,7 +15,7 @@ const OffersPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   const [offerCategories, setOfferCategories] = useState([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
@@ -136,7 +136,7 @@ const OffersPage = () => {
       )}
 
       {/* Hero Banner Section */}
-      <div className="relative py-16 md:py-20 px-6 overflow-hidden bg-gradient-to-r from-[#9f2d19] via-[#d84a14] to-[#f08b24] text-white">
+      <div className="relative py-16 px-6 overflow-hidden bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent)] pointer-events-none"></div>
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-extrabold uppercase tracking-widest mb-4">
@@ -165,7 +165,7 @@ const OffersPage = () => {
             <div className="flex flex-wrap gap-3 p-1.5 bg-slate-100 rounded-2xl w-fit border border-slate-200">
               <button
                 onClick={() => setSelectedOfferId('all')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${selectedOfferId === 'all' ? 'bg-[#e85d04] text-white shadow-md' : 'text-slate-600 hover:bg-orange-50'}`}
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${selectedOfferId === 'all' ? 'bg-[#76b900] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/50'}`}
               >
                 All Deals ({products.filter(p => (p.offerCategories || []).length > 0).length})
               </button>
@@ -175,7 +175,7 @@ const OffersPage = () => {
                   <button
                     key={oc._id}
                     onClick={() => setSelectedOfferId(oc._id)}
-                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${selectedOfferId === oc._id ? 'bg-[#e85d04] text-white shadow-md' : 'text-slate-600 hover:bg-orange-50'}`}
+                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${selectedOfferId === oc._id ? 'bg-[#76b900] text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/50'}`}
                   >
                     <span style={{ backgroundColor: oc.color }} className="w-2.5 h-2.5 rounded-full inline-block"></span>
                     {oc.name} ({count})

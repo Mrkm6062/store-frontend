@@ -21,14 +21,13 @@ const StoreCategory = ({ store, cartCount, onCartClick }) => {
 
   return (
     <StoreLayout store={store} cartCount={cartCount} onCartClick={onCartClick}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 w-full">
-        <span className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#c94710] mb-2">Find your flavour</span>
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-stone-900 mb-8 border-b border-orange-100 pb-5">Browse All Categories</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">Browse All Categories</h1>
         
         {loading ? (
           <div className="flex justify-center py-10 text-gray-500 font-medium">Loading categories...</div>
         ) : categories.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 font-medium bg-white rounded-[1.35rem] border border-orange-100 shadow-sm">No categories found.</div>
+          <div className="text-center py-20 text-gray-500 font-medium bg-white rounded-2xl border border-gray-100">No categories found.</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-12">
             {categories.map(c => (

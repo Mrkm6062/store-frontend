@@ -44,16 +44,16 @@ const CategoryCard = ({ category, onClick }) => {
       }`}
     >
       <div 
-        className="w-full aspect-square rounded-[1.35rem] border border-orange-100 group-hover:border-[#e85d04] flex items-center justify-center overflow-hidden shadow-[0_4px_14px_rgba(91,45,19,0.08)] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_12px_22px_rgba(91,45,19,0.14)]"
-        style={{ backgroundColor: categorySettings.bgColor || '#fff1df' }}
+        className="w-full aspect-square rounded-full border border-gray-200 group-hover:border-[#76b900] flex items-center justify-center overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-lg"
+        style={{ backgroundColor: categorySettings.bgColor || '#f0fdf4' }}
       >
         {category.image?.url ? (
           <img src={getOptimizedImageUrl(category.image.url, 186)} alt={category.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
         ) : (
-          <span className="text-3xl md:text-5xl uppercase font-black text-[#e85d04] tracking-wider transform group-hover:scale-110 transition-transform duration-500">{initials}</span>
+          <span className="text-3xl md:text-5xl uppercase font-black text-[#76b900] tracking-wider transform group-hover:scale-110 transition-transform duration-500">{initials}</span>
         )}
       </div>
-      <span className="text-[10px] sm:text-sm md:text-base uppercase font-extrabold tracking-tight text-stone-700 group-hover:text-[#c94710] text-center text-balance line-clamp-2 leading-tight transition-colors w-full px-1">
+      <span className="text-[10px] sm:text-sm md:text-base lg:text-lg uppercase font-bold text-gray-700 group-hover:text-[#76b900] text-center text-balance line-clamp-2 leading-tight transition-colors w-full px-1">
         {category.name}
       </span>
     </div>

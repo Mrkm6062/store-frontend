@@ -53,7 +53,7 @@ const ProductDetails = () => {
   const { store, loading: storeLoading } = useStore();
   const { products, loading: productsLoading } = useProducts();
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -448,8 +448,8 @@ const ProductDetails = () => {
           opacity: 0.9 !important;
         }
       `}</style>
-      <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-0 pb-36 lg:pt-8 lg:pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-16">
+      <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-0 pb-36 lg:pt-6 lg:pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-12">
           
           <div className="lg:sticky lg:top-8 lg:h-fit flex gap-4 items-start px-0">
             {/* Vertical Thumbnails (Desktop) */}
@@ -458,7 +458,7 @@ const ProductDetails = () => {
                 <button 
                   key={index} 
                   onClick={() => setActiveImageIndex(index)} 
-                  className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${activeImageIndex === index ? 'border-[#e85d04]' : 'border-orange-100 opacity-70 hover:opacity-100'}`}
+                  className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                   style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
                 >
                   <img src={getOptimizedImageUrl(img, 186)} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
@@ -468,7 +468,7 @@ const ProductDetails = () => {
 
             {/* Main Image Area */}
             <div className="flex-1 w-full">
-              <div className="bg-[#fff3e6] rounded-none lg:rounded-[1.5rem] shadow-[0_12px_30px_rgba(91,45,19,0.12)] border border-orange-100 overflow-hidden relative aspect-square w-full max-w-lg mx-auto group">
+              <div className="bg-slate-50 rounded-none lg:rounded-xl shadow-lg border border-gray-100 overflow-hidden relative aspect-square w-full max-w-lg mx-auto group">
                 {images.length > 0 ? (
                   <img
                     {...getImageProps(images[activeImageIndex], 600)}
@@ -559,7 +559,7 @@ const ProductDetails = () => {
           </div>
 
           {/* Right Column: Product Info */}
-          <div className="space-y-6 px-5 pt-8 pb-32 bg-white rounded-t-[30px] -mt-10 relative z-20 shadow-[0_-10px_30px_rgba(91,45,19,0.10)] lg:space-y-6 lg:px-0 lg:pt-2 lg:pb-0 lg:bg-transparent lg:rounded-none lg:mt-0 lg:shadow-none">
+          <div className="space-y-6 px-5 pt-8 pb-32 bg-white rounded-t-[30px] -mt-10 relative z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] lg:space-y-6 lg:px-0 lg:pt-0 lg:pb-0 lg:bg-transparent lg:rounded-none lg:mt-0 lg:shadow-none">
             {/* Mobile Drawer Handle Indicator */}
             <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-2 block lg:hidden" />
 
@@ -570,7 +570,7 @@ const ProductDetails = () => {
                   <button 
                     key={index} 
                     onClick={() => setActiveImageIndex(index)} 
-                    className={`w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 transition-all snap-start ${activeImageIndex === index ? 'border-[#e85d04]' : 'border-orange-100 opacity-70 hover:opacity-100'}`}
+                    className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeImageIndex === index ? 'border-[#76b900]' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                     style={activeImageIndex === index ? { borderColor: primaryColor } : {}}
                   >
                     <img src={img} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
@@ -599,16 +599,16 @@ const ProductDetails = () => {
             </nav>
 
             <div>
-              <h3 className="text-3xl lg:text-4xl font-black tracking-tight text-stone-900 mb-4">{product.name}</h3>
+              <h3 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{product.name}</h3>
               <div className="flex items-center space-x-2 mb-4">
-                <span className="bg-orange-100 text-[#9f2d19] text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                   {categoryName || product.categoryName || 'Product'}
                 </span>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 py-2">
-                <span className="text-3xl font-black text-[#9f2d19]">₹{displayPrice.toLocaleString()}</span>
+              <span className="text-3xl font-bold text-gray-900">₹{displayPrice.toLocaleString()}</span>
               {discountPercent > 0 && (
                 <>
                   <span className="text-lg text-gray-500 line-through">₹{originalPrice.toLocaleString()}</span>
@@ -674,7 +674,7 @@ const ProductDetails = () => {
                     onChange={(e) => setCustomText(e.target.value)} 
                     placeholder="e.g. Happy Birthday John!" 
                     spellCheck="false"
-                    className="flex-1 w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#e85d04] text-sm"
+                    className="flex-1 w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-sm"
                   />
                   <button 
                     type="button" 
@@ -697,7 +697,7 @@ const ProductDetails = () => {
             )}
 
             {/* Mobile / Desktop Action Bar */}
-            <div className="fixed bottom-[4.25rem] md:bottom-0 left-0 right-0 bg-[#fffdf9]/95 backdrop-blur-xl p-3 sm:p-4 border-t border-orange-100 shadow-[0_-4px_18px_rgba(91,45,19,0.10)] z-40 lg:static lg:p-0 lg:border-none lg:shadow-none pb-safe lg:mt-6">
+            <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-white p-3 sm:p-4 border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-40 lg:static lg:p-0 lg:border-none lg:shadow-none pb-safe lg:mt-6">
               <div className="flex items-stretch gap-2 sm:gap-4 max-w-7xl mx-auto">
                 <div className="shrink-0">
                   <div className="flex items-center border border-gray-300 rounded-lg h-full">
@@ -733,7 +733,7 @@ const ProductDetails = () => {
 
       {/* Customer Reviews Section */}
       {!loadingReviews && reviews.length > 0 && (
-        <div id="reviews" className="bg-white rounded-2xl lg:rounded-[1.75rem] shadow-[0_8px_28px_rgba(91,45,19,0.08)] border border-orange-100 p-6 sm:p-8 md:p-10 mt-12 animate-fadeIn">
+        <div id="reviews" className="bg-white rounded-2xl lg:rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 md:p-10 mt-12 animate-fadeIn">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 border-b border-slate-100 pb-6">
             <h3 className="text-2xl font-bold text-slate-800">Customer Reviews</h3>
             <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
@@ -856,20 +856,20 @@ const ProductDetails = () => {
              <div className="w-full mt-6 space-y-4">
                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
                  <div className="flex items-center gap-2 w-20 text-slate-600"><ZoomIn size={18} /> <span className="text-sm font-bold">Zoom</span></div>
-                 <input type="range" min="0.1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#e85d04]" />
+                 <input type="range" min="0.1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#76b900]" />
                </div>
                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-2 text-slate-600"><RotateCw size={18} /> <span className="text-sm font-bold">Rotate</span></div>
                   <div className="flex gap-2">
-                    <button onClick={() => setRotation(r => r - 90)} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:border-[#e85d04] hover:text-[#e85d04] transition-colors">-90°</button>
-                    <button onClick={() => setRotation(r => r + 90)} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:border-[#e85d04] hover:text-[#e85d04] transition-colors">+90°</button>
+                    <button onClick={() => setRotation(r => r - 90)} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:border-[#76b900] hover:text-[#76b900] transition-colors">-90°</button>
+                    <button onClick={() => setRotation(r => r + 90)} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:border-[#76b900] hover:text-[#76b900] transition-colors">+90°</button>
                   </div>
                </div>
              </div>
 
              <div className="flex w-full gap-3 mt-6">
                <button onClick={() => { setShowEditor(false); setRawImage(null); setZoom(1); setRotation(0); setOffset({x:0, y:0}); }} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
-               <button onClick={handleApplyEdit} disabled={isCompressing} className="flex-1 py-3 bg-[#e85d04] text-white font-bold rounded-xl hover:bg-[#c94710] transition-colors shadow-md disabled:opacity-50">
+               <button onClick={handleApplyEdit} disabled={isCompressing} className="flex-1 py-3 bg-[#76b900] text-white font-bold rounded-xl hover:bg-[#659e00] transition-colors shadow-md disabled:opacity-50">
                  {isCompressing ? 'Processing...' : 'Apply & Save'}
                </button>
              </div>

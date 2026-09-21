@@ -16,7 +16,7 @@ const CategoryPage = () => {
   const { store, loading: storeLoading, error: storeError } = useStore();
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [category, setCategory] = useState(null);
@@ -185,7 +185,7 @@ const CategoryPage = () => {
               onClick={() => navigate('/category/all')}
               className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
                 !category 
-                  ? 'text-white shadow-md shadow-orange-200 scale-105'
+                  ? 'text-white shadow-md shadow-green-150 scale-105' 
                   : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
               }`}
               style={{ backgroundColor: !category ? primaryColor : undefined, borderColor: !category ? primaryColor : undefined }}
@@ -203,7 +203,7 @@ const CategoryPage = () => {
                   onClick={() => navigate(`/category/${c.slug || c._id}`)}
                   className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
                     isActive 
-                      ? 'text-white shadow-md shadow-orange-200 scale-105'
+                      ? 'text-white shadow-md shadow-green-150 scale-105' 
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                   style={{ backgroundColor: isActive ? primaryColor : undefined, borderColor: isActive ? primaryColor : undefined }}
@@ -270,7 +270,7 @@ const CategoryPage = () => {
               <div className="mt-10 text-center flex justify-center">
                 <button 
                   onClick={() => setVisibleCount(prev => prev + 12)} 
-                  className="px-8 py-3 bg-white border-2 border-[#e85d04] text-[#c94710] font-extrabold rounded-xl hover:bg-[#e85d04] hover:text-white transition-colors shadow-sm hover:shadow-md"
+                  className="px-8 py-3 bg-white border-2 border-[#76b900] text-[#76b900] font-bold rounded-xl hover:bg-[#76b900] hover:text-white transition-colors shadow-sm hover:shadow-md"
                 >
                   Load More Products
                 </button>

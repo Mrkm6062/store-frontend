@@ -85,7 +85,7 @@ const Banner = ({ bannerUrl, storeName }) => {
 
   return (
     <div 
-      className="w-full relative group border-y border-orange-100/70 transition-colors duration-300"
+      className="w-full relative group border-b transition-colors duration-300"
       style={{ backgroundColor: bannerSettings.bgColor || '#f3f4f6', borderColor: bannerSettings.bgColor || '#e5e7eb' }}
     >
       <div ref={scrollRef} className="w-full flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -96,7 +96,7 @@ const Banner = ({ bannerUrl, storeName }) => {
               alt={`${storeName} Banner ${index + 1}`} 
               width="1600"
               height="599"
-              className="w-full min-h-[150px] sm:min-h-0 h-auto object-cover"
+              className="w-full h-auto object-cover" 
               fetchpriority={index === 0 ? "high" : undefined}
               loading={index === 0 ? undefined : "lazy"}
             />
@@ -108,8 +108,8 @@ const Banner = ({ bannerUrl, storeName }) => {
       {/* Navigation Arrows */}
       {banners.length > 1 && (
         <>
-          <button onClick={handlePrev} aria-label="Previous slide" className="absolute top-1/2 left-3 md:left-6 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2.5 rounded-xl shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronLeft size={22} /></button>
-          <button onClick={handleNext} aria-label="Next slide" className="absolute top-1/2 right-3 md:right-6 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2.5 rounded-xl shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronRight size={22} /></button>
+          <button onClick={handlePrev} aria-label="Previous slide" className="absolute top-1/2 left-2 md:left-4 -translate-y-1/2 bg-white/60 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronLeft size={24} /></button>
+          <button onClick={handleNext} aria-label="Next slide" className="absolute top-1/2 right-2 md:right-4 -translate-y-1/2 bg-white/60 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"><ChevronRight size={24} /></button>
         </>
       )}
 

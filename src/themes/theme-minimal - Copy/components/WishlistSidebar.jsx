@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 
-const WishlistSidebar = ({ isWishlistOpen, setIsWishlistOpen, primaryColor = '#e85d04' }) => {
+const WishlistSidebar = ({ isWishlistOpen, setIsWishlistOpen, primaryColor = '#76b900' }) => {
   const [wishlist, setWishlist] = useState([]);
 
   const loadWishlist = () => {
@@ -72,8 +72,8 @@ const WishlistSidebar = ({ isWishlistOpen, setIsWishlistOpen, primaryColor = '#e
       ></div>
       
       {/* Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-[#fffdf9] shadow-2xl flex flex-col z-[100] transform transition-transform duration-300 ease-in-out ${isWishlistOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="p-5 border-b border-orange-100 flex justify-between items-center bg-[#fff5e8]">
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col z-[100] transform transition-transform duration-300 ease-in-out ${isWishlistOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <Heart className="fill-red-500 text-red-500" size={24} /> Your Wishlist
           </h2>
@@ -91,7 +91,7 @@ const WishlistSidebar = ({ isWishlistOpen, setIsWishlistOpen, primaryColor = '#e
           ) : (
             <div className="space-y-4">
               {wishlist.map((item) => (
-                <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-orange-100 rounded-2xl shadow-[0_4px_14px_rgba(91,45,19,0.06)]">
+                <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="h-14 w-14 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
                       {item.image ? (
@@ -102,7 +102,7 @@ const WishlistSidebar = ({ isWishlistOpen, setIsWishlistOpen, primaryColor = '#e
                     </div>
                     <div>
                       <p className="font-bold text-gray-800 line-clamp-1 text-sm">{item.name}</p>
-                      <p className="text-[#c94710] font-extrabold text-sm">₹{item.price}</p>
+                      <p className="text-green-600 font-semibold text-sm">₹{item.price}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

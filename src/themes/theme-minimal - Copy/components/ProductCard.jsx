@@ -8,7 +8,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
   const cardSettings = customization?.productCard || {};
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   const hasVariants = product.variants && product.variants.length > 0;
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -102,9 +102,9 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           : 'opacity-0 translate-y-8'
       }`}
     >
-      <div className="overflow-hidden rounded-[1.35rem] border border-orange-100/80 shadow-[0_5px_20px_rgba(91,45,19,0.07)] hover:shadow-[0_16px_34px_rgba(91,45,19,0.15)] transition-all duration-300 transform hover:-translate-y-1.5 group flex flex-col bg-white w-full">
+      <div className="overflow-hidden shadow hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group flex flex-col bg-white w-full">
       <div 
-        className="relative overflow-hidden aspect-square bg-[#fff3e6] cursor-pointer"
+        className="relative overflow-hidden aspect-square bg-[#4b2d1e] cursor-pointer"
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
         <img 
@@ -116,11 +116,6 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           style={{ opacity: imageLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in-out' }}
         />
         {!imageLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse w-full h-full" />}
-        {discountPercent > 0 && !isOutOfStock && (
-          <span className="absolute top-3 left-3 rounded-full bg-[#9f2d19] px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm">
-            {discountPercent}% OFF
-          </span>
-        )}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
             <span className="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold tracking-wider shadow-lg">
@@ -131,38 +126,32 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       </div>
 
       <div 
-        className="bg-white px-3.5 pt-3.5 pb-3 text-left flex-grow cursor-pointer"
+        className="bg-white -mb-6 pt-0 pb-1 px-1 text-left shadow-inner flex-grow cursor-pointer"
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          <span className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700/70">{categoryName}</span>
-          {averageRating > 0 && (
-            <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-amber-700"><Star size={11} className="fill-amber-400 text-amber-400" />{Number(averageRating).toFixed(1)}</span>
-          )}
-        </div>
-        <p className="min-h-[2.5rem] font-bold text-[13px] leading-5 text-stone-800 group-hover:text-[#c94710] transition-colors" title={product.name}>
+        <p className="py-2 px-1 font-semibold text-sm group-hover:text-blue-600 transition-colors" title={product.name}>
            {product.name.length > 40 
             ? product.name.slice(0, 40) + "..." 
            : product.name}
         </p>
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
-          <span className="text-lg font-extrabold text-[#9f2d19]">₹{displayPrice.toLocaleString()}</span>
+        <div className="px-1 flex items-baseline space-x-1 text-align-center">
+          <span className="text-md font-semibold text-green-800">₹{displayPrice.toLocaleString()}</span>
           {discountPercent > 0 && (
             <>
-              <span className="text-[11px] text-stone-400 line-through">₹{originalPrice.toLocaleString()}</span>
-              <span className="text-[10px] font-bold text-[#c94710]">Save {discountPercent}%</span>
+              <span className="text-xs text-gray-500 line-through">₹{originalPrice.toLocaleString()}</span>
+              <span className="bg-red-100 text-red-800 text-[10px] px-1.5 py-0.5 rounded-md font-bold">{discountPercent}%↓</span>
             </>
           )}
         </div>
       </div>
 
-      <div className="px-3.5 pb-3.5 pt-0 z-10">
+      <div className="mt-6 z-10">
         {cartQty > 0 && !hasVariants ? (
-          <div className="flex items-center overflow-hidden rounded-xl text-white w-full h-11 shadow-sm" style={{ backgroundColor: primaryColor }}>
+          <div className="flex items-center text-white w-full h-12" style={{ backgroundColor: primaryColor }}>
             <button 
               onClick={handleDecrement}
-              className="w-11 h-full flex items-center justify-center hover:bg-black/10 transition-colors active:scale-95"
+              className="w-12 h-full flex items-center justify-center hover:bg-black/10 transition-colors active:scale-95"
             >
               <Minus size={16} />
             </button>
@@ -172,7 +161,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             <button 
               onClick={handleIncrement}
               disabled={cartQty >= maxStock}
-              className={`w-11 h-full flex items-center justify-center transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/10'}`}
+              className={`w-12 h-full flex items-center justify-center transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/10'}`}
             >
               <Plus size={16} />
             </button>
@@ -182,8 +171,8 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             onClick={handleAdd}
             disabled={isOutOfStock}
             style={!isOutOfStock ? { backgroundColor: primaryColor } : undefined}
-            className={`w-full rounded-xl py-3 text-sm font-extrabold transition-all ${
-              isOutOfStock ? 'bg-stone-200 text-stone-500 cursor-not-allowed' : 'text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:opacity-95'
+            className={`w-full py-3 font-semibold transition-all ${
+              isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'text-white hover:opacity-90'
             }`}
           >
             {isOutOfStock ? 'Out of Stock' : (hasVariants ? 'Buy Now' : 'Add to Cart')}
@@ -198,7 +187,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
 export default ProductCard;
 
 export const ProductCardSkeleton = () => (
-  <div className="bg-white rounded-[1.35rem] border border-orange-100 shadow-sm animate-pulse flex flex-col h-full overflow-hidden">
+  <div className="bg-white rounded-2xl sm:rounded-[20px] border border-gray-100 shadow-sm animate-pulse flex flex-col h-full overflow-hidden">
     <div className="h-32 sm:h-48 bg-gray-200/60 w-full flex-shrink-0"></div>
     <div className="p-3 sm:p-4 flex flex-col flex-grow">
       <div className="h-3 w-16 bg-gray-200 rounded mb-2"></div>

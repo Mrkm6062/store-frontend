@@ -9,7 +9,7 @@ const WriteReview = () => {
   const { orderId, productId } = useParams();
   const { store, loading: storeLoading } = useStore();
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   const [order, setOrder] = useState(null);
   const [product, setProduct] = useState(null);
@@ -145,9 +145,9 @@ const WriteReview = () => {
 
   return (
     <StoreLayout store={store} cartCount={0} onCartClick={() => {}}>
-      <div className="max-w-2xl mx-auto px-4 py-12 md:py-16 w-full">
+      <div className="max-w-2xl mx-auto px-4 py-12 w-full">
         {hasReviewed || success ? (
-          <div className="bg-white p-10 rounded-[1.75rem] shadow-[0_8px_28px_rgba(91,45,19,0.08)] border border-orange-100 text-center">
+          <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 text-center">
             <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle size={40} />
             </div>
@@ -162,7 +162,7 @@ const WriteReview = () => {
             </Link>
           </div>
         ) : (
-          <div className="bg-white p-6 sm:p-10 rounded-[1.75rem] shadow-[0_8px_28px_rgba(91,45,19,0.08)] border border-orange-100">
+          <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-slate-200">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Write a Review</h2>
             
             {product && (
@@ -225,7 +225,7 @@ const WriteReview = () => {
                       </div>
                     );
                   })}
-                  <label className={`w-24 h-24 rounded-xl border-2 border-dashed border-orange-200 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-[#e85d04] hover:text-[#e85d04] transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <label className={`w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-[#76b900] hover:text-[#76b900] transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                     <UploadCloud size={24} className="mb-1" />
                     <span className="text-xs font-bold">{uploading ? `${uploadProgress}%` : 'Upload'}</span>
                     <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleMediaUpload} disabled={uploading} />

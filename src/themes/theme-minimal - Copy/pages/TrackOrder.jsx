@@ -10,7 +10,7 @@ const TrackOrder = () => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [customerToken, setCustomerToken] = useState(localStorage.getItem('gb_customer_token') || null);
   const [customerEmail, setCustomerEmail] = useState(localStorage.getItem('gb_customer_email') || '');
@@ -167,7 +167,7 @@ const TrackOrder = () => {
   if (storeError || !store) return <div className="min-h-screen flex items-center justify-center">Store not found.</div>;
 
   const renderAuth = () => (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-[1.75rem] shadow-[0_8px_28px_rgba(91,45,19,0.08)] border border-orange-100 mt-12">
+    <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-200 mt-12">
       <div className="text-center mb-6">
         <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4" style={{ color: primaryColor }}><Key size={32} /></div>
         <h2 className="text-2xl font-extrabold text-slate-800">Track Your Orders</h2>
@@ -179,7 +179,7 @@ const TrackOrder = () => {
         <form onSubmit={handleSendOtp} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
-            <input required type="email" value={emailInput} onChange={e => setEmailInput(e.target.value)} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#e85d04]" placeholder="you@example.com" />
+            <input required type="email" value={emailInput} onChange={e => setEmailInput(e.target.value)} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900]" placeholder="you@example.com" />
           </div>
           <button type="submit" disabled={authLoading} style={{ backgroundColor: primaryColor }} className="w-full py-3 text-white font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50 shadow-lg">{authLoading ? 'Sending...' : 'Send OTP'}</button>
         </form>
@@ -187,7 +187,7 @@ const TrackOrder = () => {
         <form onSubmit={handleVerifyOtp} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1">6-Digit OTP</label>
-            <input required type="text" maxLength="6" value={otpInput} onChange={e => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#e85d04] text-center text-2xl tracking-[0.5em] font-mono" placeholder="••••••" />
+            <input required type="text" maxLength="6" value={otpInput} onChange={e => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] text-center text-2xl tracking-[0.5em] font-mono" placeholder="••••••" />
           </div>
           <button type="submit" disabled={authLoading || otpInput.length !== 6} style={{ backgroundColor: primaryColor }} className="w-full py-3 text-white font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50 shadow-lg">{authLoading ? 'Verifying...' : 'Verify & View Orders'}</button>
           <button type="button" onClick={() => setAuthStep('email')} className="w-full py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Use a different email</button>
@@ -205,7 +205,7 @@ const TrackOrder = () => {
 
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => navigate('/')} hideFooter={true}>
-      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-6">
           <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
             <ArrowLeft size={16} className="mr-1" /> Back to Store
@@ -220,7 +220,7 @@ const TrackOrder = () => {
         {authStep !== 'tracking' ? renderAuth() : loadingData ? (
           <div className="text-center py-20 font-bold flex items-center justify-center" style={{ color: primaryColor }}><RefreshCcw className="animate-spin mr-2" /> Loading Orders...</div>
         ) : orders.length === 0 ? (
-          <div className="text-center bg-white p-12 rounded-[1.75rem] shadow-[0_8px_28px_rgba(91,45,19,0.08)] border border-orange-100 mt-12">
+          <div className="text-center bg-white p-12 rounded-3xl shadow-sm border border-slate-200 mt-12">
             <Package size={64} className="mx-auto text-slate-300 mb-4" />
             <h2 className="text-2xl font-bold text-slate-800">No Orders Found</h2>
             <p className="text-slate-500 mt-2 mb-6">We couldn't find any orders placed with {customerEmail}.</p>
@@ -237,7 +237,7 @@ const TrackOrder = () => {
                   <button 
                     key={order._id}
                     onClick={() => { setSelectedOrder(order); navigate(`/track/${order._id}`); }}
-                    className={`text-left p-4 rounded-2xl border transition-all ${selectedOrder?._id === order._id ? 'border-[#e85d04] bg-orange-50 shadow-sm' : 'border-slate-200 bg-white hover:border-[#e85d04]'}`}
+                    className={`text-left p-4 rounded-2xl border transition-all ${selectedOrder?._id === order._id ? 'border-[#76b900] bg-green-50 shadow-sm' : 'border-slate-200 bg-white hover:border-[#76b900]'}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-bold text-slate-800 text-sm">#{order._id.slice(-6).toUpperCase()}</span>
@@ -270,7 +270,7 @@ const TrackOrder = () => {
                       </div>
                       <div className="text-left sm:text-right">
                         <p className="text-sm font-bold text-slate-500">Total Paid</p>
-                        <p className="text-xl text-[#c94710] font-extrabold">₹{selectedOrder.totalAmount}</p>
+                        <p className="text-xl text-[#76b900] font-extrabold">₹{selectedOrder.totalAmount}</p>
                       </div>
                     </div>
 
@@ -288,11 +288,11 @@ const TrackOrder = () => {
                         ) : (
                           <div className="relative">
                             <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-1 bg-slate-100 transform md:-translate-x-1/2"></div>
-                            <div className="absolute left-6 md:left-1/2 top-0 w-1 bg-[#e85d04] transform md:-translate-x-1/2 transition-all duration-500" style={{ height: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}></div>
+                            <div className="absolute left-6 md:left-1/2 top-0 w-1 bg-[#76b900] transform md:-translate-x-1/2 transition-all duration-500" style={{ height: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}></div>
                             
                             <div className="space-y-8 md:space-y-0 md:flex md:justify-between relative">
                               <div className="flex md:flex-col items-center md:w-1/3 relative z-10 gap-4 md:gap-2">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors ${step >= 1 ? 'bg-[#e85d04] border-white text-white shadow-md' : 'bg-slate-100 border-white text-slate-400'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors ${step >= 1 ? 'bg-[#76b900] border-white text-white shadow-md' : 'bg-slate-100 border-white text-slate-400'}`}>
                                   <Package size={20} />
                                 </div>
                                 <div className="md:text-center">
@@ -301,7 +301,7 @@ const TrackOrder = () => {
                                 </div>
                               </div>
                               <div className="flex md:flex-col items-center md:w-1/3 relative z-10 gap-4 md:gap-2">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors ${step >= 2 ? 'bg-[#e85d04] border-white text-white shadow-md' : 'bg-slate-100 border-white text-slate-400'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors ${step >= 2 ? 'bg-[#76b900] border-white text-white shadow-md' : 'bg-slate-100 border-white text-slate-400'}`}>
                                   <Truck size={20} />
                                 </div>
                                 <div className="md:text-center">
@@ -309,7 +309,7 @@ const TrackOrder = () => {
                                 </div>
                               </div>
                               <div className="flex md:flex-col items-center md:w-1/3 relative z-10 gap-4 md:gap-2">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors ${step >= 3 ? 'bg-[#e85d04] border-white text-white shadow-md' : 'bg-slate-100 border-white text-slate-400'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors ${step >= 3 ? 'bg-[#76b900] border-white text-white shadow-md' : 'bg-slate-100 border-white text-slate-400'}`}>
                                   <CheckCircle size={20} />
                                 </div>
                                 <div className="md:text-center">

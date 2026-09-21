@@ -35,10 +35,9 @@ const PolicyPage = () => {
 
   return (
     <StoreLayout store={store} cartCount={0} onCartClick={() => alert('Please return to the home page to view your cart.')}>
-      <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <span className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#c94710] mb-2">Good to know</span>
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-stone-900 mb-8">{policy.title}</h1>
-        <div className="bg-white p-8 md:p-10 rounded-[1.5rem] shadow-[0_8px_28px_rgba(91,45,19,0.08)] border border-orange-100 text-gray-700 whitespace-pre-wrap leading-relaxed">
+      <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8">{policy.title}</h1>
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-gray-700 whitespace-pre-wrap leading-relaxed">
           {policy.description}
         </div>
       </div>

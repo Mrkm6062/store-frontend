@@ -79,7 +79,7 @@ const CheckoutPage = () => {
   const isPlanExpired = store?.subscriptionStatus === 'expired' || 
                         (store?.planExpiryDate && new Date() > new Date(store.planExpiryDate));
   const customization = useContext(ThemeCustomizationContext);
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
@@ -795,7 +795,7 @@ const CheckoutPage = () => {
             email: formData.customerEmail,
             contact: formData.customerPhone
           },
-          theme: { color: primaryColor }
+          theme: { color: "#76b900" }
         };
 
         const paymentObject = new window.Razorpay(options);
@@ -823,7 +823,7 @@ const CheckoutPage = () => {
     return (
       <StoreLayout store={store} cartCount={0} onCartClick={() => {}} hideFooter={true} hideHeader={true}>
         <div className="max-w-2xl mx-auto px-4 py-20 text-center w-full">
-          <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6" style={{ color: primaryColor }}><CheckCircle size={48} /></div>
+          <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={48} /></div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Order Placed Successfully!</h2>
           <p className="text-gray-500 mb-8 text-lg">Thank you for your purchase. You will receive tracking updates shortly.</p>
           <Link to="/" style={{ backgroundColor: primaryColor }} className="px-8 py-3.5 text-white font-bold rounded-xl hover:opacity-90 transition shadow-lg">Continue Shopping</Link>
@@ -866,14 +866,14 @@ const CheckoutPage = () => {
           box-shadow: 0 0 0 1px ${primaryColor};
         }
       `}</style>
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8">
-          <div className="sticky top-0 z-30 bg-[#fffaf3]/95 backdrop-blur-sm py-3 mb-5 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 flex justify-start">
+          <div className="sticky top-0 z-30 bg-gray-50/95 backdrop-blur-sm py-3 mb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 flex justify-start">
             <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
               <ArrowLeft size={16} className="mr-1" /> Back to Cart
             </Link>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-stone-900">Checkout</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900">Checkout</h1>
         </div>
 
         {/* Desktop View Layout (hidden lg:grid) */}
@@ -883,9 +883,9 @@ const CheckoutPage = () => {
             <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-6">
               
               {/* Step 1: Delivery Location & Pincode First */}
-              <div className="bg-white p-6 rounded-[1.35rem] shadow-[0_8px_28px_rgba(91,45,19,0.07)] border border-orange-100">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex items-center gap-2 mb-4 border-b pb-3">
-                  <MapPin size={22} className="text-[#e85d04]" />
+                  <MapPin size={22} className="text-[#76b900]" />
                   <h3 className="font-bold text-xl text-slate-800">1. Delivery Location & Pincode</h3>
                 </div>
                 <div className="space-y-4">
@@ -956,7 +956,7 @@ const CheckoutPage = () => {
               </div>
 
               {/* Step 2: Street Address */}
-              <div className="bg-white p-6 rounded-[1.35rem] shadow-[0_8px_28px_rgba(91,45,19,0.07)] border border-orange-100">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">2. Street Address & Landmark</h3>
                 <div className="space-y-4">
                   <div className="relative">
@@ -984,7 +984,7 @@ const CheckoutPage = () => {
               </div>
 
               {/* Step 3: Contact Details */}
-              <div className="bg-white p-6 rounded-[1.35rem] shadow-[0_8px_28px_rgba(91,45,19,0.07)] border border-orange-100">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">3. Customer Contact Details</h3>
                 <div className="space-y-4">
                   <div className="relative">
@@ -1005,12 +1005,12 @@ const CheckoutPage = () => {
               </div>
               
               {/* Payment Method */}
-              <div className="bg-white p-6 rounded-[1.35rem] shadow-[0_8px_28px_rgba(91,45,19,0.07)] border border-orange-100">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Payment Method</h3>
                 <div className="flex flex-col gap-3">
-                  {checkoutSettings?.codEnabled !== false && <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'cod' ? 'border-[#e85d04] bg-orange-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-[#e85d04]" /><span className="font-bold text-slate-800">Cash on Delivery (COD)</span></label>}
-                  {checkoutSettings?.whatsappEnabled && <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'whatsapp' ? 'border-[#e85d04] bg-orange-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="whatsapp" checked={paymentMethod === 'whatsapp'} onChange={() => setPaymentMethod('whatsapp')} className="w-5 h-5 text-[#e85d04]" /><span className="font-bold text-slate-800">Order via WhatsApp</span></label>}
-                  {checkoutSettings?.razorpayEnabled && <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'razorpay' ? 'border-[#e85d04] bg-orange-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 text-[#e85d04]" /><span className="font-bold text-slate-800">Pay Online (Razorpay)</span></label>}
+                  {checkoutSettings?.codEnabled !== false && <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'cod' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-[#76b900]" /><span className="font-bold text-slate-800">Cash on Delivery (COD)</span></label>}
+                  {checkoutSettings?.whatsappEnabled && <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'whatsapp' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="whatsapp" checked={paymentMethod === 'whatsapp'} onChange={() => setPaymentMethod('whatsapp')} className="w-5 h-5 text-[#76b900]" /><span className="font-bold text-slate-800">Order via WhatsApp</span></label>}
+                  {checkoutSettings?.razorpayEnabled && <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition ${paymentMethod === 'razorpay' ? 'border-[#76b900] bg-green-50' : 'border-slate-200 bg-white'}`}><input type="radio" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 text-[#76b900]" /><span className="font-bold text-slate-800">Pay Online (Razorpay)</span></label>}
                 </div>
               </div>
             </form>
@@ -1018,7 +1018,7 @@ const CheckoutPage = () => {
 
           {/* Right Column: Order Summary Card */}
           <div className="lg:col-span-5">
-            <div className="bg-white p-6 rounded-[1.35rem] shadow-[0_8px_28px_rgba(91,45,19,0.07)] border border-orange-100 sticky top-24">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
               <h3 className="font-bold text-xl text-slate-800 mb-4 border-b pb-3">Order Summary</h3>
               <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {cart.map((item) => (
@@ -1040,7 +1040,7 @@ const CheckoutPage = () => {
                 ))}
               </div>
 
-              <div className="mb-6"><div className="flex gap-2"><input type="text" placeholder="Coupon Code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} disabled={appliedCoupon} className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#e85d04] font-mono uppercase text-sm" />{appliedCoupon ? <button type="button" onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponMessage({text: '', type: ''}); }} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition text-sm">Remove</button> : <button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon || !couponCode} className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition disabled:opacity-50 text-sm">{isValidatingCoupon ? '...' : 'Apply'}</button>}</div>{couponMessage.text && <p className={`text-xs font-bold mt-2 ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>{couponMessage.text}</p>}</div>
+              <div className="mb-6"><div className="flex gap-2"><input type="text" placeholder="Coupon Code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} disabled={appliedCoupon} className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#76b900] font-mono uppercase text-sm" />{appliedCoupon ? <button type="button" onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponMessage({text: '', type: ''}); }} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition text-sm">Remove</button> : <button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon || !couponCode} className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition disabled:opacity-50 text-sm">{isValidatingCoupon ? '...' : 'Apply'}</button>}</div>{couponMessage.text && <p className={`text-xs font-bold mt-2 ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>{couponMessage.text}</p>}</div>
 
               <div className="space-y-2 mb-4 text-sm text-gray-600">
                 <div className="flex justify-between"><span>Subtotal:</span><span className="font-bold text-gray-800">₹{cartTotal}</span></div>
@@ -1117,7 +1117,7 @@ const CheckoutPage = () => {
                   <button 
                     type="button"
                     onClick={() => setShowEditModal(true)}
-                    className="text-xs font-bold text-[#c94710] bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition"
+                    className="text-xs font-bold text-[#76b900] bg-[#f1f8e9] hover:bg-[#e8f5e9] px-3 py-1.5 rounded-lg transition"
                   >
                     Edit Location
                   </button>
@@ -1366,7 +1366,7 @@ const CheckoutPage = () => {
                     <button 
                       type="submit" 
                       disabled={isVerifying}
-                      className="flex-1 py-3 bg-[#e85d04] text-white font-bold rounded-xl text-sm transition shadow-md shadow-orange-100 disabled:opacity-50"
+                      className="flex-1 py-3 bg-[#76b900] text-white font-bold rounded-xl text-sm transition shadow-md shadow-green-50 disabled:opacity-50"
                     >
                       {isVerifying ? 'Checking...' : 'Save & Check Delivery'}
                     </button>

@@ -30,7 +30,7 @@ const Footer = ({ storeName }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const customization = useContext(ThemeCustomizationContext);
   const footerSettings = customization?.footer || {};
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
 
   const [isVisible, setIsVisible] = useState(false);
   const footerRef = useRef(null);
@@ -131,10 +131,10 @@ const Footer = ({ storeName }) => {
   return (
     <footer 
       ref={footerRef}
-      className={`border-t border-orange-100 mt-auto pt-14 md:pt-16 transition-all duration-1000 ease-out transform ${
+      className={`border-t border-gray-100 mt-auto pt-16 transition-all duration-1000 ease-out transform ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
-      style={{ backgroundColor: footerSettings.bgColor || '#2b1a12', color: footerSettings.textColor || '#f8eee3' }}
+      style={{ backgroundColor: footerSettings.bgColor || '#f8fafc', color: footerSettings.textColor || '#4b5563' }}
     >
       <style>{`
         .footer-social-icon:hover {
@@ -146,7 +146,7 @@ const Footer = ({ storeName }) => {
         {footerSettings.newsletter?.enabled && (
           <div className="border-b border-current/10 pb-8 mb-10 flex flex-col md:flex-row justify-between items-center gap-6 animate-fadeIn">
             <div className="max-w-md">
-              <h3 className="text-lg font-bold" style={{ color: footerSettings.textColor || '#fff7ed' }}>Subscribe to our Newsletter</h3>
+              <h3 className="text-lg font-bold" style={{ color: footerSettings.textColor || '#111827' }}>Subscribe to our Newsletter</h3>
               <p className="text-xs opacity-75 mt-1">Stay updated with our latest offers, new arrivals, and custom collections.</p>
             </div>
             <div className="flex flex-col w-full md:w-auto max-w-md shrink-0 gap-1.5">
@@ -156,7 +156,7 @@ const Footer = ({ storeName }) => {
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder={footerSettings.newsletter.placeholder || 'Enter your email'} 
-                  className="px-4 py-2.5 text-sm rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#e85d04] text-gray-900 w-full md:w-64"
+                  className="px-4 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#76b900] text-gray-900 w-full md:w-64"
                   required
                   disabled={submitting}
                 />
@@ -164,7 +164,7 @@ const Footer = ({ storeName }) => {
                   type="submit" 
                   disabled={submitting}
                   style={{ backgroundColor: primaryColor }}
-                  className="px-5 py-2.5 text-sm font-bold text-white hover:opacity-90 rounded-xl transition-colors duration-300 shrink-0 shadow-sm disabled:opacity-50"
+                  className="px-5 py-2 text-sm font-bold text-white hover:opacity-90 rounded-lg transition-colors duration-300 shrink-0 shadow-sm disabled:opacity-50"
                 >
                   {submitting ? 'Subscribing...' : (footerSettings.newsletter.buttonText || 'Subscribe')}
                 </button>
@@ -189,13 +189,13 @@ const Footer = ({ storeName }) => {
                 <h2 className="text-2xl font-extrabold mb-2" style={{ color: footerSettings.textColor || primaryColor }}>{storeName}</h2>
               )}
               <p className="text-sm leading-relaxed pr-4 opacity-80">
-                {footerSettings.description || `Freshly prepared snacks, bold Indian flavours, and easy ordering from ${storeName}.`}
+                {footerSettings.description || `Order custom printed T-shirts, mugs, photo frames, mobile covers, cushions, and personalized gifts at ${storeName}. High-quality printing, unique designs, and fast delivery.`}
               </p>
             </div>
             
             {socialLinks.length > 0 && (
               <div>
-                <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#fff7ed' }}>Follow Us</h3>
+                <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Follow Us</h3>
                 <div className="flex items-center gap-3 flex-wrap">
                   {socialLinks.map(link => (
                     <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="footer-social-icon p-2.5 bg-black/5 rounded-full hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-sm border border-black/5" style={{ color: footerSettings.textColor || '#9ca3af' }}>
@@ -209,7 +209,7 @@ const Footer = ({ storeName }) => {
 
           {/* Quick Links Section */}
           <div>
-            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#fff7ed' }}>Quick Links</h3>
+            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Quick Links</h3>
             <ul className="space-y-3">
               {['Home', 'Shop Categories', 'Today\'s Offers', 'Track Order', 'Contact Us'].map((link, idx) => (
                 <li key={idx}>
@@ -224,7 +224,7 @@ const Footer = ({ storeName }) => {
 
           {/* Customer Support (Policies) */}
           <div>
-            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#fff7ed' }}>Customer Support</h3>
+            <h3 className="text-lg font-bold mb-5" style={{ color: footerSettings.textColor || '#111827' }}>Customer Support</h3>
             <ul className="space-y-3">
               {policies.length > 0 ? policies.map(policy => {
                 const slug = policy.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -272,7 +272,7 @@ const Footer = ({ storeName }) => {
       </div>
       
       {/* Bottom Bar */}
-      <div className="bg-black/15 py-6">
+      <div className="bg-black/5 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left opacity-80 text-sm font-medium">
             &copy; {new Date().getFullYear()} {storeName}. All rights reserved.

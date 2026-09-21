@@ -8,18 +8,18 @@ const BottomNav = ({ cartCount, onCartClick }) => {
   const customization = useContext(ThemeCustomizationContext);
   
   // Use the primary color from theme settings, or default to green
-  const primaryColor = customization?.global?.primaryColor || '#e85d04';
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
   const activeColor = isLightColor(primaryColor) ? '#15803d' : primaryColor;
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#fffdf9]/95 backdrop-blur-xl border-t border-orange-100 shadow-[0_-8px_24px_rgba(91,45,19,0.08)] z-50 pb-safe">
-      <div className="flex justify-around items-center h-[4.25rem]">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] z-50 pb-safe">
+      <div className="flex justify-around items-center h-16">
         {/* Home */}
         <Link 
           to="/" 
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/') ? '' : 'text-stone-400 hover:text-stone-900'}`}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/') ? '' : 'text-gray-500 hover:text-gray-900'}`} 
           style={isActive('/') ? { color: activeColor } : {}}
         >
           <Home size={20} />
@@ -29,7 +29,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         {/* Offers */}
         <Link 
           to="/offers" 
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/offers') ? '' : 'text-stone-400 hover:text-stone-900'}`}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/offers') ? '' : 'text-gray-500 hover:text-gray-900'}`} 
           style={isActive('/offers') ? { color: activeColor } : {}}
         >
           <Percent size={20} />
@@ -39,7 +39,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         {/* Track Orders */}
         <Link 
           to="/track" 
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/track') ? '' : 'text-stone-400 hover:text-stone-900'}`}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive('/track') ? '' : 'text-gray-500 hover:text-gray-900'}`} 
           style={isActive('/track') ? { color: activeColor } : {}}
         >
           <Package size={20} />
@@ -49,7 +49,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         {/* Cart */}
         <button 
           onClick={onCartClick} 
-          className="flex flex-col items-center justify-center w-full h-full space-y-1 text-stone-400 hover:text-stone-900 relative transition-colors"
+          className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-500 hover:text-gray-900 relative transition-colors"
         >
           <div className="relative">
             <ShoppingCart size={20} />
@@ -68,7 +68,7 @@ const BottomNav = ({ cartCount, onCartClick }) => {
         {/* Login / Profile */}
         <Link 
           to="/track" 
-          className="flex flex-col items-center justify-center w-full h-full space-y-1 text-stone-400 hover:text-stone-900 transition-colors"
+          className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-500 hover:text-gray-900 transition-colors"
         >
           <User size={20} />
           <span className="text-[10px] font-bold">Login</span>
