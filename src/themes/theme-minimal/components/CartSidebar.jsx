@@ -112,7 +112,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
 
   const isShippingFree = freeLimit > 0 && discountedTotal >= freeLimit;
   const shippingCharge = isShippingFree ? 0 : baseCharge;
-  const estimatedTotal = discountedTotal + shippingCharge;
+  const estimatedTotal = discountedTotal;
   const amountNeededForFreeDelivery = freeLimit - discountedTotal;
 
   return (
@@ -236,12 +236,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                 <span className="font-bold">-₹{offerDiscount}</span>
               </div>
             )}
-            <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-              <span>Shipping Charges:</span>
-              <span className={`font-bold ${shippingCharge === 0 ? 'text-green-600' : 'text-gray-800'}`}>
-                {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
-              </span>
-            </div>
+
             <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800 border-t border-dashed border-gray-200 pt-3">
               <span>Estimated Total:</span>
               <span className="text-[#9f2d19]">₹{estimatedTotal}</span>

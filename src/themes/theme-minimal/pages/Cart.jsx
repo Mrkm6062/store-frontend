@@ -150,7 +150,7 @@ const CartPage = () => {
 
   const isShippingFree = freeLimit > 0 && discountedTotal >= freeLimit;
   const shippingCharge = isShippingFree ? 0 : baseCharge;
-  const estimatedTotal = discountedTotal + shippingCharge;
+  const estimatedTotal = discountedTotal;
   const amountNeededForFreeDelivery = Math.max(0, freeLimit - discountedTotal);
 
   if (storeLoading) {
@@ -333,12 +333,7 @@ const CartPage = () => {
                       <span>-₹{offerDiscount}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center">
-                    <span>Estimated Shipping:</span>
-                    <span className={`font-bold ${shippingCharge === 0 ? 'text-green-600' : 'text-slate-800'}`}>
-                      {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
-                    </span>
-                  </div>
+
                 </div>
 
                 <div className="flex justify-between items-center font-extrabold text-xl mb-6 text-slate-900 border-t border-dashed border-gray-200 pt-4">
