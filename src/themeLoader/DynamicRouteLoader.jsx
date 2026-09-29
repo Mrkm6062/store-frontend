@@ -106,6 +106,8 @@ const DynamicRouteLoader = ({ ActiveTheme, componentName }) => {
       return <ActiveTheme.Policy />;
     case 'TrackOrder':
       return <ActiveTheme.TrackOrder />;
+    case 'Cart':
+      return ActiveTheme.Cart ? <ActiveTheme.Cart /> : <ActiveTheme.Home />;
     case 'Checkout':
       return <ActiveTheme.Checkout />;
     case 'WriteReview':

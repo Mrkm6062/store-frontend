@@ -420,7 +420,12 @@ const StoreHome = () => {
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
         <div className="md:hidden fixed bottom-[4.25rem] left-0 right-0 bg-[#fffdf9]/95 backdrop-blur-xl border-t border-orange-100 shadow-[0_-10px_26px_rgba(91,45,19,0.08)] p-3.5 z-40 flex flex-col gap-2 pb-safe">
-          {deliverySettings?.freeShippingThreshold > 0 && (
+          {deliverySettings?.minimumOrderLimitThreshold > 0 && cartTotal < deliverySettings.minimumOrderLimitThreshold ? (
+            <div className="text-[10px] font-bold text-center py-1.5 px-2 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 flex items-center justify-center gap-1.5">
+              <span>⚠️</span>
+              <span>Add ₹{deliverySettings.minimumOrderLimitThreshold - cartTotal} more to reach minimum order (₹{deliverySettings.minimumOrderLimitThreshold})</span>
+            </div>
+          ) : deliverySettings?.freeShippingThreshold > 0 ? (
             <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeShippingThreshold ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
               {cartTotal >= deliverySettings.freeShippingThreshold ? (
                 <span>Free delivery unlocked! 🎉</span>
@@ -428,7 +433,7 @@ const StoreHome = () => {
                 <span>Add ₹{deliverySettings.freeShippingThreshold - cartTotal} more to get free delivery</span>
               )}
             </div>
-          )}
+          ) : null}
           <div className="flex justify-between items-center">
             <div>
               <p className="text-xs text-gray-500 font-bold uppercase">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</p>

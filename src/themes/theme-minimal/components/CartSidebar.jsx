@@ -105,6 +105,10 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
 
   const freeLimit = deliverySettings?.freeShippingThreshold || 0;
   const baseCharge = deliverySettings?.baseCharge || 0;
+  const minOrderLimit = Number(deliverySettings?.minimumOrderLimitThreshold || 0);
+  const isBelowMinOrder = minOrderLimit > 0 && cartTotal < minOrderLimit;
+  const amountNeededForMinOrder = Math.max(0, minOrderLimit - cartTotal);
+  const minOrderProgress = minOrderLimit > 0 ? Math.min(100, Math.round((cartTotal / minOrderLimit) * 100)) : 100;
 
   const isShippingFree = freeLimit > 0 && discountedTotal >= freeLimit;
   const shippingCharge = isShippingFree ? 0 : baseCharge;
@@ -179,6 +183,38 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
         
         {cart.length > 0 && (
           <div className="p-5 border-t border-orange-100 bg-[#fffdf9]">
+            {/* Minimum Order Limit Alert Banner */}
+            {minOrderLimit > 0 && (
+              <div className={`p-3.5 rounded-xl text-xs font-bold mb-3 ${isBelowMinOrder ? 'bg-amber-50 text-amber-900 border border-amber-200 shadow-sm' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                {isBelowMinOrder ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="flex items-center gap-1.5 font-black text-amber-900">
+                        <span>⚠️</span> Minimum Order: ₹{minOrderLimit}
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                        ₹{cartTotal} / ₹{minOrderLimit}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-semibold text-amber-800 leading-snug">
+                      Please add <span className="font-black text-amber-950 underline decoration-amber-500 underline-offset-2">₹{amountNeededForMinOrder}</span> more worth of products to your cart to checkout.
+                    </p>
+                    <div className="w-full bg-amber-200/70 h-2 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="bg-amber-600 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${minOrderProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-emerald-700">
+                    <span>✓</span>
+                    <span>Minimum order requirement of ₹{minOrderLimit} satisfied!</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Free Delivery Promo Message */}
             {freeLimit > 0 && (
               <div className={`p-3 rounded-xl text-xs font-bold mb-4 text-center ${isShippingFree ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
@@ -210,9 +246,25 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
               <span>Estimated Total:</span>
               <span className="text-[#9f2d19]">₹{estimatedTotal}</span>
             </div>
-            <button type="button" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} className="w-full text-white font-extrabold py-4 rounded-xl transition text-lg shadow-lg hover:opacity-90" style={{ backgroundColor: primaryColor }}>
-              Proceed to Checkout
-            </button>
+            {isBelowMinOrder ? (
+              <button 
+                type="button" 
+                disabled={true}
+                className="w-full bg-slate-200 text-slate-500 font-extrabold py-3.5 rounded-xl transition text-base shadow-none cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
+              >
+                <span>Add ₹{amountNeededForMinOrder} More to Checkout</span>
+                <span className="text-[11px] font-medium text-slate-400">Minimum Order Required: ₹{minOrderLimit}</span>
+              </button>
+            ) : (
+              <button 
+                type="button" 
+                onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} 
+                className="w-full text-white font-extrabold py-4 rounded-xl transition text-lg shadow-lg hover:opacity-90" 
+                style={{ backgroundColor: primaryColor }}
+              >
+                Proceed to Checkout
+              </button>
+            )}
           </div>
         )}
       </div>

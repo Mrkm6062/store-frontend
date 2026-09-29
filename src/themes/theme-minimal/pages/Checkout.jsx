@@ -247,6 +247,11 @@ const CheckoutPage = () => {
 
   const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || '').trim());
 
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const minOrderLimit = Number(deliverySettings?.minimumOrderLimitThreshold || 0);
+  const isBelowMinOrder = minOrderLimit > 0 && cartTotal < minOrderLimit;
+  const amountNeededForMinOrder = Math.max(0, minOrderLimit - cartTotal);
+
   const isCheckoutFormValid = !!(
     formData.pincode && formData.pincode.trim().length === 6 &&
     formData.locality && formData.locality.trim() !== '' && formData.locality !== 'Other' &&
@@ -256,7 +261,8 @@ const CheckoutPage = () => {
     formData.customerName && formData.customerName.trim() !== '' &&
     formData.customerPhone && formData.customerPhone.trim().length >= 10 &&
     isEmailValid(formData.customerEmail) &&
-    calculatedDelivery.available
+    calculatedDelivery.available &&
+    !isBelowMinOrder
   );
 
   useEffect(() => {
@@ -497,7 +503,6 @@ const CheckoutPage = () => {
   };
 
   const { totalDiscount: offerDiscount, appliedPromoNames } = calculateOfferDiscount(cart);
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const discountedTotal = Math.max(0, cartTotal - discountAmount - offerDiscount);
 
   // Dynamic Calculate Delivery API call
@@ -604,6 +609,12 @@ const CheckoutPage = () => {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setIsPlacingOrder(true);
+
+    if (isBelowMinOrder) {
+      showToast(`Minimum order amount of ₹${minOrderLimit} is required to place an order. Please add ₹${amountNeededForMinOrder} more to your cart.`, 'error');
+      setIsPlacingOrder(false);
+      return;
+    }
     
     if (!formData.pincode || formData.pincode.trim().length < 6) return showToast('Pincode must be exactly 6 digits.'), setIsPlacingOrder(false);
     if (!formData.locality || !formData.locality.trim()) return showToast('Please select a delivery area.'), setIsPlacingOrder(false);
@@ -1068,6 +1079,44 @@ const CheckoutPage = () => {
 
               <div className="flex justify-between items-center font-bold text-xl mb-6 border-t pt-4 text-gray-800"><span>Total:</span><span className="text-green-600">₹{finalTotal}</span></div>
               
+              {/* Minimum Order Limit Warning */}
+              {minOrderLimit > 0 && (
+                <div className={`mb-4 p-4 rounded-2xl text-left ${isBelowMinOrder ? 'bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-sm' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`}>
+                  {isBelowMinOrder ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="flex items-center gap-1.5 font-black text-amber-900 text-sm">
+                          <span>⚠️</span> Minimum Order Required: ₹{minOrderLimit}
+                        </span>
+                        <span className="text-xs font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
+                          ₹{cartTotal} / ₹{minOrderLimit}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-amber-800 leading-snug">
+                        This store has a minimum order limit of <span className="font-black text-amber-950">₹{minOrderLimit}</span>. Please add <span className="font-black text-amber-950 underline decoration-amber-500 underline-offset-2">₹{amountNeededForMinOrder}</span> more worth of products to your cart.
+                      </p>
+                      <div className="w-full bg-amber-200/80 h-2 rounded-full mt-2.5 overflow-hidden">
+                        <div 
+                          className="bg-amber-600 h-full rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, Math.round((cartTotal / minOrderLimit) * 100))}%` }}
+                        />
+                      </div>
+                      <Link 
+                        to="/" 
+                        className="inline-flex items-center gap-1 mt-3 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-sm"
+                      >
+                        + Add More Products (₹{amountNeededForMinOrder} Needed)
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                      <span className="text-emerald-600 text-base">✓</span>
+                      <span>Minimum order requirement of ₹{minOrderLimit} satisfied!</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {isPlanExpired ? (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-xl text-left flex gap-2">
                   <span>⚠️</span>
@@ -1088,13 +1137,14 @@ const CheckoutPage = () => {
               <button 
                 type="submit" 
                 form="checkout-form" 
-                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired || !isCheckoutFormValid} 
-                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired && isCheckoutFormValid) ? primaryColor : '#94a3b8' }} 
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired || !isCheckoutFormValid || isBelowMinOrder} 
+                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired && isCheckoutFormValid && !isBelowMinOrder) ? primaryColor : '#94a3b8' }} 
                 className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 {isPlacingOrder ? 'Processing...' : 
                  isPlanExpired ? 'Subscription Expired' : 
                  !storeOpenStatus.isOpen ? 'Store Closed' : 
+                 isBelowMinOrder ? `Add ₹${amountNeededForMinOrder} More To Order (Min ₹${minOrderLimit})` :
                  (formData.pincode && formData.pincode.trim().length === 6 && !calculatedDelivery.available) ? 'Pincode is not deliverable' : 
                  !formData.pincode || formData.pincode.trim().length < 6 ? 'Enter 6-Digit Pincode' : 
                  !formData.locality ? 'Select Delivery Area' : 
@@ -1179,6 +1229,84 @@ const CheckoutPage = () => {
                   <span>Total:</span><span className="text-green-600">₹{finalTotal}</span>
                 </div>
               </div>
+
+              {/* Mobile Minimum Order Limit Warning */}
+              {minOrderLimit > 0 && (
+                <div className={`p-4 rounded-2xl text-left ${isBelowMinOrder ? 'bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-sm' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`}>
+                  {isBelowMinOrder ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="flex items-center gap-1.5 font-black text-amber-900 text-sm">
+                          <span>⚠️</span> Minimum Order: ₹{minOrderLimit}
+                        </span>
+                        <span className="text-xs font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
+                          ₹{cartTotal} / ₹{minOrderLimit}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-amber-800 leading-snug">
+                        This store requires a minimum order of <span className="font-black text-amber-950">₹{minOrderLimit}</span>. Please add <span className="font-black text-amber-950 underline decoration-amber-500 underline-offset-2">₹{amountNeededForMinOrder}</span> more to your cart.
+                      </p>
+                      <div className="w-full bg-amber-200/80 h-2 rounded-full mt-2.5 overflow-hidden">
+                        <div 
+                          className="bg-amber-600 h-full rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, Math.round((cartTotal / minOrderLimit) * 100))}%` }}
+                        />
+                      </div>
+                      <Link 
+                        to="/" 
+                        className="inline-flex items-center gap-1 mt-3 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-sm"
+                      >
+                        + Add More Products (₹{amountNeededForMinOrder} Needed)
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                      <span className="text-emerald-600 text-base">✓</span>
+                      <span>Minimum order requirement of ₹{minOrderLimit} satisfied!</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Mobile Payment Method */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 className="font-bold text-base text-slate-800 mb-4 border-b pb-3 text-left">Payment Method</h3>
+                <div className="flex flex-col gap-3">
+                  {checkoutSettings?.codEnabled !== false && (
+                    <label className={`flex items-center gap-3 p-3.5 border rounded-xl cursor-pointer transition ${paymentMethod === 'cod' ? 'border-[#e85d04] bg-orange-50' : 'border-slate-200 bg-white'}`}>
+                      <input type="radio" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-[#e85d04]" />
+                      <span className="font-bold text-sm text-slate-800">Cash on Delivery (COD)</span>
+                    </label>
+                  )}
+                  {checkoutSettings?.whatsappEnabled && (
+                    <label className={`flex items-center gap-3 p-3.5 border rounded-xl cursor-pointer transition ${paymentMethod === 'whatsapp' ? 'border-[#e85d04] bg-orange-50' : 'border-slate-200 bg-white'}`}>
+                      <input type="radio" value="whatsapp" checked={paymentMethod === 'whatsapp'} onChange={() => setPaymentMethod('whatsapp')} className="w-5 h-5 text-[#e85d04]" />
+                      <span className="font-bold text-sm text-slate-800">Order via WhatsApp</span>
+                    </label>
+                  )}
+                  {checkoutSettings?.razorpayEnabled && (
+                    <label className={`flex items-center gap-3 p-3.5 border rounded-xl cursor-pointer transition ${paymentMethod === 'razorpay' ? 'border-[#e85d04] bg-orange-50' : 'border-slate-200 bg-white'}`}>
+                      <input type="radio" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 text-[#e85d04]" />
+                      <span className="font-bold text-sm text-slate-800">Pay Online (Razorpay)</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Place Order Button */}
+              <button 
+                type="button" 
+                onClick={handlePlaceOrder}
+                disabled={isPlacingOrder || !storeOpenStatus.isOpen || isPlanExpired || !isCheckoutFormValid || isBelowMinOrder} 
+                style={{ backgroundColor: (storeOpenStatus.isOpen && !isPlanExpired && isCheckoutFormValid && !isBelowMinOrder) ? primaryColor : '#94a3b8' }} 
+                className="w-full text-white font-bold py-4 rounded-xl hover:opacity-90 transition text-base shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
+              >
+                {isPlacingOrder ? 'Processing...' : 
+                 isPlanExpired ? 'Subscription Expired' : 
+                 !storeOpenStatus.isOpen ? 'Store Closed' : 
+                 isBelowMinOrder ? `Add ₹${amountNeededForMinOrder} More To Order (Min ₹${minOrderLimit})` :
+                 'Confirm & Place Order'}
+              </button>
             </>
           ) : (
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
