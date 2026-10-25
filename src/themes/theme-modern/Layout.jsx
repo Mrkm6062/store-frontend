@@ -23,49 +23,39 @@ const SocialIcon = ({ platform, size = 26, className }) => {
   );
 };
 
-const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
+import WishlistSidebar from './components/WishlistSidebar';
+import DiningTypeModal from './components/DiningTypeModal';
+import { ThemeCustomizationContext } from '../../themeLoader/themeRenderer.jsx';
+
+const StoreLayout = ({ children, store, cartCount, onCartClick, hideFooter, hideHeader, hideBottomNav }) => {
   const [socialLinks, setSocialLinks] = useState([]);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const customization = React.useContext(ThemeCustomizationContext);
+  const primaryColor = customization?.global?.primaryColor || '#e85d04';
 
   useEffect(() => {
     getPublicSocialMedia().then(setSocialLinks).catch(console.error);
   }, []);
 
   const isProductPage = typeof window !== 'undefined' && window.location.pathname.includes('/product/');
+  const isHomePage = typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '');
+  const shouldShowFooter = isHomePage && !hideFooter;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-900 w-full overflow-clip">
-      <Header store={store} cartCount={cartCount} onCartClick={onCartClick} />
+    <div className={`min-h-screen flex flex-col bg-[#fffaf3] font-sans text-slate-900 w-full overflow-clip selection:bg-orange-200 selection:text-stone-900 ${cartCount > 0 && !hideBottomNav ? 'pb-36' : (!hideBottomNav ? 'pb-16' : '')} md:pb-0`}>
+      {!hideHeader && <Header store={store} cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       <main className="flex-1 w-full flex flex-col">
         {children}
       </main>
+      {shouldShowFooter && <Footer storeName={store?.name || 'Store'} />}
+      {!hideBottomNav && <BottomNav cartCount={cartCount} onCartClick={onCartClick} onWishlistClick={() => setIsWishlistOpen(true)} />}
       
-      {/* Social Media Footer Section */}
-      {socialLinks.length > 0 && (
-        <div className="bg-white border-t border-gray-200 py-8 mt-10">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5">
-            <h3 className="text-gray-500 font-bold text-sm uppercase tracking-widest">Connect with us</h3>
-            <div className="flex gap-6">
-              {socialLinks.map(link => {
-                return (
-                  <a key={link._id} href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#76b900] hover:scale-110 transform transition-all duration-300">
-                    <SocialIcon platform={link.platform} size={26} />
-                  </a>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Footer storeName={store?.name || 'Store'} />
-      <BottomNav cartCount={cartCount} onCartClick={onCartClick} />
-
       {store?.whatsappSupportEnabled && store?.whatsappNumber && (
         <a
           href={`https://wa.me/${store.whatsappNumber.replace(/[^0-9]/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className={`fixed ${isProductPage ? 'bottom-36' : 'bottom-20'} md:bottom-6 right-6 z-40 bg-[#25D366] text-white p-3.5 rounded-full shadow-2xl hover:bg-[#20ba5a] transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/20`}
+          className={`fixed ${isProductPage ? 'bottom-36' : 'bottom-20'} md:bottom-6 right-6 z-40 bg-[#25D366] text-white p-3.5 rounded-2xl shadow-[0_12px_28px_rgba(37,211,102,0.28)] hover:bg-[#20ba5a] transition-all duration-300 hover:-translate-y-1 hover:scale-105 flex items-center justify-center border border-white/30`}
           aria-label="Contact Support on WhatsApp"
         >
           <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg whitespace-nowrap tracking-wide flex items-center gap-1 border border-white/10">
@@ -83,6 +73,9 @@ const StoreLayout = ({ children, store, cartCount, onCartClick }) => {
           </svg>
         </a>
       )}
+
+      <WishlistSidebar isWishlistOpen={isWishlistOpen} setIsWishlistOpen={setIsWishlistOpen} primaryColor={primaryColor} />
+      <DiningTypeModal store={store} />
     </div>
   );
 };
