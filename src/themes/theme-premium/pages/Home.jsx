@@ -104,9 +104,43 @@ const StoreHome = () => {
       // Update Meta Description
       if (store.metaDescription) {
         let meta = document.querySelector("meta[name='description']");
-        if (meta) {
-          meta.content = store.metaDescription;
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.name = 'description';
+          document.head.appendChild(meta);
         }
+        meta.content = store.metaDescription;
+      }
+
+      // Update Meta Keywords
+      const rawKeywords = store.metaKeywords || store.seoSettings?.metaKeywords;
+      if (rawKeywords) {
+        const kwStr = Array.isArray(rawKeywords) ? rawKeywords.join(', ') : String(rawKeywords).trim();
+        if (kwStr) {
+          let metaKw = document.querySelector("meta[name='keywords']");
+          if (!metaKw) {
+            metaKw = document.createElement('meta');
+            metaKw.name = 'keywords';
+            document.head.appendChild(metaKw);
+          }
+          metaKw.content = kwStr;
+        }
+      }
+
+      // Update Canonical Link
+      const rawCanonical = (store.canonicalDomain || store.seoSettings?.canonicalDomain || '').trim();
+      if (rawCanonical) {
+        const cleanDomain = rawCanonical.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+        const currentPath = window.location.pathname;
+        const fullCanonical = `https://${cleanDomain}${currentPath === '/' ? '' : currentPath}`;
+
+        let canonicalLink = document.querySelector("link[rel='canonical']");
+        if (!canonicalLink) {
+          canonicalLink = document.createElement('link');
+          canonicalLink.rel = 'canonical';
+          document.head.appendChild(canonicalLink);
+        }
+        canonicalLink.href = fullCanonical;
       }
 
       // Inject dynamic Organization JSON-LD Schema

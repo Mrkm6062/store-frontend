@@ -348,6 +348,40 @@ const ThemeRenderer = () => {
           let themeColorMeta = document.querySelector('meta[name="theme-color"]');
           if (themeColorMeta) themeColorMeta.remove();
         }
+
+        // 6. Inject SEO Metadata (metaKeywords, canonicalDomain, websiteTitle, metaDescription)
+        if (storeData) {
+          // Meta keywords
+          const rawKeywords = storeData.metaKeywords || storeData.seoSettings?.metaKeywords;
+          if (rawKeywords) {
+            const kwStr = Array.isArray(rawKeywords) ? rawKeywords.join(', ') : String(rawKeywords).trim();
+            if (kwStr) {
+              let metaKw = document.querySelector('meta[name="keywords"]');
+              if (!metaKw) {
+                metaKw = document.createElement('meta');
+                metaKw.name = 'keywords';
+                document.head.appendChild(metaKw);
+              }
+              metaKw.content = kwStr;
+            }
+          }
+
+          // Canonical Domain / URL
+          const rawCanonical = (storeData.canonicalDomain || storeData.seoSettings?.canonicalDomain || '').trim();
+          if (rawCanonical) {
+            const cleanDomain = rawCanonical.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+            const currentPath = window.location.pathname;
+            const fullCanonical = `https://${cleanDomain}${currentPath === '/' ? '' : currentPath}`;
+
+            let canonicalLink = document.querySelector('link[rel="canonical"]');
+            if (!canonicalLink) {
+              canonicalLink = document.createElement('link');
+              canonicalLink.rel = 'canonical';
+              document.head.appendChild(canonicalLink);
+            }
+            canonicalLink.href = fullCanonical;
+          }
+        }
       } catch (err) {
         console.error("Failed to load store theme. Falling back to theme-free.", err);
       } finally {
