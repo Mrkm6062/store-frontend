@@ -3,8 +3,13 @@ import { Utensils, Bike, Check, X, ChevronRight, ArrowLeft } from 'lucide-react'
 
 const DiningTypeModal = ({ store }) => {
   const isRestaurant = Boolean(
-    store?.isRestaurant || 
-    (store?.storeType && /restaurant|cafe|food|dine|bistro|dhaba|eatery/i.test(store.storeType))
+    store?.isRestaurant !== false && (
+      store?.isRestaurant === true ||
+      store?.dineInEnabled === true ||
+      (store?.tables && store.tables.length > 0) ||
+      (store?.storeType && /restaurant|cafe|food|dine|bistro|dhaba|eatery/i.test(store.storeType)) ||
+      true
+    )
   );
 
   const tables = (store?.tables && Array.isArray(store.tables) && store.tables.length > 0)
@@ -52,9 +57,10 @@ const DiningTypeModal = ({ store }) => {
         return;
       }
 
-      // If no QR param and no preference saved yet, show popup for direct web visitors
-      const savedPref = localStorage.getItem('gb_dining_preference');
-      if (!savedPref) {
+      // If no QR param, show prompt to direct visitors on first arrival
+      const promptShown = sessionStorage.getItem('gb_dining_prompt_shown');
+      if (!promptShown) {
+        setStep('choice');
         setIsOpen(true);
       }
     } catch (err) {
@@ -97,6 +103,7 @@ const DiningTypeModal = ({ store }) => {
       updatedAt: Date.now()
     };
     localStorage.setItem('gb_dining_preference', JSON.stringify(pref));
+    sessionStorage.setItem('gb_dining_prompt_shown', 'true');
     setCurrentPreference(pref);
     window.dispatchEvent(new Event('dining-preference-updated'));
     setIsOpen(false);
@@ -121,6 +128,7 @@ const DiningTypeModal = ({ store }) => {
   };
 
   const handleClose = () => {
+    sessionStorage.setItem('gb_dining_prompt_shown', 'true');
     // If user closes without making an explicit selection on first visit, default to delivery
     if (!currentPreference) {
       handleSelectDelivery();
