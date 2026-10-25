@@ -8,7 +8,7 @@ import ProductGrid from '../components/ProductGrid';
 import CategoryCard from '../components/CategoryCard';
 import CartSidebar from '../components/CartSidebar';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
-import { LayoutGrid, ArrowLeft, Search } from 'lucide-react';
+import { LayoutGrid, ArrowLeft, Search, ShoppingCart } from 'lucide-react';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
@@ -17,6 +17,26 @@ const CategoryPage = () => {
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const customization = useContext(ThemeCustomizationContext);
   const primaryColor = customization?.global?.primaryColor || '#e85d04';
+
+  const [diningPreference, setDiningPreference] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gb_dining_preference');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleDiningUpdate = () => {
+      try {
+        const saved = localStorage.getItem('gb_dining_preference');
+        setDiningPreference(saved ? JSON.parse(saved) : null);
+      } catch (e) {}
+    };
+    window.addEventListener('dining-preference-updated', handleDiningUpdate);
+    return () => window.removeEventListener('dining-preference-updated', handleDiningUpdate);
+  }, []);
   
   const [visibleCount, setVisibleCount] = useState(12);
   const [category, setCategory] = useState(null);
@@ -165,20 +185,82 @@ const CategoryPage = () => {
           }
         `}</style>
 
-        {/* Back navigation to Home */}
-        <div className="flex items-center gap-2 mb-4 pt-4 text-left">
-          <button 
-            onClick={() => navigate('/')} 
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shadow-sm"
-            title="Go to Home"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <span className="text-xs font-bold text-slate-400">Home</span>
+        {/* Sticky Fixed Header Bar with Back Button and Dine-in/Table Info */}
+        <div className="sticky top-0 z-40 bg-[#fffdf9]/95 backdrop-blur-md border-b border-orange-100/90 -mx-3 sm:-mx-12 lg:-mx-16 px-4 sm:px-12 lg:px-16 py-2.5 mb-3 shadow-xs">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-2.5">
+            {/* Left: Fixed Back Button to Home */}
+            <button 
+              onClick={() => navigate('/')} 
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-extrabold text-xs transition border border-orange-200/80 shadow-xs cursor-pointer active:scale-95"
+              title="Go back to Home"
+            >
+              <ArrowLeft size={16} className="text-orange-600" />
+              <span>Back</span>
+            </button>
+
+            {/* Middle: Store / Collection Title */}
+            <div className="text-center truncate hidden sm:block">
+              <h1 className="text-sm font-black text-slate-800 truncate">
+                {category ? category.name : (store?.name || 'All Products')}
+              </h1>
+            </div>
+
+            {/* Right: Dine-in Table Number Badge & Cart */}
+            <div className="flex items-center gap-2">
+              {diningPreference?.orderType === 'Dine-in' ? (
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event('open-dining-modal'))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow-sm shadow-orange-500/20 transition cursor-pointer active:scale-95"
+                  title="Click to change table"
+                >
+                  <span className="text-sm">🍽️</span>
+                  <span>Table {diningPreference.tableNumber || '1'}</span>
+                </button>
+              ) : diningPreference?.orderType === 'delivery' ? (
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event('open-dining-modal'))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-sm shadow-blue-600/20 transition cursor-pointer active:scale-95"
+                  title="Click to change delivery pincode"
+                >
+                  <span className="text-sm">🛵</span>
+                  <span>Delivery{diningPreference.pincode ? (' (' + diningPreference.pincode + ')') : ''}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event('open-dining-modal'))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white font-extrabold text-xs shadow-sm transition active:scale-95 cursor-pointer"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <span>🍽️</span>
+                  <span>Select Table</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-slate-700 border border-orange-200/80 transition shadow-xs cursor-pointer active:scale-95"
+                title="View Cart"
+              >
+                <ShoppingCart size={18} className="text-orange-600" />
+                {cart.length > 0 && (
+                  <span 
+                    className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-[10px] font-black leading-none text-white rounded-full shadow-sm"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {cart.reduce((sum, item) => sum + (item.qty || 1), 0)}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Horizontal Category Selector */}
-        <div className="border-b border-gray-200/80 bg-white sticky top-0 z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-6 py-4 shadow-sm backdrop-blur-md bg-white/95">
+        <div className="border-b border-gray-200/80 bg-white sticky top-[49px] z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-6 py-4 shadow-sm backdrop-blur-md bg-white/95">
           <div className="max-w-5xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-none snap-x pb-1">
             {/* "All Products" Button */}
             <button
@@ -283,7 +365,7 @@ const CategoryPage = () => {
       {/* Mobile Sticky Bottom Cart Bar */}
       {cart.length > 0 && !isCartOpen && (
         <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 flex flex-col gap-2 pb-safe">
-          {deliverySettings?.freeShippingThreshold > 0 && (
+          {deliverySettings?.freeShippingThreshold > 0 && diningPreference?.orderType !== 'Dine-in' && (
             <div className={`text-[10px] font-bold text-center py-1 rounded-lg ${cartTotal >= deliverySettings.freeShippingThreshold ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
               {cartTotal >= deliverySettings.freeShippingThreshold ? (
                 <span>Free delivery unlocked! 🎉</span>

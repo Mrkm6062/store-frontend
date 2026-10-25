@@ -39,7 +39,26 @@ const StoreHome = () => {
       return null;
     }
   });
+  const [diningPreference, setDiningPreference] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gb_dining_preference');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [deliverySettings, setDeliverySettings] = useState(null);
+
+  useEffect(() => {
+    const handleDiningUpdate = () => {
+      try {
+        const saved = localStorage.getItem('gb_dining_preference');
+        setDiningPreference(saved ? JSON.parse(saved) : null);
+      } catch (e) {}
+    };
+    window.addEventListener('dining-preference-updated', handleDiningUpdate);
+    return () => window.removeEventListener('dining-preference-updated', handleDiningUpdate);
+  }, []);
 
   useEffect(() => {
     if (store?._id) {
@@ -214,38 +233,40 @@ const StoreHome = () => {
   return (
     <StoreLayout store={store} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} hideBottomNav={false}>
       
-      {/* Top Location Bar - Mobile only (hidden on desktop) */}
-      <div className="bg-[#fff5e8] border-b border-orange-100 md:hidden block">
-        <div className="max-w-6xl mx-auto px-4 py-3 text-center flex flex-col justify-center items-center gap-1.5">
-          {customerInfo?.pincode ? (
-            <div className="flex flex-col items-center justify-center gap-1.5 w-full text-center">
-              <div className="flex items-center justify-center gap-1.5 text-center">
-                <MapPin className="text-[#e85d04]" size={18} />
-                <span className="text-xs font-bold text-slate-800">
-                  {customerInfo.customerName} - {customerInfo.addressLine1}, {customerInfo.city} ({customerInfo.pincode})
-                </span>
+      {/* Top Location Bar - Mobile only (hidden on desktop, and hidden when Dine-in is selected) */}
+      {diningPreference?.orderType !== 'Dine-in' && (
+        <div className="bg-[#fff5e8] border-b border-orange-100 md:hidden block">
+          <div className="max-w-6xl mx-auto px-4 py-3 text-center flex flex-col justify-center items-center gap-1.5">
+            {customerInfo?.pincode ? (
+              <div className="flex flex-col items-center justify-center gap-1.5 w-full text-center">
+                <div className="flex items-center justify-center gap-1.5 text-center">
+                  <MapPin className="text-[#e85d04]" size={18} />
+                  <span className="text-xs font-bold text-slate-800">
+                    {customerInfo.customerName} - {customerInfo.addressLine1}, {customerInfo.city} ({customerInfo.pincode})
+                  </span>
+                </div>
+                <button 
+                  onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
+                  className="text-xs font-bold text-[#c94710] bg-white hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-100 transition"
+                >
+                  Change Location
+                </button>
               </div>
-              <button 
-                onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
-                className="text-xs font-bold text-[#c94710] bg-white hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-100 transition"
-              >
-                Change Location
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
-              <button 
-                onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
-                className="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center flex items-center justify-center gap-1.5 mx-auto"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <MapPin size={16} />
-                Check Delivery
-              </button>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
+                <button 
+                  onClick={() => window.dispatchEvent(new Event('open-address-modal'))}
+                  className="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-md hover:opacity-95 transition text-center flex items-center justify-center gap-1.5 mx-auto"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <MapPin size={16} />
+                  Check Delivery
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <style>{`
         @keyframes slideUp {

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Utensils, Bike, Check, X, ChevronRight, ArrowLeft, MapPin, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const DiningTypeModal = ({ store }) => {
+  const navigate = useNavigate();
   const isRestaurant = Boolean(
     store?.isRestaurant !== false && (
       store?.isRestaurant === true ||
@@ -48,6 +50,16 @@ const DiningTypeModal = ({ store }) => {
   const [checkingDelivery, setCheckingDelivery] = useState(false);
   const [pincodeStatus, setPincodeStatus] = useState({ type: '', text: '' });
 
+  const redirectToMenu = () => {
+    if (typeof window !== "undefined" && !window.location.pathname.includes("/category/all")) {
+      try {
+        navigate('/category/all');
+      } catch (e) {
+        window.location.href = '/category/all';
+      }
+    }
+  };
+
   // 1. Check for QR code table param in URL on load
   useEffect(() => {
     if (!isRestaurant) return;
@@ -81,6 +93,7 @@ const DiningTypeModal = ({ store }) => {
         setCurrentPreference(pref);
         window.dispatchEvent(new Event("dining-preference-updated"));
         setIsOpen(false);
+        redirectToMenu();
         return;
       }
 
@@ -180,6 +193,7 @@ const DiningTypeModal = ({ store }) => {
     setCurrentPreference(pref);
     window.dispatchEvent(new Event('dining-preference-updated'));
     setIsOpen(false);
+    redirectToMenu();
   };
 
   // Check delivery availability by Pincode
