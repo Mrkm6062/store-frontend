@@ -32,39 +32,53 @@ const DiningTypeModal = ({ store }) => {
   useEffect(() => {
     if (!isRestaurant) return;
 
+    // Never auto-open on checkout page
+    if (typeof window !== "undefined" && window.location.pathname.includes("/checkout")) {
+      setIsOpen(false);
+      return;
+    }
+
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      let scannedTable = urlParams.get('table') || urlParams.get('tableNumber') || urlParams.get('tableno') || urlParams.get('t');
+      let scannedTable = urlParams.get("table") || urlParams.get("tableNumber") || urlParams.get("tableno") || urlParams.get("t");
 
       // Also check hash or pathname if applicable
       if (!scannedTable && window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ''));
-        scannedTable = hashParams.get('table') || hashParams.get('tableNumber');
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ""));
+        scannedTable = hashParams.get("table") || hashParams.get("tableNumber");
       }
 
       if (scannedTable) {
         const cleanTable = String(scannedTable).trim();
         const pref = {
-          orderType: 'Dine-in',
+          orderType: "Dine-in",
           tableNumber: cleanTable,
           fromQr: true,
           updatedAt: Date.now()
         };
-        localStorage.setItem('gb_dining_preference', JSON.stringify(pref));
+        localStorage.setItem("gb_dining_preference", JSON.stringify(pref));
+        sessionStorage.setItem("gb_dining_prompt_shown", "true");
         setCurrentPreference(pref);
-        window.dispatchEvent(new Event('dining-preference-updated'));
+        window.dispatchEvent(new Event("dining-preference-updated"));
         setIsOpen(false);
         return;
       }
 
-      // If no QR param, show prompt to direct visitors on first arrival
-      const promptShown = sessionStorage.getItem('gb_dining_prompt_shown');
+      // If customer ALREADY has a dining preference chosen or scanned, DO NOT open popup automatically!
+      const savedPref = localStorage.getItem("gb_dining_preference");
+      if (savedPref) {
+        setIsOpen(false);
+        return;
+      }
+
+      // If no QR param and no preference saved yet, show prompt to direct visitors on first arrival
+      const promptShown = sessionStorage.getItem("gb_dining_prompt_shown");
       if (!promptShown) {
-        setStep('choice');
+        setStep("choice");
         setIsOpen(true);
       }
     } catch (err) {
-      console.error('Error checking dining QR parameter:', err);
+      console.error("Error checking dining QR parameter:", err);
     }
   }, [isRestaurant]);
 

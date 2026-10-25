@@ -13,7 +13,15 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState([]);
   const [storeOpenStatus, setStoreOpenStatus] = useState({ isOpen: true, reason: '', nextOpen: null });
-  const isRestaurant = Boolean(store?.isRestaurant || (store?.storeType && /restaurant|cafe|food|dine|bistro|dhaba|eatery/i.test(store.storeType)));
+  const isRestaurant = store ? Boolean(
+    store.isRestaurant !== false && (
+      store.isRestaurant === true ||
+      store.dineInEnabled === true ||
+      (store.tables && store.tables.length > 0) ||
+      (store.storeType && /restaurant|cafe|food|dine|bistro|dhaba|eatery/i.test(store.storeType)) ||
+      true
+    )
+  ) : true;
   const [diningPreference, setDiningPreference] = useState(() => {
     try {
       const saved = localStorage.getItem('gb_dining_preference');
@@ -354,35 +362,52 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
               <Menu size={24} />
             </button>
 
-            {/* Desktop Location Bar - Hidden on mobile, visible on desktop */}
+            {/* Desktop Dining Mode Bar */}
             <div className="hidden md:flex items-center gap-2 text-left">
-              {customerInfo?.pincode ? (
-                <div className="flex items-center gap-2 max-w-[200px] lg:max-w-[300px]">
-                  <div className="truncate">
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none">Delivering to</p>
-                    <p className="text-xs font-bold text-slate-700 truncate">
-                      {customerInfo.customerName} - {customerInfo.addressLine1} ({customerInfo.pincode})
+              {diningPreference?.orderType === "Dine-in" ? (
+                <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 shadow-xs">
+                  <span className="text-base">🍽️</span>
+                  <div>
+                    <p className="text-[9px] text-orange-800/80 font-black uppercase tracking-wider leading-none">Dining Mode</p>
+                    <p className="text-xs font-black text-slate-900">
+                      Dine-in: <span className="text-orange-600 font-extrabold">Table {diningPreference.tableNumber || "1"}</span>
                     </p>
                   </div>
-                  <button 
-                    onClick={() => setShowAddressModal(true)}
-                    className="text-[10px] font-bold text-[#c94710] bg-orange-50 hover:bg-orange-100 px-2.5 py-1.5 rounded-lg transition shrink-0 flex items-center gap-1"
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event("open-dining-modal"))}
+                    className="ml-1 text-[10px] font-black text-white bg-orange-600 hover:bg-orange-700 px-2.5 py-1 rounded-lg transition shrink-0 shadow-xs cursor-pointer"
                   >
-                    <MapPin size={12} />
+                    Change
+                  </button>
+                </div>
+              ) : diningPreference?.orderType === "delivery" ? (
+                <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 shadow-xs">
+                  <span className="text-base">🛵</span>
+                  <div>
+                    <p className="text-[9px] text-blue-800/80 font-black uppercase tracking-wider leading-none">Dining Mode</p>
+                    <p className="text-xs font-black text-slate-900">
+                      Mode: <span className="text-blue-600 font-extrabold">Delivery</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event("open-dining-modal"))}
+                    className="ml-1 text-[10px] font-black text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-lg transition shrink-0 shadow-xs cursor-pointer"
+                  >
                     Change
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => setShowAddressModal(true)}
-                    className="px-3 py-1.5 text-white text-[10px] font-bold rounded-lg shadow-sm hover:opacity-95 transition shrink-0 whitespace-nowrap flex items-center gap-1.5"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    <MapPin size={12} />
-                    Check Delivery
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event("open-dining-modal"))}
+                  className="px-3.5 py-1.5 text-white text-[11px] font-black rounded-xl shadow-sm hover:opacity-95 transition shrink-0 whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <span>🍽️</span>
+                  <span>Select Dining Mode</span>
+                </button>
               )}
             </div>
           </div>

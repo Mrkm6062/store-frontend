@@ -105,7 +105,15 @@ const CheckoutPage = () => {
   const [checkoutSettings, setCheckoutSettings] = useState(null);
   
   // Restaurant & Dine-in ordering support
-  const isRestaurant = Boolean(store?.isRestaurant || (store?.storeType && /restaurant|cafe|food|dine|bistro|dhaba|eatery/i.test(store.storeType)));
+  const isRestaurant = store ? Boolean(
+    store.isRestaurant !== false && (
+      store.isRestaurant === true ||
+      store.dineInEnabled === true ||
+      (store.tables && store.tables.length > 0) ||
+      (store.storeType && /restaurant|cafe|food|dine|bistro|dhaba|eatery/i.test(store.storeType)) ||
+      true
+    )
+  ) : true;
   const availableTables = (store?.tables && Array.isArray(store.tables) && store.tables.length > 0)
     ? store.tables
     : ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
