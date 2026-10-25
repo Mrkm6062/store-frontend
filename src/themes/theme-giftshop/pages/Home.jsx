@@ -159,7 +159,10 @@ const StoreHome = () => {
       // Update Canonical Link
       const rawCanonical = (store.canonicalDomain || store.seoSettings?.canonicalDomain || '').trim();
       if (rawCanonical) {
-        const cleanDomain = rawCanonical.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+        let cleanDomain = rawCanonical.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+        while (cleanDomain.toLowerCase().includes('.galibrand.cloud.galibrand.cloud')) {
+          cleanDomain = cleanDomain.replace(/\.galibrand\.cloud\.galibrand\.cloud/gi, '.galibrand.cloud');
+        }
         const currentPath = window.location.pathname;
         const fullCanonical = `https://${cleanDomain}${currentPath === '/' ? '' : currentPath}`;
 
