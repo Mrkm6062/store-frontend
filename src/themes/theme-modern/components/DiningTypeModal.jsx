@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Utensils, Bike, Check, X, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Utensils, Bike, Check, X, ChevronRight, ArrowLeft, MapPin, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const DiningTypeModal = ({ store }) => {
   const isRestaurant = Boolean(
@@ -17,7 +17,7 @@ const DiningTypeModal = ({ store }) => {
     : ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState('choice'); // 'choice' | 'table'
+  const [step, setStep] = useState('choice'); // 'choice' | 'table' | 'pincode'
   const [selectedTable, setSelectedTable] = useState(tables[0] || '1');
   const [currentPreference, setCurrentPreference] = useState(() => {
     try {
@@ -27,6 +27,26 @@ const DiningTypeModal = ({ store }) => {
       return null;
     }
   });
+
+  const [pincodeInput, setPincodeInput] = useState(() => {
+    try {
+      const pref = localStorage.getItem('gb_dining_preference');
+      if (pref) {
+        const parsed = JSON.parse(pref);
+        if (parsed?.pincode) return parsed.pincode;
+      }
+      const cust = localStorage.getItem('gb_customer_info');
+      if (cust) {
+        const parsedCust = JSON.parse(cust);
+        if (parsedCust?.pincode) return parsedCust.pincode;
+      }
+    } catch (e) {}
+    return '';
+  });
+
+  const [locationInfo, setLocationInfo] = useState(null);
+  const [checkingDelivery, setCheckingDelivery] = useState(false);
+  const [pincodeStatus, setPincodeStatus] = useState({ type: '', text: '' });
 
   // 1. Check for QR code table param in URL on load
   useEffect(() => {
@@ -86,6 +106,7 @@ const DiningTypeModal = ({ store }) => {
   useEffect(() => {
     const handleOpen = () => {
       setStep('choice');
+      setPincodeStatus({ type: '', text: '' });
       setIsOpen(true);
     };
     const handleUpdated = () => {
@@ -95,6 +116,7 @@ const DiningTypeModal = ({ store }) => {
           const parsed = JSON.parse(saved);
           setCurrentPreference(parsed);
           if (parsed.tableNumber) setSelectedTable(parsed.tableNumber);
+          if (parsed.pincode) setPincodeInput(parsed.pincode);
         }
       } catch (e) {}
     };
@@ -107,26 +129,44 @@ const DiningTypeModal = ({ store }) => {
     };
   }, []);
 
+  // Lookup city and state whenever 6-digit pincode is entered
+  useEffect(() => {
+    const clean = pincodeInput.trim();
+    if (clean.length === 6) {
+      let isCancelled = false;
+      const fetchLocation = async () => {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+          const res = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${clean}`);
+          if (res.ok && !isCancelled) {
+            const data = await res.json();
+            setLocationInfo({ city: data.city || '', state: data.state || '' });
+          }
+        } catch (e) {}
+      };
+      fetchLocation();
+      return () => {
+        isCancelled = true;
+      };
+    } else {
+      setLocationInfo(null);
+    }
+  }, [pincodeInput]);
+
   if (!isRestaurant) return null;
 
+  // Click on "Delivery" option in Choice step
   const handleSelectDelivery = () => {
-    const pref = {
-      orderType: 'delivery',
-      tableNumber: '0',
-      fromQr: false,
-      updatedAt: Date.now()
-    };
-    localStorage.setItem('gb_dining_preference', JSON.stringify(pref));
-    sessionStorage.setItem('gb_dining_prompt_shown', 'true');
-    setCurrentPreference(pref);
-    window.dispatchEvent(new Event('dining-preference-updated'));
-    setIsOpen(false);
+    setPincodeStatus({ type: '', text: '' });
+    setStep('pincode');
   };
 
+  // Click on "Dine-in" option in Choice step
   const handleSelectDineIn = () => {
     setStep('table');
   };
 
+  // Confirm Table selection for Dine-in
   const handleConfirmTable = (tableToConfirm) => {
     const finalTable = String(tableToConfirm || selectedTable || tables[0] || '1').trim();
     const pref = {
@@ -136,19 +176,143 @@ const DiningTypeModal = ({ store }) => {
       updatedAt: Date.now()
     };
     localStorage.setItem('gb_dining_preference', JSON.stringify(pref));
+    sessionStorage.setItem('gb_dining_prompt_shown', 'true');
     setCurrentPreference(pref);
     window.dispatchEvent(new Event('dining-preference-updated'));
     setIsOpen(false);
   };
 
+  // Check delivery availability by Pincode
+  const handleVerifyDeliveryPincode = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const cleanPin = pincodeInput.trim();
+    if (cleanPin.length !== 6) {
+      setPincodeStatus({ type: 'error', text: 'Please enter a valid 6-digit pincode.' });
+      return;
+    }
+
+    setCheckingDelivery(true);
+    setPincodeStatus({ type: '', text: '' });
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+      const storeId = store?._id;
+
+      // Ensure city and state
+      let city = locationInfo?.city || '';
+      let state = locationInfo?.state || '';
+
+      if (!city || !state) {
+        try {
+          const pinRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/pincode/${cleanPin}`);
+          if (pinRes.ok) {
+            const pinData = await pinRes.json();
+            city = pinData.city || '';
+            state = pinData.state || '';
+            setLocationInfo({ city, state });
+          }
+        } catch (err) {}
+      }
+
+      // Check delivery availability using calculate endpoint
+      let isAvailable = false;
+      let reasonText = '';
+
+      const calcRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public/calculate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(storeId ? { 'x-store-id': storeId } : {})
+        },
+        body: JSON.stringify({
+          storeId: storeId,
+          pincode: cleanPin,
+          district: city,
+          state: state
+        })
+      });
+
+      if (calcRes.ok) {
+        const calcData = await calcRes.json();
+        isAvailable = Boolean(calcData.available);
+        if (isAvailable) {
+          reasonText = calcData.message || (city ? `Delivery is available in ${city} (${cleanPin})!` : `Delivery is available in ${cleanPin}!`);
+        } else {
+          reasonText = calcData.message || `Sorry, delivery is not available for pincode ${cleanPin}.`;
+        }
+      } else {
+        // Fallback: check public delivery settings directly
+        const settingsRes = await fetch(`${API_BASE_URL}/api/delivery-settings/public`, {
+          headers: storeId ? { 'x-store-id': storeId } : {}
+        });
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          if (settings.deliveryMode === 'pincode') {
+            const allowed = (settings.allowedPincodes || []).map((p) => String(p).trim());
+            isAvailable = allowed.includes(cleanPin);
+          } else if (settings.deliveryMode === 'state') {
+            const allowedStates = (settings.allowedStates || []).map((s) => s.toLowerCase().trim());
+            isAvailable = Boolean(state && allowedStates.includes(state.toLowerCase().trim()));
+          } else {
+            isAvailable = true;
+          }
+        } else {
+          isAvailable = true;
+        }
+
+        if (isAvailable) {
+          reasonText = city ? `Delivery is available in ${city} (${cleanPin})!` : `Delivery is available in ${cleanPin}!`;
+        } else {
+          reasonText = `Sorry, delivery is not available for pincode ${cleanPin}.`;
+        }
+      }
+
+      if (isAvailable) {
+        setPincodeStatus({ type: 'success', text: reasonText });
+
+        const pref = {
+          orderType: 'delivery',
+          pincode: cleanPin,
+          city: city || '',
+          state: state || '',
+          tableNumber: '0',
+          fromQr: false,
+          updatedAt: Date.now()
+        };
+        localStorage.setItem('gb_dining_preference', JSON.stringify(pref));
+        sessionStorage.setItem('gb_dining_prompt_shown', 'true');
+        setCurrentPreference(pref);
+
+        // Pre-fill customer address info so user doesn't have to re-enter pincode later
+        try {
+          const savedCust = localStorage.getItem('gb_customer_info');
+          const custObj = savedCust ? JSON.parse(savedCust) : {};
+          custObj.pincode = cleanPin;
+          if (city) custObj.city = city;
+          if (state) custObj.state = state;
+          localStorage.setItem('gb_customer_info', JSON.stringify(custObj));
+          window.dispatchEvent(new Event('customer-info-updated'));
+        } catch (e) {}
+
+        window.dispatchEvent(new Event('dining-preference-updated'));
+
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 700);
+      } else {
+        setPincodeStatus({ type: 'error', text: reasonText });
+      }
+    } catch (err) {
+      console.error('Error checking delivery availability:', err);
+      setPincodeStatus({ type: 'error', text: 'Could not verify delivery right now. Please try again.' });
+    } finally {
+      setCheckingDelivery(false);
+    }
+  };
+
   const handleClose = () => {
     sessionStorage.setItem('gb_dining_prompt_shown', 'true');
-    // If user closes without making an explicit selection on first visit, default to delivery
-    if (!currentPreference) {
-      handleSelectDelivery();
-    } else {
-      setIsOpen(false);
-    }
+    setIsOpen(false);
   };
 
   if (!isOpen) return null;
@@ -162,19 +326,20 @@ const DiningTypeModal = ({ store }) => {
       >
         {/* Modal Header */}
         <div className="relative px-6 pt-6 pb-4 border-b border-orange-100/70 bg-gradient-to-b from-orange-50/80 to-transparent">
-          {currentPreference && (
-            <button
-              onClick={handleClose}
-              className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-orange-100/60 transition"
-              aria-label="Close"
-            >
-              <X size={20} />
-            </button>
-          )}
+          <button
+            onClick={handleClose}
+            className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-orange-100/60 transition"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
 
-          {step === 'table' && (
+          {(step === 'table' || step === 'pincode') && (
             <button
-              onClick={() => setStep('choice')}
+              onClick={() => {
+                setStep('choice');
+                setPincodeStatus({ type: '', text: '' });
+              }}
               className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 mb-2 transition"
             >
               <ArrowLeft size={14} /> Back to Options
@@ -182,15 +347,27 @@ const DiningTypeModal = ({ store }) => {
           )}
 
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20">
-              <Utensils size={20} />
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-md ${
+              step === 'pincode'
+                ? 'bg-blue-600 text-white shadow-blue-600/20'
+                : 'bg-orange-500 text-white shadow-orange-500/20'
+            }`}>
+              {step === 'pincode' ? <Bike size={20} /> : <Utensils size={20} />}
             </div>
             <div>
               <h2 className="text-lg font-black text-slate-900">
-                {step === 'choice' ? `Welcome to ${store?.name || 'our restaurant'}!` : 'Select Your Table'}
+                {step === 'choice' 
+                  ? `Welcome to ${store?.name || 'our restaurant'}!` 
+                  : step === 'table'
+                  ? 'Select Your Table'
+                  : 'Check Delivery Availability'}
               </h2>
               <p className="text-xs font-semibold text-slate-500">
-                {step === 'choice' ? 'How would you like to order today?' : 'Please choose your table number to serve your order'}
+                {step === 'choice' 
+                  ? 'How would you like to order today?' 
+                  : step === 'table'
+                  ? 'Please choose your table number to serve your order'
+                  : 'Enter your 6-digit pincode to check if delivery is available'}
               </p>
             </div>
           </div>
@@ -243,14 +420,14 @@ const DiningTypeModal = ({ store }) => {
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      Get food delivered to your home or office address
+                      Check delivery availability by pincode
                     </p>
                   </div>
                 </div>
                 <ChevronRight size={20} className="text-blue-400 group-hover:translate-x-1 transition" />
               </button>
             </div>
-          ) : (
+          ) : step === 'table' ? (
             <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
@@ -295,12 +472,98 @@ const DiningTypeModal = ({ store }) => {
               <button
                 type="button"
                 onClick={() => handleConfirmTable(selectedTable)}
-                className="w-full py-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-base shadow-lg shadow-orange-600/30 transition flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-base shadow-lg shadow-orange-600/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
               >
                 <Check size={18} />
                 Confirm Table {selectedTable} & Start Ordering
               </button>
             </div>
+          ) : (
+            <form onSubmit={handleVerifyDeliveryPincode} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  Enter 6-Digit Delivery Pincode
+                </label>
+                <div className="relative">
+                  <MapPin size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    autoFocus
+                    placeholder="e.g. 110001"
+                    value={pincodeInput}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setPincodeInput(val);
+                      if (pincodeStatus.text) {
+                        setPincodeStatus({ type: '', text: '' });
+                      }
+                    }}
+                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none bg-white text-base font-bold text-slate-900 tracking-wider shadow-sm transition"
+                  />
+                </div>
+                {locationInfo?.city && (
+                  <p className="text-xs font-semibold text-slate-500 mt-1.5 flex items-center gap-1">
+                    <span>📍</span>
+                    <span>{locationInfo.city}{locationInfo.state ? `, ${locationInfo.state}` : ''}</span>
+                  </p>
+                )}
+              </div>
+
+              {pincodeStatus.text && (
+                <div
+                  className={`p-3.5 rounded-xl text-xs font-semibold flex items-start gap-2.5 transition-all animate-in fade-in ${
+                    pincodeStatus.type === 'error'
+                      ? 'bg-rose-50 border border-rose-200 text-rose-700'
+                      : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                  }`}
+                >
+                  {pincodeStatus.type === 'error' ? (
+                    <AlertCircle size={18} className="shrink-0 text-rose-600 mt-0.5" />
+                  ) : (
+                    <CheckCircle2 size={18} className="shrink-0 text-emerald-600 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-bold">{pincodeStatus.text}</p>
+                    {pincodeStatus.type === 'error' && (
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setStep('table')}
+                          className="text-xs font-bold text-orange-600 hover:text-orange-700 underline flex items-center gap-1"
+                        >
+                          🍽️ Switch to Dine-in instead
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={checkingDelivery || pincodeInput.trim().length !== 6}
+                className={`w-full py-4 rounded-xl font-extrabold text-base shadow-lg transition flex items-center justify-center gap-2 ${
+                  checkingDelivery || pincodeInput.trim().length !== 6
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 cursor-pointer active:scale-[0.99]'
+                }`}
+              >
+                {checkingDelivery ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Checking Availability...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    <span>Check Delivery & Proceed</span>
+                  </>
+                )}
+              </button>
+            </form>
           )}
         </div>
       </div>

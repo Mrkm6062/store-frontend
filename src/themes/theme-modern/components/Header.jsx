@@ -387,7 +387,7 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
                   <div>
                     <p className="text-[9px] text-blue-800/80 font-black uppercase tracking-wider leading-none">Dining Mode</p>
                     <p className="text-xs font-black text-slate-900">
-                      Mode: <span className="text-blue-600 font-extrabold">Delivery</span>
+                      Mode: <span className="text-blue-600 font-extrabold">Delivery{diningPreference.pincode ? ` (${diningPreference.pincode})` : ''}</span>
                     </p>
                   </div>
                   <button
@@ -485,7 +485,11 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
 
       {/* Mobile Dining Bar for Restaurant */}
       {isRestaurant && (
-        <div className="flex md:hidden items-center justify-between px-4 py-2 bg-orange-50 border-t border-orange-100 text-xs">
+        <div className={`flex md:hidden items-center justify-between px-4 py-2 border-t text-xs ${
+          diningPreference?.orderType === 'delivery' 
+            ? 'bg-blue-50 border-blue-100' 
+            : 'bg-orange-50 border-orange-100'
+        }`}>
           <div className="flex items-center gap-1.5 font-bold text-slate-800">
             {diningPreference?.orderType === 'Dine-in' ? (
               <>
@@ -495,14 +499,18 @@ const Header = ({ store, cartCount, onCartClick, onWishlistClick }) => {
             ) : (
               <>
                 <span className="text-base">🛵</span>
-                <span>Mode: <span className="text-blue-600 font-black">Delivery</span></span>
+                <span>Mode: <span className="text-blue-600 font-black">Delivery{diningPreference?.pincode ? ` (${diningPreference.pincode})` : ''}</span></span>
               </>
             )}
           </div>
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('open-dining-modal'))}
-            className="text-[11px] font-extrabold text-white bg-orange-600 px-2.5 py-1 rounded-md shadow-sm"
+            className={`text-[11px] font-extrabold text-white px-2.5 py-1 rounded-md shadow-sm ${
+              diningPreference?.orderType === 'delivery'
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-orange-600 hover:bg-orange-700'
+            }`}
           >
             Change
           </button>

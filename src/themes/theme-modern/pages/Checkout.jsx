@@ -161,6 +161,9 @@ const CheckoutPage = () => {
     const updated = {
       orderType: 'delivery',
       tableNumber: '0',
+      pincode: formData.pincode || diningPreference?.pincode || '',
+      city: formData.city || diningPreference?.city || '',
+      state: formData.state || diningPreference?.state || '',
       updatedAt: Date.now()
     };
     localStorage.setItem('gb_dining_preference', JSON.stringify(updated));
