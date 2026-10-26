@@ -474,6 +474,7 @@ const ThemeRenderer = () => {
             <Route path="/cart" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Cart" />} />
             <Route path="/checkout" element={<ActiveTheme.Checkout />} />
             <Route path="/staff-login" element={<StaffLogin />} />
+            <Route path="/staff-login/:role" element={<StaffLogin />} />
             <Route path="/review/:orderId/:productId" element={<ActiveTheme.WriteReview />} />
             <Route path="/product/:productId" element={<ActiveTheme.ProductDetails />} />
             <Route path="*" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="NotFound" />} />

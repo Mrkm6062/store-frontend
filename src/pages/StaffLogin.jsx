@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   CreditCard,
   Search,
@@ -32,7 +32,8 @@ import {
   QrCode,
   Download,
   FileText,
-  MessageCircle
+  MessageCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { generateReceiptPdf, downloadReceiptPdf, sendWhatsAppWithReceiptPdf } from '../utils/receiptPdf';
 
@@ -40,6 +41,7 @@ const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://
 
 const StaffLogin = () => {
   const navigate = useNavigate();
+  const { role: urlRole } = useParams();
 
   // -------------------------------------------------------------
   // Store Context & Public Data
@@ -60,7 +62,30 @@ const StaffLogin = () => {
     }
   });
 
-  // Login form state
+
+  // -------------------------------------------------------------
+  // Secure Staff OTP Login State
+  // -------------------------------------------------------------
+  const [authMode, setAuthMode] = useState('otp'); // 'otp' | 'password'
+  const [otpStoreId, setOtpStoreId] = useState(() => localStorage.getItem('gb_pos_store_code') || '');
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpStatus, setOtpStatus] = useState({ text: '', type: '' });
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  // Resend Countdown Timer
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  // Password Login form state
   const [loginStaffId, setLoginStaffId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginStoreCode, setLoginStoreCode] = useState('');
@@ -188,6 +213,36 @@ const StaffLogin = () => {
 
   const isOnlinePaymentEnabled = Boolean(checkoutSettings?.razorpayEnabled);
 
+
+  // -------------------------------------------------------------
+  // URL Role Synchronization: /staff-login/<role>
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (!staffToken || !staffData) return;
+    const userRole = (staffData.role || 'counter').toLowerCase();
+    const isManager = userRole === 'manager';
+
+    if (isManager) {
+      if (urlRole === 'kitchen') {
+        setActiveView('kitchen');
+      } else if (urlRole === 'delivery') {
+        setActiveView('delivery');
+      } else if (urlRole === 'counter' || urlRole === 'cashier') {
+        setActiveView('counter');
+      } else if (urlRole === 'manager') {
+        setActiveView('counter');
+      } else {
+        navigate('/staff-login/manager', { replace: true });
+      }
+    } else {
+      const expectedRole = (userRole === 'waiter' || userRole === 'cashier') ? 'counter' : userRole;
+      if (urlRole !== expectedRole) {
+        navigate(`/staff-login/${expectedRole}`, { replace: true });
+      }
+      setActiveView(expectedRole === 'counter' ? 'counter' : expectedRole);
+    }
+  }, [staffToken, staffData, urlRole, navigate]);
+
   // Sound chime for Kitchen orders
   const playKitchenTone = () => {
     try {
@@ -209,7 +264,110 @@ const StaffLogin = () => {
   };
 
   // -------------------------------------------------------------
-  // Staff Login Handler
+
+  // -------------------------------------------------------------
+  // OTP AUTH HANDLERS (Store ID + Staff Email -> LandingMailConfig)
+  // -------------------------------------------------------------
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    if (!otpStoreId.trim() || !otpEmail.trim()) {
+      setOtpStatus({ text: 'Please enter both Store ID and Staff Email.', type: 'error' });
+      return;
+    }
+
+    setIsSendingOtp(true);
+    setOtpStatus({ text: '', type: '' });
+
+    try {
+      const res = await fetch(`${API_BASE}/api/store-staff/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: otpStoreId.trim(),
+          email: otpEmail.trim().toLowerCase()
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setIsOtpSent(true);
+        setResendCountdown(60);
+        setOtpStatus({
+          text: `✓ OTP verification code sent to ${otpEmail.trim()}. Valid for 10 minutes.`,
+          type: 'success'
+        });
+      } else {
+        setOtpStatus({ text: data.message || 'Failed to send OTP.', type: 'error' });
+      }
+    } catch (err) {
+      setOtpStatus({ text: err.message || 'Network error sending OTP.', type: 'error' });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    if (e) e.preventDefault();
+    if (!otpCode.trim() || otpCode.trim().length < 6) {
+      setOtpStatus({ text: 'Please enter the complete 6-digit OTP code.', type: 'error' });
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    setOtpStatus({ text: '', type: '' });
+
+    try {
+      const res = await fetch(`${API_BASE}/api/store-staff/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: otpStoreId.trim(),
+          email: otpEmail.trim().toLowerCase(),
+          otp: otpCode.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('gb_pos_staff_token', data.token);
+        localStorage.setItem('gb_pos_staff_data', JSON.stringify(data.staff));
+        if (data.staff?.store?.storeId) {
+          localStorage.setItem('gb_pos_store_code', data.staff.store.storeId);
+        }
+        setStaffToken(data.token);
+        setStaffData(data.staff);
+        setOtpCode('');
+        setIsOtpSent(false);
+
+        // Redirect to /staff-login/<role>
+        const targetRole = (data.staff?.role || 'counter').toLowerCase();
+        if (targetRole === 'kitchen') {
+          setActiveView('kitchen');
+          navigate('/staff-login/kitchen');
+        } else if (targetRole === 'delivery') {
+          setActiveView('delivery');
+          navigate('/staff-login/delivery');
+        } else if (targetRole === 'manager') {
+          setActiveView('counter');
+          navigate('/staff-login/manager');
+        } else if (targetRole === 'cashier') {
+          setActiveView('counter');
+          navigate('/staff-login/cashier');
+        } else {
+          setActiveView('counter');
+          navigate('/staff-login/counter');
+        }
+      } else {
+        setOtpStatus({ text: data.message || 'Invalid or expired OTP code.', type: 'error' });
+      }
+    } catch (err) {
+      setOtpStatus({ text: err.message || 'Network error verifying OTP.', type: 'error' });
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  // Password Staff Login Handler
   // -------------------------------------------------------------
   const handleStaffLogin = async (e) => {
     e.preventDefault();
@@ -243,13 +401,22 @@ const StaffLogin = () => {
         setStaffData(data.staff);
         setLoginPassword('');
 
-        // Direct staff to role-specific default view
-        if (data.staff?.role === 'kitchen') {
+        const targetRole = (data.staff?.role || 'counter').toLowerCase();
+        if (targetRole === 'kitchen') {
           setActiveView('kitchen');
-        } else if (data.staff?.role === 'delivery') {
+          navigate('/staff-login/kitchen');
+        } else if (targetRole === 'delivery') {
           setActiveView('delivery');
+          navigate('/staff-login/delivery');
+        } else if (targetRole === 'manager') {
+          setActiveView('counter');
+          navigate('/staff-login/manager');
+        } else if (targetRole === 'cashier') {
+          setActiveView('counter');
+          navigate('/staff-login/cashier');
         } else {
           setActiveView('counter');
+          navigate('/staff-login/counter');
         }
       } else {
         setLoginError(data.message || 'Login failed. Please check your credentials.');
@@ -267,6 +434,7 @@ const StaffLogin = () => {
     setStaffToken('');
     setStaffData(null);
     setCart([]);
+    navigate('/staff-login', { replace: true });
   };
 
   // -------------------------------------------------------------
@@ -1033,7 +1201,7 @@ const StaffLogin = () => {
           <div className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 shadow-inner">
             <button
               type="button"
-              onClick={() => setActiveView('counter')}
+              onClick={() => { setActiveView('counter'); navigate('/staff-login/counter'); }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
                 effectiveView === 'counter'
                   ? 'bg-orange-600 text-white shadow-md'
@@ -1046,7 +1214,7 @@ const StaffLogin = () => {
 
             <button
               type="button"
-              onClick={() => setActiveView('kitchen')}
+              onClick={() => { setActiveView('kitchen'); navigate('/staff-login/kitchen'); }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 relative ${
                 effectiveView === 'kitchen'
                   ? 'bg-amber-600 text-white shadow-md'
@@ -1064,7 +1232,7 @@ const StaffLogin = () => {
 
             <button
               type="button"
-              onClick={() => setActiveView('delivery')}
+              onClick={() => { setActiveView('delivery'); navigate('/staff-login/delivery'); }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
                 effectiveView === 'delivery'
                   ? 'bg-indigo-600 text-white shadow-md'
