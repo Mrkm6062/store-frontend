@@ -1,7 +1,6 @@
 import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DynamicRouteLoader from './DynamicRouteLoader.jsx';
-import StaffLogin from '../pages/StaffLogin.jsx';
 
 // Import theme-free components
 export const isLightColor = (color) => {
@@ -473,8 +472,6 @@ const ThemeRenderer = () => {
             <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
             <Route path="/cart" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Cart" />} />
             <Route path="/checkout" element={<ActiveTheme.Checkout />} />
-            <Route path="/staff-login" element={<StaffLogin />} />
-            <Route path="/staff-login/:role" element={<StaffLogin />} />
             <Route path="/review/:orderId/:productId" element={<ActiveTheme.WriteReview />} />
             <Route path="/product/:productId" element={<ActiveTheme.ProductDetails />} />
             <Route path="*" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="NotFound" />} />
