@@ -25,7 +25,10 @@ import {
   ChefHat,
   MapPin,
   Check,
-  Tag
+  Tag,
+  ArrowRight,
+  ChevronUp,
+  Navigation
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3011' : 'https://api.galibrand.cloud');
@@ -84,6 +87,7 @@ const StaffLogin = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [cart, setCart] = useState([]);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [customerPhone, setCustomerPhone] = useState('');
   const [selectedTable, setSelectedTable] = useState('0');
   const [paymentType, setPaymentType] = useState('cash'); // 'cash' | 'upi' | 'card'
@@ -662,6 +666,29 @@ const StaffLogin = () => {
   const activeStoreName = staffData?.store?.storeName || storeData?.storeName || 'Store POS';
   const tables = staffData?.store?.tables || ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
+  // Resolve Store Custom ID (e.g. GBS006) - NEVER show raw MongoDB ObjectId
+  const rawIdCandidate = staffData?.store?.storeId || storeData?.storeId || loginStoreCode || '';
+  const storeCustomId = (/^[0-9a-fA-F]{24}$/.test(rawIdCandidate))
+    ? (staffData?.store?.storeSlug || storeData?.storeSlug || 'STORE')
+    : (rawIdCandidate || staffData?.store?.storeSlug || storeData?.storeSlug || '');
+
+  // Strict Role-Based Access Control: Staff can only access their assigned role's view
+  const userRole = (staffData?.role || 'counter').toLowerCase();
+  const isManager = userRole === 'manager';
+  const canAccessCounter = isManager || ['counter', 'cashier', 'waiter'].includes(userRole);
+  const canAccessKitchen = isManager || userRole === 'kitchen';
+  const canAccessDelivery = isManager || userRole === 'delivery';
+
+  // Force active view to role-permitted section (cannot access unauthorized views)
+  const effectiveView = (() => {
+    if (userRole === 'kitchen') return 'kitchen';
+    if (userRole === 'delivery') return 'delivery';
+    if (!canAccessCounter && canAccessKitchen) return 'kitchen';
+    if (!canAccessCounter && canAccessDelivery) return 'delivery';
+    if (isManager) return activeView;
+    return 'counter';
+  })();
+
   const filteredProducts = products.filter((p) => {
     const matchesCat =
       selectedCategory === 'ALL' ||
@@ -681,75 +708,108 @@ const StaffLogin = () => {
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-100 flex flex-col font-sans select-none">
       
-      {/* Header */}
-      <header className="h-16 bg-slate-900 text-white px-4 md:px-6 flex items-center justify-between border-b border-slate-800 shrink-0 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black shadow-md">
-            {activeView === 'kitchen' ? <ChefHat size={22} /> : activeView === 'delivery' ? <Truck size={22} /> : <CreditCard size={20} />}
+      {/* Header (Responsive on Mobile & Desktop) */}
+      <header className="min-h-16 bg-slate-900 text-white px-3 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800 shrink-0 shadow-md z-30">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black shadow-md shrink-0">
+            {effectiveView === 'kitchen' ? <ChefHat size={20} /> : effectiveView === 'delivery' ? <Truck size={20} /> : <CreditCard size={18} />}
           </div>
-          <div>
-            <h1 className="text-sm md:text-base font-black truncate max-w-[200px] md:max-w-xs">
+          <div className="min-w-0">
+            <h1 className="text-xs md:text-base font-black truncate max-w-[140px] sm:max-w-[200px] md:max-w-xs leading-tight">
               {activeStoreName}
             </h1>
-            <p className="text-[10px] text-slate-400 font-mono">
-              Store: {currentStoreId}
-            </p>
+            {storeCustomId && (
+              <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-mono text-[9px] md:text-[10px] font-black border border-orange-500/30">
+                ID: {storeCustomId}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 shadow-inner">
-          <button
-            type="button"
-            onClick={() => setActiveView('counter')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
-              activeView === 'counter'
-                ? 'bg-orange-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-            }`}
-          >
-            <CreditCard size={14} />
-            <span>Counter POS</span>
-          </button>
+        {/* View Switcher: Manager can switch; non-managers only see their assigned role terminal */}
+        {isManager ? (
+          <div className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setActiveView('counter')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
+                effectiveView === 'counter'
+                  ? 'bg-orange-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <CreditCard size={14} />
+              <span>Counter POS</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveView('kitchen')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 relative ${
-              activeView === 'kitchen'
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-            }`}
-          >
-            <Utensils size={14} />
-            <span>Kitchen Area</span>
-            {kitchenOrders.filter(o => ['placed', 'preparing'].includes(o.orderStatus)).length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-black leading-none animate-pulse">
-                {kitchenOrders.filter(o => ['placed', 'preparing'].includes(o.orderStatus)).length}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('kitchen')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 relative ${
+                effectiveView === 'kitchen'
+                  ? 'bg-amber-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <Utensils size={14} />
+              <span>Kitchen Area</span>
+              {kitchenOrders.filter(o => ['placed', 'preparing'].includes(o.orderStatus)).length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-black leading-none animate-pulse">
+                  {kitchenOrders.filter(o => ['placed', 'preparing'].includes(o.orderStatus)).length}
+                </span>
+              )}
+            </button>
 
-          {(staffData?.role === 'delivery' || staffData?.role === 'manager') && (
             <button
               type="button"
               onClick={() => setActiveView('delivery')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
-                activeView === 'delivery'
+                effectiveView === 'delivery'
                   ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
               }`}
             >
               <Truck size={14} />
-              <span>My Deliveries</span>
+              <span>Delivery Orders</span>
               {myAssignedOrders.length > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full bg-indigo-400 text-slate-900 text-[10px] font-black leading-none">
                   {myAssignedOrders.length}
                 </span>
               )}
             </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            {canAccessKitchen && (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black shadow-xs">
+                <ChefHat size={16} />
+                <span>Kitchen Display Terminal (KDS)</span>
+                {kitchenOrders.filter(o => ['placed', 'preparing'].includes(o.orderStatus)).length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-black leading-none animate-pulse">
+                    {kitchenOrders.filter(o => ['placed', 'preparing'].includes(o.orderStatus)).length}
+                  </span>
+                )}
+              </div>
+            )}
+            {canAccessDelivery && (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-black shadow-xs">
+                <Truck size={16} />
+                <span>Delivery Staff Terminal</span>
+                {myAssignedOrders.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-indigo-400 text-slate-900 text-[10px] font-black leading-none">
+                    {myAssignedOrders.length}
+                  </span>
+                )}
+              </div>
+            )}
+            {canAccessCounter && !canAccessKitchen && !canAccessDelivery && (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-orange-500/20 text-orange-300 border border-orange-500/40 text-xs font-black shadow-xs">
+                <CreditCard size={16} />
+                <span>Counter Sale POS Terminal</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Staff Profile & Logout */}
         <div className="flex items-center gap-3">
@@ -781,10 +841,10 @@ const StaffLogin = () => {
       {/* ========================================================= */}
       {/* VIEW 1: COUNTER POS                                       */}
       {/* ========================================================= */}
-      {activeView === 'counter' && (
-        <div className="flex-1 flex overflow-hidden">
-          {/* Catalog Left (70%) */}
-          <div className="w-[68%] lg:w-[70%] xl:w-[72%] flex flex-col border-r border-slate-200 bg-slate-50 overflow-hidden">
+      {effectiveView === 'counter' && canAccessCounter && (
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+          {/* Catalog Left (Full width on mobile, 70% on desktop) */}
+          <div className="w-full md:w-[68%] lg:w-[70%] xl:w-[72%] flex flex-col border-r border-slate-200 bg-slate-50 overflow-hidden pb-16 md:pb-0">
             {/* Search toolbar */}
             <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between gap-4 shrink-0 shadow-xs">
               <div className="relative flex-1">
@@ -877,8 +937,8 @@ const StaffLogin = () => {
             </div>
           </div>
 
-          {/* Cart Right (30%) */}
-          <div className="w-[32%] lg:w-[30%] xl:w-[28%] bg-white flex flex-col border-l border-slate-200 overflow-hidden">
+          {/* Cart Right (Desktop only: 30%) */}
+          <div className="hidden md:flex md:w-[32%] lg:w-[30%] xl:w-[28%] bg-white flex-col border-l border-slate-200 overflow-hidden">
             {/* Cart Header */}
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1006,13 +1066,165 @@ const StaffLogin = () => {
               </button>
             </div>
           </div>
+
+          {/* Floating Mobile Cart Summary Bar (Mobile Only) */}
+          {cart.length > 0 && (
+            <div className="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl z-30 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black shadow-md shrink-0">
+                  <ShoppingCart size={18} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black text-slate-900">{cart.reduce((s, i) => s + i.qty, 0)} Items</span>
+                    <span className="text-xs font-black text-emerald-700">₹{finalTotal}</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-orange-600">
+                    {selectedTable === '0' ? '🛵 Delivery' : `🍽️ Table ${selectedTable}`}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMobileCartOpen(true)}
+                className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-orange-600/30 transition flex items-center gap-1.5"
+              >
+                <span>Review & Pay</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Mobile Cart Drawer Modal (Slides up on Mobile) */}
+          {isMobileCartOpen && (
+            <div className="md:hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
+              <div className="bg-white rounded-t-3xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-250">
+                {/* Drawer Header */}
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart size={18} className="text-orange-600" />
+                    <h3 className="font-black text-sm text-slate-900">Current Order ({cart.reduce((s, i) => s + i.qty, 0)} items)</h3>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileCartOpen(false)}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Dining Mode & Customer Phone */}
+                <div className="p-3 bg-slate-50/80 border-b border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-slate-500">Dining Mode:</span>
+                    <span className="text-[11px] font-bold text-orange-600">
+                      {selectedTable === '0' ? '🛵 Delivery' : `🍽️ Table ${selectedTable}`}
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTable('0')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition border ${
+                        selectedTable === '0' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      🛵 Delivery
+                    </button>
+                    {tables.map(t => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setSelectedTable(t)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition border ${
+                          selectedTable === t ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        T-{t}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="tel"
+                    placeholder="Customer Mobile (for WhatsApp Bill)"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-orange-500 bg-white"
+                  />
+                </div>
+
+                {/* Items List */}
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[140px] max-h-[35vh]">
+                  {cart.map((item) => (
+                    <div key={item._id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="font-extrabold text-slate-800 truncate">{item.name}</p>
+                        <p className="text-[11px] font-mono text-slate-500">₹{item.price} × {item.qty} = ₹{item.price * item.qty}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={() => updateCartQty(item._id, -1)} className="w-6 h-6 rounded bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600">
+                          -
+                        </button>
+                        <span className="font-black text-xs min-w-[16px] text-center">{item.qty}</span>
+                        <button onClick={() => updateCartQty(item._id, 1)} className="w-6 h-6 rounded bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600">
+                          +
+                        </button>
+                        <button onClick={() => removeFromCart(item._id)} className="text-red-400 hover:text-red-600 ml-1">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Checkout Section in Drawer */}
+                <div className="p-4 border-t border-slate-200 bg-white space-y-3">
+                  <div className="flex justify-between items-center text-base font-black text-slate-900">
+                    <span>Total Amount:</span>
+                    <span className="text-emerald-700">₹{finalTotal}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {['cash', 'upi', 'card'].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPaymentType(p)}
+                        className={`py-2 rounded-xl text-xs font-black uppercase transition border ${
+                          paymentType === p ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileCartOpen(false);
+                      handleCreateCounterOrder();
+                    }}
+                    disabled={cart.length === 0 || isSubmittingOrder}
+                    className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-orange-600/30 transition flex items-center justify-center gap-1.5 disabled:opacity-40"
+                  >
+                    {isSubmittingOrder ? <RefreshCw size={14} className="animate-spin" /> : <Utensils size={14} />}
+                    Place Order & Send to Kitchen (₹{finalTotal})
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
       {/* ========================================================= */}
       {/* VIEW 2: KITCHEN AREA (KDS)                                */}
       {/* ========================================================= */}
-      {activeView === 'kitchen' && (
+      {effectiveView === 'kitchen' && canAccessKitchen && (
         <div className="flex-1 flex flex-col bg-slate-100 overflow-hidden">
           {/* Sub Toolbar */}
           <div className="p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
@@ -1202,7 +1414,7 @@ const StaffLogin = () => {
       {/* ========================================================= */}
       {/* VIEW 3: DELIVERY MONITOR (Assigned Delivery Staff)        */}
       {/* ========================================================= */}
-      {activeView === 'delivery' && (
+      {effectiveView === 'delivery' && canAccessDelivery && (
         <div className="flex-1 flex flex-col bg-slate-100 overflow-hidden">
           <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-3">
@@ -1450,7 +1662,7 @@ const StaffLogin = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid ${canAccessKitchen ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
                 <button
                   type="button"
                   onClick={handleOpenWhatsAppBill}
@@ -1458,13 +1670,15 @@ const StaffLogin = () => {
                 >
                   💬 Send WhatsApp Bill
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveView('kitchen')}
-                  className="py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase flex items-center justify-center gap-2 shadow"
-                >
-                  🍳 View in Kitchen
-                </button>
+                {canAccessKitchen && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('kitchen')}
+                    className="py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase flex items-center justify-center gap-2 shadow"
+                  >
+                    🍳 View in Kitchen
+                  </button>
+                )}
               </div>
 
               <button
