@@ -57,9 +57,24 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const maxStock = product.totalStock !== undefined ? product.totalStock : product.stock;
   const isOutOfStock = maxStock <= 0;
 
-  // Extract rating data (assumes backend populates averageRating and totalReviews)
-  const averageRating = product.averageRating || product.rating || 0;
-  const totalReviews = product.totalReviews || product.reviewCount || product.numReviews || 0;
+  // Extract rating & review data (handles averageRating, rating, totalReviews, reviewCount, numReviews, and reviews array)
+  const averageRating = Number(
+    product.averageRating || 
+    product.rating || 
+    (Array.isArray(product.reviews) && product.reviews.length > 0 
+      ? (product.reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / product.reviews.length) 
+      : 0) || 
+    0
+  );
+
+  const totalReviews = Number(
+    product.totalReviews || 
+    product.reviewCount || 
+    product.numReviews || 
+    (Array.isArray(product.reviews) ? product.reviews.length : 0) || 
+    (averageRating > 0 ? 1 : 0) ||
+    0
+  );
 
   const cartItem = !hasVariants ? cart.find(item => item._id === product._id) : null;
   const cartQty = cartItem ? cartItem.qty : 0;
@@ -136,15 +151,44 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       >
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <span className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700/70">{categoryName}</span>
-          {averageRating > 0 && (
-            <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-amber-700"><Star size={11} className="fill-amber-400 text-amber-400" />{Number(averageRating).toFixed(1)}</span>
-          )}
+          {totalReviews > 0 || averageRating > 0 ? (
+            <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 shadow-2xs">
+              <Star size={10} className="fill-amber-400 text-amber-400" />
+              {averageRating.toFixed(1)}
+            </span>
+          ) : null}
         </div>
         <p className="min-h-[2.5rem] font-bold text-[13px] leading-5 text-stone-800 group-hover:text-[#c94710] transition-colors" title={product.name}>
            {product.name.length > 40 
             ? product.name.slice(0, 40) + "..." 
            : product.name}
         </p>
+
+        {/* Rating & Reviews */}
+        <div className="mt-1 flex items-center gap-1.5">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Star
+                key={s}
+                size={11}
+                className={
+                  s <= Math.round(averageRating)
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'fill-stone-200 text-stone-200'
+                }
+              />
+            ))}
+          </div>
+          <span className="text-[11px] font-semibold text-stone-600">
+            {totalReviews > 0 ? (
+              <span className="text-stone-600">
+                ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+              </span>
+            ) : (
+              <span className="text-stone-400 font-normal">(0 reviews)</span>
+            )}
+          </span>
+        </div>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
           <span className="text-lg font-extrabold text-[#9f2d19]">₹{displayPrice.toLocaleString()}</span>
@@ -202,7 +246,8 @@ export const ProductCardSkeleton = () => (
     <div className="h-32 sm:h-48 bg-gray-200/60 w-full flex-shrink-0"></div>
     <div className="p-3 sm:p-4 flex flex-col flex-grow">
       <div className="h-3 w-16 bg-gray-200 rounded mb-2"></div>
-      <div className="h-4 sm:h-5 w-3/4 bg-gray-200 rounded mb-4"></div>
+      <div className="h-4 sm:h-5 w-3/4 bg-gray-200 rounded mb-2"></div>
+      <div className="h-3 w-24 bg-gray-200 rounded mb-4"></div>
       <div className="h-6 w-1/3 bg-gray-200 rounded mb-4 mt-auto"></div>
       <div className="flex justify-between items-end mt-auto pt-2">
         <div className="h-6 w-16 bg-gray-200 rounded"></div>
