@@ -3,6 +3,7 @@ import { useParams, useLocation, Navigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import StoreLayout from '../Layout';
 import { getPublicPolicies } from '../../../services/api';
+import { formatPolicyHtml } from '../../../utils/policyFormatter';
 
 const PolicyPage = () => {
   const { slug } = useParams();
@@ -37,8 +38,8 @@ const PolicyPage = () => {
     <StoreLayout store={store} cartCount={0} onCartClick={() => alert('Please return to the home page to view your cart.')}>
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8">{policy.title}</h1>
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-gray-700 whitespace-pre-wrap leading-relaxed">
-          {policy.description}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-gray-700 ">
+          <div className="policy-rendered-content text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatPolicyHtml(policy.description) }} />
         </div>
       </div>
     </StoreLayout>

@@ -1,3 +1,119 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Rich Policy Typography Styling */
+.policy-rendered-content {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.policy-rendered-content h1 {
+  font-size: 1.875rem !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 0.85rem !important;
+  color: #0f172a !important;
+  letter-spacing: -0.02em !important;
+}
+
+.policy-rendered-content h2 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  margin-top: 1.75rem !important;
+  margin-bottom: 0.75rem !important;
+  color: #1e293b !important;
+  letter-spacing: -0.01em !important;
+  padding-bottom: 0.35rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.policy-rendered-content h3 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #334155 !important;
+}
+
+.policy-rendered-content h4 {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.4rem !important;
+  color: #334155 !important;
+}
+
+.policy-rendered-content p {
+  margin-bottom: 1rem !important;
+  line-height: 1.75 !important;
+  color: #475569 !important;
+}
+
+.policy-rendered-content strong,
+.policy-rendered-content b {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.policy-rendered-content em,
+.policy-rendered-content i {
+  font-style: italic !important;
+}
+
+.policy-rendered-content u {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+.policy-rendered-content ul {
+  list-style-type: disc !important;
+  padding-left: 1.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
+  display: block !important;
+}
+
+.policy-rendered-content ol {
+  list-style-type: decimal !important;
+  padding-left: 1.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
+  display: block !important;
+}
+
+.policy-rendered-content li {
+  margin-bottom: 0.45rem !important;
+  line-height: 1.65 !important;
+  color: #475569 !important;
+}
+
+.policy-rendered-content blockquote {
+  border-left: 4px solid #76b900 !important;
+  padding: 0.75rem 1.25rem !important;
+  margin: 1.5rem 0 !important;
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-radius: 0 0.75rem 0.75rem 0 !important;
+  font-style: italic !important;
+}
+
+.policy-rendered-content hr {
+  border: 0 !important;
+  border-top: 1px solid #e2e8f0 !important;
+  margin: 2rem 0 !important;
+}
+
+.policy-rendered-content a {
+  color: #0284c7 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+.policy-rendered-content a:hover {
+  color: #0369a1 !important;
+}
