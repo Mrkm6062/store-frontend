@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getImageProps } from '../../../services/api';
 import { Plus, Minus, Heart, Star } from 'lucide-react';
+import FoodTypeIcon from '../../../components/FoodTypeIcon';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart, index }) => {
@@ -135,6 +136,13 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           <span className="absolute top-3 left-3 rounded-full bg-[#9f2d19] px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm">
             {discountPercent}% OFF
           </span>
+        )}
+
+        {/* Food Type Badge on Image */}
+        {(product.foodtype || product.foodType) && (
+          <div className="absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-xs p-1 rounded-md shadow-xs border border-stone-200/60 flex items-center justify-center">
+            <FoodTypeIcon type={product.foodtype || product.foodType} size={15} />
+          </div>
         )}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">

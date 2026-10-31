@@ -600,7 +600,15 @@ const ProductDetails = () => {
 
             <div>
               <h3 className="text-3xl lg:text-4xl font-black tracking-tight text-stone-900 mb-4">{product.name}</h3>
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-2 mb-4 flex-wrap gap-y-2">
+                {(product.foodtype || product.foodType) && (
+                  <span className="inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-stone-200 shadow-2xs">
+                    <FoodTypeIcon type={product.foodtype || product.foodType} size={16} />
+                    <span className="text-xs font-bold text-stone-700 capitalize">
+                      {product.foodtype || product.foodType}
+                    </span>
+                  </span>
+                )}
                 <span className="bg-orange-100 text-[#9f2d19] text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
                   {categoryName || product.categoryName || 'Product'}
                 </span>
