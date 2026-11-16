@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
@@ -18,9 +18,8 @@ const CategoryPage = () => {
   const customization = useContext(ThemeCustomizationContext);
   const primaryColor = customization?.global?.primaryColor || '#e85d04';
   
-  const [visibleCount, setVisibleCount] = useState(12);
-  const [category, setCategory] = useState(null);
   const [allCategories, setAllCategories] = useState([]);
+  const [activeCategoryId, setActiveCategoryId] = useState(categoryId || 'all');
   const [toast, setToast] = useState(null);
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('gb_store_cart');
@@ -29,6 +28,13 @@ const CategoryPage = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Refs for scrollspy
+  const categoryNavRef = useRef(null);
+  const categoryBtnRefs = useRef({});
+  const sectionRefs = useRef({});
+  const isManualScroll = useRef(false);
+  const manualScrollTimeout = useRef(null);
 
   useEffect(() => {
     if (store?._id) {
@@ -64,18 +70,141 @@ const CategoryPage = () => {
   useEffect(() => {
     getPublicCategories().then(categories => {
       setAllCategories(categories);
-      if (categoryId === 'all') {
-        setCategory(null);
-      } else {
-        const currentCategory = categories.find(c => c.slug === categoryId || c._id === categoryId);
-        setCategory(currentCategory);
-      }
     }).catch(console.error);
-  }, [categoryId]);
+  }, []);
 
+  // Filter products based on search query
+  const filteredProducts = products.filter(p => 
+    p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Group products by category
+  const visibleCategoryGroups = allCategories.map(c => {
+    const categoryProducts = filteredProducts.filter(p => p.category === c._id);
+    return { category: c, products: categoryProducts };
+  }).filter(group => group.products.length > 0);
+
+  // Products with no category or an unlisted category
+  const uncategorizedProducts = filteredProducts.filter(p => 
+    !allCategories.some(c => c._id === p.category)
+  );
+
+  // Selectable categories in the top horizontal bar
+  const selectableCategories = productsLoading 
+    ? allCategories 
+    : allCategories.filter(c => products.some(p => p.category === c._id));
+
+  // Initial scroll to category if opened with /category/:categoryId
   useEffect(() => {
-    setVisibleCount(12);
-  }, [categoryId]);
+    if (!productsLoading && !storeLoading && allCategories.length > 0) {
+      if (categoryId && categoryId !== 'all') {
+        const targetCat = allCategories.find(c => c.slug === categoryId || c._id === categoryId);
+        if (targetCat) {
+          setActiveCategoryId(targetCat._id);
+          setTimeout(() => {
+            const el = sectionRefs.current[targetCat._id];
+            if (el) {
+              const headerOffset = 90;
+              const y = el.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+              window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+            }
+          }, 200);
+        }
+      } else {
+        setActiveCategoryId('all');
+      }
+    }
+  }, [categoryId, productsLoading, storeLoading, allCategories]);
+
+  // ScrollSpy: highlight category header as user scrolls down/up through products
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isManualScroll.current) return;
+
+      // At the top of page, highlight 'all'
+      if (window.scrollY < 120) {
+        setActiveCategoryId('all');
+        return;
+      }
+
+      // At the bottom of page, highlight the last category
+      const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60;
+      if (isAtBottom && visibleCategoryGroups.length > 0) {
+        const lastCat = visibleCategoryGroups[visibleCategoryGroups.length - 1];
+        setActiveCategoryId(lastCat.category._id);
+        return;
+      }
+
+      // Sticky header offset in theme-minimal (~85-95px)
+      const headerOffset = 95;
+      let currentId = 'all';
+
+      for (let i = 0; i < visibleCategoryGroups.length; i++) {
+        const catId = visibleCategoryGroups[i].category._id;
+        const el = sectionRefs.current[catId];
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= headerOffset + 40) {
+            currentId = catId;
+          }
+        }
+      }
+
+      if (uncategorizedProducts.length > 0) {
+        const uncatEl = sectionRefs.current['uncategorized'];
+        if (uncatEl) {
+          const rect = uncatEl.getBoundingClientRect();
+          if (rect.top <= headerOffset + 40) {
+            currentId = 'uncategorized';
+          }
+        }
+      }
+
+      setActiveCategoryId(currentId);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleCategoryGroups, uncategorizedProducts]);
+
+  // Auto-scroll the active category button into view inside the horizontal bar
+  useEffect(() => {
+    const btn = categoryBtnRefs.current[activeCategoryId];
+    if (btn && categoryNavRef.current) {
+      btn.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }
+  }, [activeCategoryId]);
+
+  // Smooth scroll to selected category section when clicking category header button
+  const handleCategoryClick = (catId) => {
+    setActiveCategoryId(catId);
+    isManualScroll.current = true;
+    if (manualScrollTimeout.current) clearTimeout(manualScrollTimeout.current);
+
+    if (catId === 'all') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate('/category/all', { replace: true });
+    } else {
+      const el = sectionRefs.current[catId];
+      if (el) {
+        const headerOffset = 90;
+        const y = el.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      }
+      const cat = allCategories.find(c => c._id === catId);
+      if (cat) {
+        navigate(`/category/${cat.slug || cat._id}`, { replace: true });
+      }
+    }
+
+    manualScrollTimeout.current = setTimeout(() => {
+      isManualScroll.current = false;
+    }, 800);
+  };
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
@@ -124,14 +253,12 @@ const CategoryPage = () => {
 
   useEffect(() => {
     if (store) {
-      document.title = category 
-        ? `${category.name} - ${store.websiteTitle || store.name}`
+      const activeCat = allCategories.find(c => c._id === activeCategoryId);
+      document.title = activeCat 
+        ? `${activeCat.name} - ${store.websiteTitle || store.name}`
         : `All Products - ${store.websiteTitle || store.name}`;
     }
-  }, [store, category]);
-
-  const filteredProducts = (category ? products.filter(p => p.category === category._id) : products)
-    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [store, activeCategoryId, allCategories]);
 
   if (storeLoading) {
     return (
@@ -169,7 +296,7 @@ const CategoryPage = () => {
         <div className="flex items-center gap-2 mb-4 pt-4 text-left">
           <button 
             onClick={() => navigate('/')} 
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shadow-sm"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shadow-sm cursor-pointer active:scale-95"
             title="Go to Home"
           >
             <ArrowLeft size={16} />
@@ -177,36 +304,47 @@ const CategoryPage = () => {
           <span className="text-xs font-bold text-slate-400">Home</span>
         </div>
 
-        {/* Horizontal Category Selector */}
+        {/* Horizontal Category Selector Header (Sticky) */}
         <div className="border-b border-gray-200/80 bg-white sticky top-0 z-30 -mx-3 sm:-mx-12 lg:-mx-16 px-3 sm:px-12 lg:px-16 mb-6 py-4 shadow-sm backdrop-blur-md bg-white/95">
-          <div className="max-w-5xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-none snap-x pb-1">
+          <div 
+            ref={categoryNavRef}
+            className="max-w-5xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-none snap-x pb-1"
+          >
             {/* "All Products" Button */}
             <button
-              onClick={() => navigate('/category/all')}
-              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
-                !category 
+              ref={el => categoryBtnRefs.current['all'] = el}
+              onClick={() => handleCategoryClick('all')}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-200 border cursor-pointer ${
+                activeCategoryId === 'all' 
                   ? 'text-white shadow-md shadow-orange-200 scale-105'
                   : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
               }`}
-              style={{ backgroundColor: !category ? primaryColor : undefined, borderColor: !category ? primaryColor : undefined }}
+              style={{ 
+                backgroundColor: activeCategoryId === 'all' ? primaryColor : undefined, 
+                borderColor: activeCategoryId === 'all' ? primaryColor : undefined 
+              }}
             >
               <LayoutGrid size={16} />
               <span>All Products</span>
             </button>
 
             {/* Other Categories */}
-            {allCategories.map(c => {
-              const isActive = category && category._id === c._id;
+            {selectableCategories.map(c => {
+              const isActive = activeCategoryId === c._id;
               return (
                 <button
                   key={c._id}
-                  onClick={() => navigate(`/category/${c.slug || c._id}`)}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-250 border ${
+                  ref={el => categoryBtnRefs.current[c._id] = el}
+                  onClick={() => handleCategoryClick(c._id)}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm snap-start shrink-0 transition-all duration-200 border cursor-pointer ${
                     isActive 
                       ? 'text-white shadow-md shadow-orange-200 scale-105'
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
-                  style={{ backgroundColor: isActive ? primaryColor : undefined, borderColor: isActive ? primaryColor : undefined }}
+                  style={{ 
+                    backgroundColor: isActive ? primaryColor : undefined, 
+                    borderColor: isActive ? primaryColor : undefined 
+                  }}
                 >
                   {c.image?.url ? (
                     <img 
@@ -257,26 +395,95 @@ const CategoryPage = () => {
           </div>
         ) : productsError ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl font-bold border border-red-100 text-center text-lg">{productsError}</div>
+        ) : visibleCategoryGroups.length === 0 && uncategorizedProducts.length === 0 ? (
+          <div className="py-16 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+            <span className="text-4xl">🔍</span>
+            <h3 className="mt-3 text-lg font-bold text-gray-800">No products found</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {searchQuery ? `No items matching "${searchQuery}"` : "This store hasn't added products yet."}
+            </p>
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="mt-4 px-5 py-2 text-xs font-bold rounded-xl text-white shadow-sm cursor-pointer hover:opacity-90 transition"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Clear Search
+              </button>
+            )}
+          </div>
         ) : (
-          <>
-            <ProductGrid 
-              products={filteredProducts.slice(0, visibleCount)} 
-              onAddToCart={handleAddToCart} 
-              cart={cart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveFromCart={handleRemoveFromCart}
-            />
-            {visibleCount < filteredProducts.length && (
-              <div className="mt-10 text-center flex justify-center">
-                <button 
-                  onClick={() => setVisibleCount(prev => prev + 12)} 
-                  className="px-8 py-3 bg-white border-2 border-[#e85d04] text-[#c94710] font-extrabold rounded-xl hover:bg-[#e85d04] hover:text-white transition-colors shadow-sm hover:shadow-md"
-                >
-                  Load More Products
-                </button>
+          <div className="space-y-12 sm:space-y-16">
+            {visibleCategoryGroups.map(({ category: catItem, products: catProducts }) => (
+              <div 
+                key={catItem._id} 
+                ref={el => sectionRefs.current[catItem._id] = el}
+                id={`category-${catItem._id}`}
+                className="border-b border-gray-100 pb-12 last:border-b-0 last:pb-0 scroll-mt-24"
+              >
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    {catItem.image?.url ? (
+                      <img 
+                        src={catItem.image.url} 
+                        alt={catItem.name} 
+                        className="w-10 h-10 rounded-xl object-cover border border-slate-200/60 shadow-xs shrink-0" 
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-lg border border-orange-100 shrink-0">
+                        📦
+                      </div>
+                    )}
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
+                        {catItem.name}
+                      </h2>
+                      {catItem.description && (
+                        <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{catItem.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-200/60 shrink-0">
+                    {catProducts.length} {catProducts.length === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+
+                <ProductGrid 
+                  products={catProducts} 
+                  onAddToCart={handleAddToCart} 
+                  cart={cart}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onRemoveFromCart={handleRemoveFromCart}
+                />
+              </div>
+            ))}
+
+            {/* Uncategorized products section if any */}
+            {uncategorizedProducts.length > 0 && (
+              <div 
+                ref={el => sectionRefs.current['uncategorized'] = el}
+                id="category-uncategorized"
+                className="border-b border-gray-100 pb-12 last:border-b-0 last:pb-0 scroll-mt-24"
+              >
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
+                    Other Products
+                  </h2>
+                  <span className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-200/60 shrink-0">
+                    {uncategorizedProducts.length} {uncategorizedProducts.length === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+
+                <ProductGrid 
+                  products={uncategorizedProducts} 
+                  onAddToCart={handleAddToCart} 
+                  cart={cart}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onRemoveFromCart={handleRemoveFromCart}
+                />
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
