@@ -533,7 +533,7 @@ const ProductDetails = () => {
                 <button
                   onClick={() => showToast('Share functionality coming soon!', 'success')}
                   aria-label="Share this product"
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full shadow-md transition-all duration-200 flex items-center justify-center bg-white text-gray-600 hover:text-blue-500 z-10"
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full shadow-md transition-all duration-200 flex items-center justify-center bg-white text-stone-700 hover:text-[#e85d04] z-10"
                 >
                   <Share2 className="w-4 h-4" />
                 </button>
@@ -547,7 +547,7 @@ const ProductDetails = () => {
                 </button>
 
                 <button
-                  className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-blue-600 z-10 transition-colors"
+                  className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-stone-700 hover:text-[#e85d04] z-10 transition-colors"
                   aria-label="View Full Screen"
                 >
                   <Maximize2 className="w-4 h-4" />
@@ -637,7 +637,7 @@ const ProductDetails = () => {
                     <button 
                       key={v._id} 
                       onClick={() => setSelectedVariantId(v._id)}
-                      className={`px-5 py-2.5 border rounded-lg text-sm font-medium transition-colors ${selectedVariantId === v._id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:border-gray-400'}`}
+                      className={`px-5 py-2.5 border rounded-lg text-sm font-medium transition-colors ${selectedVariantId === v._id ? 'border-[#e85d04] bg-orange-50 text-[#e85d04]' : 'border-stone-300 hover:border-stone-400'}`}
                       style={selectedVariantId === v._id ? { borderColor: primaryColor, backgroundColor: `${primaryColor}10`, color: primaryColor } : {}}
                     >
                       {v.name}
@@ -653,8 +653,8 @@ const ProductDetails = () => {
             )}
 
             {product.isCustomizable && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <label className="block text-sm font-bold text-blue-800 mb-2">Upload Custom Image (For Printing) <span className="text-red-500">*</span></label>
+              <div className="mt-4 p-4 bg-orange-50/70 rounded-xl border border-orange-200">
+                <label className="block text-sm font-bold text-stone-900 mb-2">Upload Custom Image (For Printing) <span className="text-red-500">*</span></label>
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -662,10 +662,10 @@ const ProductDetails = () => {
                   className="primary-file-input w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:text-white transition-colors cursor-pointer"
                   disabled={isCompressing}
                 />
-                {isCompressing && <p className="text-xs text-blue-600 mt-2 font-bold animate-pulse">Processing image...</p>}
+                {isCompressing && <p className="text-xs text-[#e85d04] mt-2 font-bold animate-pulse">Processing image...</p>}
                 {customImageBase64 && (
                   <div className="mt-3 relative inline-block">
-                     <img src={customImageBase64} alt="Custom Preview" className="h-16 w-16 object-cover rounded-lg border border-blue-200 shadow-sm" />
+                     <img src={customImageBase64} alt="Custom Preview" className="h-16 w-16 object-cover rounded-lg border border-orange-200 shadow-sm" />
                     <button type="button" onClick={() => setCustomImageBase64(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition">&times;</button>
                   </div>
                 )}
@@ -673,8 +673,8 @@ const ProductDetails = () => {
             )}
 
             {product.allowCustomText && (
-              <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <label className="block text-sm font-bold text-slate-800 mb-2">Custom Text (Optional)</label>
+              <div className="mt-4 p-4 bg-orange-50/50 rounded-xl border border-orange-200">
+                <label className="block text-sm font-bold text-stone-900 mb-2">Custom Text (Optional)</label>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
@@ -682,7 +682,7 @@ const ProductDetails = () => {
                     onChange={(e) => setCustomText(e.target.value)} 
                     placeholder="e.g. Happy Birthday John!" 
                     spellCheck="false"
-                    className="flex-1 w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#e85d04] text-sm"
+                    className="flex-1 w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:border-[#e85d04] text-sm bg-white"
                   />
                   <button 
                     type="button" 

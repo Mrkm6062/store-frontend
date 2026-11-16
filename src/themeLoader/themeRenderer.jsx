@@ -48,6 +48,9 @@ import ModernCategories from '../themes/theme-modern/pages/Categories.jsx';
 import ModernPolicy from '../themes/theme-modern/pages/Policy.jsx';
 import ModernTrackOrder from '../themes/theme-modern/pages/TrackOrder.jsx';
 import ModernCheckout from '../themes/theme-modern/pages/Checkout.jsx';
+import ModernOffers from '../themes/theme-modern/pages/Offers.jsx';
+import ModernProductDetails from '../themes/theme-modern/pages/ProductDetails.jsx';
+import ModernWriteReview from '../themes/theme-modern/pages/WriteReview.jsx';
 
 // Import theme-premium components
 import PremiumHome from '../themes/theme-premium/pages/Home.jsx';
@@ -65,6 +68,9 @@ import MinimalPolicy from '../themes/theme-minimal/pages/Policy.jsx';
 import MinimalTrackOrder from '../themes/theme-minimal/pages/TrackOrder.jsx';
 import MinimalCheckout from '../themes/theme-minimal/pages/Checkout.jsx';
 import MinimalCart from '../themes/theme-minimal/pages/Cart.jsx';
+import MinimalOffers from '../themes/theme-minimal/pages/Offers.jsx';
+import MinimalProductDetails from '../themes/theme-minimal/pages/ProductDetails.jsx';
+import MinimalWriteReview from '../themes/theme-minimal/pages/WriteReview.jsx';
 
 // Import theme-giftshop components
 import GiftshopHome from '../themes/theme-giftshop/pages/Home.jsx';
@@ -89,9 +95,9 @@ import LocalshopOffers from '../themes/theme-localshop/pages/Offers.jsx';
 
 const themesMap = {
   'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails, Offers: FreeHome },
-  'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails, Offers: ModernHome },
+  'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: ModernWriteReview, ProductDetails: ModernProductDetails, Offers: ModernOffers },
   'theme-premium': { Home: PremiumHome, Category: PremiumCategory, Categories: PremiumCategories, Policy: PremiumPolicy, TrackOrder: PremiumTrackOrder, Checkout: PremiumCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails, Offers: PremiumHome },
-  'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout, Cart: MinimalCart, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails, Offers: MinimalHome },
+  'theme-minimal': { Home: MinimalHome, Category: MinimalCategory, Categories: MinimalCategories, Policy: MinimalPolicy, TrackOrder: MinimalTrackOrder, Checkout: MinimalCheckout, Cart: MinimalCart, WriteReview: MinimalWriteReview, ProductDetails: MinimalProductDetails, Offers: MinimalOffers },
   'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails, Offers: GiftshopOffers },
   'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails, Offers: GiftshopOffers },
   'theme-localshop': { Home: LocalshopHome, Category: LocalshopCategory, Categories: LocalshopCategories, Policy: LocalshopPolicy, TrackOrder: LocalshopTrackOrder, Checkout: LocalshopCheckout, WriteReview: LocalshopWriteReview, ProductDetails: LocalshopProductDetails, Offers: LocalshopOffers },
@@ -466,7 +472,9 @@ const ThemeRenderer = () => {
           <Route path="/" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Home" />} />
             <Route path="/category/:categoryId" element={<ActiveTheme.Category />} />
             <Route path="/categories" element={<ActiveTheme.Categories />} />
-            <Route path="/offers" element={<ActiveTheme.Offers />} />
+            <Route path="/offers" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Offers" />} />
+            <Route path="/offers/:offerId" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Offers" />} />
+            <Route path="/offer/:offerId" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Offers" />} />
             <Route path="/policy/:slug" element={<ActiveTheme.Policy />} />
             <Route path="/track" element={<ActiveTheme.TrackOrder />} />
             <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />

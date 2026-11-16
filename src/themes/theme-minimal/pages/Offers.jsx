@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useStore } from '../../../services/useStore';
 import { useProducts } from '../../../services/useProducts';
 import { getPublicOfferCategories } from '../../../services/api';
@@ -14,6 +14,7 @@ const OffersPage = () => {
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const navigate = useNavigate();
   const location = useLocation();
+  const { offerId: routeOfferId } = useParams();
   const customization = useContext(ThemeCustomizationContext);
   const primaryColor = customization?.global?.primaryColor || '#e85d04';
 
@@ -52,9 +53,14 @@ const OffersPage = () => {
         setLoadingOffers(false);
         
         const queryParams = new URLSearchParams(location.search);
-        const idFromQuery = queryParams.get('id') || location.state?.selectedOfferId;
-        if (idFromQuery && data.some(oc => oc._id === idFromQuery)) {
-          setSelectedOfferId(idFromQuery);
+        const idFromQuery = routeOfferId || queryParams.get('id') || queryParams.get('offerId') || location.state?.selectedOfferId;
+        if (idFromQuery) {
+          const match = data.find(oc => oc._id === idFromQuery || oc.slug === idFromQuery);
+          if (match) {
+            setSelectedOfferId(match._id);
+          } else {
+            setSelectedOfferId(idFromQuery);
+          }
         } else {
           setSelectedOfferId('all');
         }
@@ -63,7 +69,18 @@ const OffersPage = () => {
         console.error(err);
         setLoadingOffers(false);
       });
-  }, [location.search, location.state]);
+  }, [location.search, location.state, routeOfferId]);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const idFromQuery = routeOfferId || queryParams.get('id') || queryParams.get('offerId') || location.state?.selectedOfferId;
+    if (idFromQuery) {
+      const match = offerCategories.find(oc => oc._id === idFromQuery || oc.slug === idFromQuery);
+      setSelectedOfferId(match ? match._id : idFromQuery);
+    } else if (!routeOfferId && !queryParams.get('id') && !queryParams.get('offerId')) {
+      setSelectedOfferId('all');
+    }
+  }, [location.search, location.state, routeOfferId, offerCategories]);
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
@@ -110,11 +127,11 @@ const OffersPage = () => {
 
   // Filter products that belong to the active offer category
   const filteredProducts = products.filter(p => {
-    const pOfferIds = (p.offerCategories || []).map(oc => oc._id || oc);
+    const pOfferIds = (p.offerCategories || []).map(oc => (typeof oc === 'object' && oc !== null ? String(oc._id) : String(oc)));
     if (selectedOfferId === 'all') {
-      return pOfferIds.some(id => offerCategories.some(oc => oc._id === id));
+      return pOfferIds.some(id => offerCategories.some(oc => String(oc._id) === id));
     }
-    return pOfferIds.includes(selectedOfferId);
+    return pOfferIds.some(id => id === String(selectedOfferId));
   });
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -164,17 +181,23 @@ const OffersPage = () => {
           <div className="mb-10">
             <div className="flex flex-wrap gap-3 p-1.5 bg-slate-100 rounded-2xl w-fit border border-slate-200">
               <button
-                onClick={() => setSelectedOfferId('all')}
+                onClick={() => {
+                  setSelectedOfferId('all');
+                  navigate('/offers', { replace: true });
+                }}
                 className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${selectedOfferId === 'all' ? 'bg-[#e85d04] text-white shadow-md' : 'text-slate-600 hover:bg-orange-50'}`}
               >
                 All Deals ({products.filter(p => (p.offerCategories || []).length > 0).length})
               </button>
               {offerCategories.map(oc => {
-                const count = products.filter(p => (p.offerCategories || []).map(id => id._id || id).includes(oc._id)).length;
+                const count = products.filter(p => (p.offerCategories || []).map(id => (typeof id === 'object' && id !== null ? id._id : id)).includes(oc._id)).length;
                 return (
                   <button
                     key={oc._id}
-                    onClick={() => setSelectedOfferId(oc._id)}
+                    onClick={() => {
+                      setSelectedOfferId(oc._id);
+                      navigate(`/offers?id=${oc._id}`, { replace: true });
+                    }}
                     className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${selectedOfferId === oc._id ? 'bg-[#e85d04] text-white shadow-md' : 'text-slate-600 hover:bg-orange-50'}`}
                   >
                     <span style={{ backgroundColor: oc.color }} className="w-2.5 h-2.5 rounded-full inline-block"></span>

@@ -408,13 +408,22 @@ const StoreHome = () => {
               .filter(item => item.products.length > 0)
               .map(({ offerCategory, products: offerProducts }) => (
                 <div key={offerCategory._id} className="border-b border-orange-100/70 pb-12 last:border-b-0 last:pb-0">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-3">
-                      <span style={{ backgroundColor: offerCategory.color }} className="w-3.5 h-3.5 rounded-full inline-block"></span>
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 tracking-tight text-left">
-                        {offerCategory.name}
-                      </h2>
+                  <div className="flex justify-between items-end gap-4 mb-6 md:mb-7">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#c94710]">Special Offer</span>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span style={{ backgroundColor: offerCategory.color || '#e85d04' }} className="w-3.5 h-3.5 rounded-full inline-block"></span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 tracking-tight text-left">
+                          {offerCategory.name}
+                        </h2>
+                      </div>
                     </div>
+                    <button 
+                      onClick={() => navigate(`/offers?id=${offerCategory._id}`)} 
+                      className="hidden sm:inline-flex shrink-0 items-center rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-extrabold text-[#c94710] shadow-sm transition hover:border-orange-300 hover:bg-orange-50 cursor-pointer"
+                    >
+                      View all
+                    </button>
                   </div>
                   
                   <ProductGrid 
