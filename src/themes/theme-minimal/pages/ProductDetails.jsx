@@ -7,6 +7,7 @@ import { Star, ShoppingCart, Zap, ArrowLeft, Plus, Minus, PackageX, Home, Chevro
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import { getPublicCategories, getImageProps, getOptimizedImageUrl } from '../../../services/api';
 import CartSidebar from '../components/CartSidebar';
+import FoodTypeIcon from '../../../components/FoodTypeIcon';
 
 const compressImage = (file, maxSizeMB = 1) => {
   return new Promise((resolve) => {
