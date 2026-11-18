@@ -129,9 +129,14 @@ const CustomWebsiteRenderer = ({ storeData }) => {
 
   // Construct website source URL (served through public GCS or backend proxy)
   const gcsBase = storeData?.customWebsite?.baseUrl;
-  const iframeSrc = gcsBase 
+  const updateTimestamp = storeData?.customWebsite?.updatedAt 
+    ? new Date(storeData.customWebsite.updatedAt).getTime() 
+    : '';
+  const cacheParam = updateTimestamp ? `?v=${updateTimestamp}` : '';
+  const rawSrc = gcsBase 
     ? `${gcsBase}${relativePath}`
     : `${API_URL}/api/custom-website/public/serve/${relativePath}`;
+  const iframeSrc = `${rawSrc}${cacheParam}`;
 
   // If store has no custom website files uploaded
   const hasFiles = storeData?.customWebsite?.filesCount > 0 || Boolean(storeData?.customWebsite?.enabled);
