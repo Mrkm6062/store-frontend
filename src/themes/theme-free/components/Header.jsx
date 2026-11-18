@@ -1,3 +1,4 @@
+import { useStoreHours, StoreClosedBanner, StoreClosedPopup } from '../../../components/StoreClosedNotice';
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X, ChevronRight } from 'lucide-react';
@@ -15,6 +16,8 @@ const Header = ({ store, cartCount, onCartClick }) => {
 
   const customization = useContext(ThemeCustomizationContext);
   const { products } = useProducts();
+  const primaryColor = customization?.global?.primaryColor || '#76b900';
+  const { storeOpenStatus, showClosedPopup, handleClosePopup, countdownCompact, countdownLong } = useStoreHours(store?._id);
 
   const headerSettings = customization?.header || {};
   const offerBanner = headerSettings.offerBanner || { Enabled: true, text: store?.offerText || '🎉 Special Offer: Free delivery on all orders over ₹500!', bgColor: '#76b900', textColor: '#ffffff' };
@@ -45,8 +48,11 @@ const Header = ({ store, cartCount, onCartClick }) => {
 
   return (
     <header className="shadow-sm sticky top-0 z-50 transition-colors duration-300" style={{ backgroundColor: headerSettings.bgColor || '#ffffff', color: headerSettings.textColor || '#000000' }}>
-      {/* Offer Header */}
-      {offerBanner.Enabled !== false && (
+      {/* Offer Header or Store Closed Notice */}
+      {!storeOpenStatus.isOpen ? (
+        <StoreClosedBanner storeOpenStatus={storeOpenStatus} countdownCompact={countdownCompact} countdownLong={countdownLong} />
+      ) : (
+        offerBanner.Enabled !== false && (
         <div 
           className="py-1.5 sm:py-2 text-xs sm:text-sm font-medium w-full overflow-hidden transition-colors duration-300 flex"
           style={{ backgroundColor: offerBanner.bgColor, color: bannerTextColor }}
@@ -63,6 +69,7 @@ const Header = ({ store, cartCount, onCartClick }) => {
             {offerBanner.text}
           </div>
         </div>
+        )
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -208,6 +215,14 @@ const Header = ({ store, cartCount, onCartClick }) => {
           </div>
         </div>
       )}
+      {/* Store Closed Popup Dialog */}
+      <StoreClosedPopup
+        showClosedPopup={showClosedPopup}
+        handleClosePopup={handleClosePopup}
+        storeOpenStatus={storeOpenStatus}
+        countdownLong={countdownLong}
+        primaryColor={primaryColor}
+      />
     </header>
   );
 };
