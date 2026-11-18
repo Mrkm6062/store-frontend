@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Package, Truck, CheckCircle, XCircle, ArrowLeft, RefreshCcw, Key, LogOut } from 'lucide-react';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { Package, Truck, CheckCircle, XCircle, ArrowLeft, RefreshCcw, Key, LogOut, Receipt } from 'lucide-react';
 import { useStore } from '../../../services/useStore';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 import StoreLayout from '../Layout';
 
 const TrackOrder = () => {
   const { orderId } = useParams();
+  const [searchParams] = useSearchParams();
+  const directOrderId = orderId || searchParams.get('orderId') || searchParams.get('id');
   const navigate = useNavigate();
   const { store, loading: storeLoading, error: storeError } = useStore();
   const customization = useContext(ThemeCustomizationContext);
@@ -144,6 +146,25 @@ const TrackOrder = () => {
     }
   };
 
+    useEffect(() => {
+    if (!directOrderId) return;
+    if (!customerToken) {
+      setLoadingData(true);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+      fetch(`${API_BASE_URL}/api/public-order/${directOrderId}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data._id) {
+            setSelectedOrder(data);
+            setOrders([data]);
+            setAuthStep('tracking');
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoadingData(false));
+    }
+  }, [directOrderId, customerToken]);
+
   useEffect(() => {
     if (authStep === 'tracking' && customerToken && store?._id) {
       fetchOrders();
@@ -210,9 +231,13 @@ const TrackOrder = () => {
           <Link to="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
             <ArrowLeft size={16} className="mr-1" /> Back to Store
           </Link>
-          {customerToken && (
+          {customerToken ? (
             <button onClick={handleLogout} className="text-sm font-bold text-red-500 hover:text-red-700 flex items-center gap-1 transition">
               <LogOut size={16} /> Logout
+            </button>
+          ) : (
+            <button onClick={() => setAuthStep('email')} className="text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
+              <Key size={14} /> View All Past Orders
             </button>
           )}
         </div>
@@ -268,9 +293,21 @@ const TrackOrder = () => {
                         <h1 className="text-2xl font-extrabold text-slate-800">Order Details</h1>
                         <p className="text-slate-500 mt-1">ID: <span className="font-mono font-bold text-slate-700">{selectedOrder._id.slice(-6).toUpperCase()}</span></p>
                       </div>
-                      <div className="text-left sm:text-right">
-                        <p className="text-sm font-bold text-slate-500">Total Paid</p>
-                        <p className="text-xl text-[#c94710] font-extrabold">₹{selectedOrder.totalAmount}</p>
+                      <div className="text-left sm:text-right flex flex-col sm:items-end gap-2.5">
+                        <div>
+                          <p className="text-sm font-bold text-slate-500">Total Paid</p>
+                          <p className="text-xl font-extrabold" style={{ color: primaryColor }}>₹{selectedOrder.totalAmount}</p>
+                        </div>
+                        <a
+                          href={`${API_BASE_URL}/api/orders/receipt/${selectedOrder._id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:opacity-90 active:scale-95"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          <Receipt size={14} />
+                          View Receipt
+                        </a>
                       </div>
                     </div>
 

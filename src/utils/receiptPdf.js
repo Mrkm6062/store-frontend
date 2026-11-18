@@ -152,6 +152,48 @@ export const downloadReceiptPdf = (order, store = {}, staff = null) => {
 };
 
 /**
+ * Resolves the public storefront base URL for a given store.
+ */
+export const getStoreOwnerUrl = (store = {}) => {
+  if (!store) return '';
+  if (store.customDomain) {
+    const cd = String(store.customDomain).trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+    if (cd) return `https://${cd}`;
+  }
+  if (store.subdomain) {
+    const sub = String(store.subdomain).trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+    if (sub) {
+      return sub.includes('.') ? `https://${sub}` : `https://${sub}.galibrand.cloud`;
+    }
+  }
+  if (store.storeSlug) {
+    const slug = String(store.storeSlug).trim().toLowerCase().replace(/\/+$/, '');
+    if (slug) return `https://${slug}.galibrand.cloud`;
+  }
+  if (store.storeId) {
+    const sid = String(store.storeId).trim().toLowerCase().replace(/\/+$/, '');
+    if (sid) return `https://${sid}.galibrand.cloud`;
+  }
+  return '';
+};
+
+/**
+ * Builds the public receipt / tracking URL on the store owner's storefront.
+ */
+export const getStoreReceiptUrl = (order, store = {}) => {
+  const resolvedStore = order?.store && typeof order.store === 'object' ? order.store : store;
+  const storeUrl = getStoreOwnerUrl(resolvedStore);
+  const orderId = order?._id || '';
+  if (storeUrl) {
+    return `${storeUrl}/track/receipt/${orderId}`;
+  }
+  if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('api.galibrand.cloud')) {
+    return `${window.location.origin}/track/receipt/${orderId}`;
+  }
+  return `https://galibrand.cloud/track/receipt/${orderId}`;
+};
+
+/**
  * Sends digital bill to WhatsApp:
  * 1. Generates the PDF file.
  * 2. Uses Web Share API (navigator.share) with the PDF file attached (on mobile / supported OS).
@@ -172,6 +214,7 @@ export const sendWhatsAppWithReceiptPdf = async ({
 
   const cleanPhone = (targetPhone || order.customerPhone || '').replace(/[^0-9]/g, '');
   const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+  const finalReceiptUrl = receiptUrl || getStoreReceiptUrl(order, store);
 
   // Build formatted text message
   let text = `🧾 *Digital Bill - ${storeName}*\n\n`;
@@ -191,8 +234,8 @@ export const sendWhatsAppWithReceiptPdf = async ({
   }
   text += `\n*Total Amount:* ₹${order.totalAmount}\n`;
   text += `*Payment:* ${String(order.paymentMethod || 'cash').toUpperCase()} (PAID ✓)\n\n`;
-  if (receiptUrl) {
-    text += `📄 *Download / View Digital Receipt PDF:*\n${receiptUrl}\n\n`;
+  if (finalReceiptUrl) {
+    text += `📄 *Download / View Digital Receipt:*\n${finalReceiptUrl}\n\n`;
   }
   text += `Thank you for visiting ${storeName}! Visit us again soon.`;
 

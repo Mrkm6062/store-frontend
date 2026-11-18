@@ -478,6 +478,8 @@ const ThemeRenderer = () => {
             <Route path="/policy/:slug" element={<ActiveTheme.Policy />} />
             <Route path="/track" element={<ActiveTheme.TrackOrder />} />
             <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
+            <Route path="/track/receipt" element={<ActiveTheme.TrackOrder />} />
+            <Route path="/track/receipt/:orderId" element={<ActiveTheme.TrackOrder />} />
             <Route path="/cart" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Cart" />} />
             <Route path="/checkout" element={<ActiveTheme.Checkout />} />
             <Route path="/review/:orderId/:productId" element={<ActiveTheme.WriteReview />} />
