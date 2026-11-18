@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DynamicRouteLoader from './DynamicRouteLoader.jsx';
 import ReceiptPage from '../pages/ReceiptPage.jsx';
+import CustomWebsiteRenderer from './CustomWebsiteRenderer.jsx';
 
 // Import theme-free components
 export const isLightColor = (color) => {
@@ -139,6 +140,7 @@ const ThemeRenderer = () => {
   const [themeFolder, setThemeFolder] = useState('theme-free');
   const [loading, setLoading] = useState(true);
   const [customization, setCustomization] = useState(null);
+  const [storeData, setStoreData] = useState(null);
 
   useEffect(() => {
     const fetchTheme = async () => {
@@ -154,6 +156,7 @@ const ThemeRenderer = () => {
         let storeData = null;
         if (res.ok) {
           storeData = await res.json();
+          setStoreData(storeData);
         }
 
         // 2. Support for Superadmin Live Preview (via URL query param)
@@ -475,6 +478,28 @@ const ThemeRenderer = () => {
   // Show a clean blank screen instead of text while resolving the store
   if (loading) {
     return <div className="min-h-screen bg-white"></div>;
+  }
+
+  // Check if store has custom website enabled or is configured as Custom Website
+  const isCustomWebsite = Boolean(
+    storeData?.customWebsite?.enabled ||
+    storeData?.storeType === "Custom Website(HTML,CSS,JS)" ||
+    (storeData?.storeType && storeData?.storeType?.toLowerCase()?.includes("custom website"))
+  );
+
+  if (isCustomWebsite) {
+    return (
+      <ThemeCustomizationContext.Provider value={customization}>
+        <Router>
+          <NavigationExposer />
+          <Routes>
+            <Route path="/receipt" element={<ReceiptPage />} />
+            <Route path="/receipt/:orderId" element={<ReceiptPage />} />
+            <Route path="*" element={<CustomWebsiteRenderer storeData={storeData} />} />
+          </Routes>
+        </Router>
+      </ThemeCustomizationContext.Provider>
+    );
   }
 
   // Fallback to theme-free if the active theme folder isn't in our map
