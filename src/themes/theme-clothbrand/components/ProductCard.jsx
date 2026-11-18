@@ -2,13 +2,14 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getImageProps } from '../../../services/api';
 import { Plus, Minus, Heart, Star } from 'lucide-react';
+import FoodTypeIcon from '../../../components/FoodTypeIcon';
 import { ThemeCustomizationContext } from '../../../themeLoader/themeRenderer.jsx';
 
 const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemoveFromCart, index }) => {
   const navigate = useNavigate();
   const customization = useContext(ThemeCustomizationContext);
   const cardSettings = customization?.productCard || {};
-  const primaryColor = customization?.global?.primaryColor || '#76b900';
+  const primaryColor = customization?.global?.primaryColor || '#e85d04';
   const hasVariants = product.variants && product.variants.length > 0;
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -57,9 +58,24 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
   const maxStock = product.totalStock !== undefined ? product.totalStock : product.stock;
   const isOutOfStock = maxStock <= 0;
 
-  // Extract rating data (assumes backend populates averageRating and totalReviews)
-  const averageRating = product.averageRating || product.rating || 0;
-  const totalReviews = product.totalReviews || product.reviewCount || product.numReviews || 0;
+  // Extract rating & review data (handles averageRating, rating, totalReviews, reviewCount, numReviews, and reviews array)
+  const averageRating = Number(
+    product.averageRating || 
+    product.rating || 
+    (Array.isArray(product.reviews) && product.reviews.length > 0 
+      ? (product.reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / product.reviews.length) 
+      : 0) || 
+    0
+  );
+
+  const totalReviews = Number(
+    product.totalReviews || 
+    product.reviewCount || 
+    product.numReviews || 
+    (Array.isArray(product.reviews) ? product.reviews.length : 0) || 
+    (averageRating > 0 ? 1 : 0) ||
+    0
+  );
 
   const cartItem = !hasVariants ? cart.find(item => item._id === product._id) : null;
   const cartQty = cartItem ? cartItem.qty : 0;
@@ -102,9 +118,9 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           : 'opacity-0 translate-y-8'
       }`}
     >
-      <div className="overflow-hidden shadow hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group flex flex-col bg-white w-full">
+      <div className="overflow-hidden rounded-[1.35rem] border border-orange-100/80 shadow-[0_5px_20px_rgba(91,45,19,0.07)] hover:shadow-[0_16px_34px_rgba(91,45,19,0.15)] transition-all duration-300 transform hover:-translate-y-1.5 group flex flex-col bg-white w-full">
       <div 
-        className="relative overflow-hidden aspect-square bg-[#4b2d1e] cursor-pointer"
+        className="relative overflow-hidden aspect-square bg-[#fff3e6] cursor-pointer"
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
         <img 
@@ -116,6 +132,18 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
           style={{ opacity: imageLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in-out' }}
         />
         {!imageLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse w-full h-full" />}
+        {discountPercent > 0 && !isOutOfStock && (
+          <span className="absolute top-3 left-3 rounded-full bg-[#9f2d19] px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm">
+            {discountPercent}% OFF
+          </span>
+        )}
+
+        {/* Food Type Badge on Image */}
+        {(product.foodtype || product.foodType) && (
+          <div className="absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-xs p-1 rounded-md shadow-xs border border-stone-200/60 flex items-center justify-center">
+            <FoodTypeIcon type={product.foodtype || product.foodType} size={15} />
+          </div>
+        )}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
             <span className="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold tracking-wider shadow-lg">
@@ -126,32 +154,67 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
       </div>
 
       <div 
-        className="bg-white -mb-6 pt-0 pb-1 px-1 text-left shadow-inner flex-grow cursor-pointer"
+        className="bg-white px-3.5 pt-3.5 pb-3 text-left flex-grow cursor-pointer"
         onClick={() => navigate(`/product/${product.slug || product._id}`)}
       >
-        <p className="py-2 px-1 font-semibold text-sm group-hover:text-blue-600 transition-colors" title={product.name}>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <span className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700/70">{categoryName}</span>
+          {totalReviews > 0 || averageRating > 0 ? (
+            <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 shadow-2xs">
+              <Star size={10} className="fill-amber-400 text-amber-400" />
+              {averageRating.toFixed(1)}
+            </span>
+          ) : null}
+        </div>
+        <p className="min-h-[2.5rem] font-bold text-[13px] leading-5 text-stone-800 group-hover:text-[#c94710] transition-colors" title={product.name}>
            {product.name.length > 40 
             ? product.name.slice(0, 40) + "..." 
            : product.name}
         </p>
 
-        <div className="px-1 flex items-baseline space-x-1 text-align-center">
-          <span className="text-md font-semibold text-green-800">₹{displayPrice.toLocaleString()}</span>
+        {/* Rating & Reviews */}
+        <div className="mt-1 flex items-center gap-1.5">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Star
+                key={s}
+                size={11}
+                className={
+                  s <= Math.round(averageRating)
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'fill-stone-200 text-stone-200'
+                }
+              />
+            ))}
+          </div>
+          <span className="text-[11px] font-semibold text-stone-600">
+            {totalReviews > 0 ? (
+              <span className="text-stone-600">
+                ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+              </span>
+            ) : (
+              <span className="text-stone-400 font-normal">(0 reviews)</span>
+            )}
+          </span>
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+          <span className="text-lg font-extrabold text-[#9f2d19]">₹{displayPrice.toLocaleString()}</span>
           {discountPercent > 0 && (
             <>
-              <span className="text-xs text-gray-500 line-through">₹{originalPrice.toLocaleString()}</span>
-              <span className="bg-red-100 text-red-800 text-[10px] px-1.5 py-0.5 rounded-md font-bold">{discountPercent}%↓</span>
+              <span className="text-[11px] text-stone-400 line-through">₹{originalPrice.toLocaleString()}</span>
+              <span className="text-[10px] font-bold text-[#c94710]">Save {discountPercent}%</span>
             </>
           )}
         </div>
       </div>
 
-      <div className="mt-6 z-10">
+      <div className="px-3.5 pb-3.5 pt-0 z-10">
         {cartQty > 0 && !hasVariants ? (
-          <div className="flex items-center text-white w-full h-12" style={{ backgroundColor: primaryColor }}>
+          <div className="flex items-center overflow-hidden rounded-xl text-white w-full h-11 shadow-sm" style={{ backgroundColor: primaryColor }}>
             <button 
               onClick={handleDecrement}
-              className="w-12 h-full flex items-center justify-center hover:bg-black/10 transition-colors active:scale-95"
+              className="w-11 h-full flex items-center justify-center hover:bg-black/10 transition-colors active:scale-95"
             >
               <Minus size={16} />
             </button>
@@ -161,7 +224,7 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             <button 
               onClick={handleIncrement}
               disabled={cartQty >= maxStock}
-              className={`w-12 h-full flex items-center justify-center transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/10'}`}
+              className={`w-11 h-full flex items-center justify-center transition-colors active:scale-95 ${cartQty >= maxStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/10'}`}
             >
               <Plus size={16} />
             </button>
@@ -171,8 +234,8 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
             onClick={handleAdd}
             disabled={isOutOfStock}
             style={!isOutOfStock ? { backgroundColor: primaryColor } : undefined}
-            className={`w-full py-3 font-semibold transition-all ${
-              isOutOfStock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'text-white hover:opacity-90'
+            className={`w-full rounded-xl py-3 text-sm font-extrabold transition-all ${
+              isOutOfStock ? 'bg-stone-200 text-stone-500 cursor-not-allowed' : 'text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:opacity-95'
             }`}
           >
             {isOutOfStock ? 'Out of Stock' : (hasVariants ? 'Buy Now' : 'Add to Cart')}
@@ -187,11 +250,12 @@ const ProductCard = ({ product, onAddToCart, cart = [], onUpdateQuantity, onRemo
 export default ProductCard;
 
 export const ProductCardSkeleton = () => (
-  <div className="bg-white rounded-2xl sm:rounded-[20px] border border-gray-100 shadow-sm animate-pulse flex flex-col h-full overflow-hidden">
+  <div className="bg-white rounded-[1.35rem] border border-orange-100 shadow-sm animate-pulse flex flex-col h-full overflow-hidden">
     <div className="h-32 sm:h-48 bg-gray-200/60 w-full flex-shrink-0"></div>
     <div className="p-3 sm:p-4 flex flex-col flex-grow">
       <div className="h-3 w-16 bg-gray-200 rounded mb-2"></div>
-      <div className="h-4 sm:h-5 w-3/4 bg-gray-200 rounded mb-4"></div>
+      <div className="h-4 sm:h-5 w-3/4 bg-gray-200 rounded mb-2"></div>
+      <div className="h-3 w-24 bg-gray-200 rounded mb-4"></div>
       <div className="h-6 w-1/3 bg-gray-200 rounded mb-4 mt-auto"></div>
       <div className="flex justify-between items-end mt-auto pt-2">
         <div className="h-6 w-16 bg-gray-200 rounded"></div>

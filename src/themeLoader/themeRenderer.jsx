@@ -94,6 +94,18 @@ import LocalshopProductDetails from '../themes/theme-localshop/pages/ProductDeta
 import LocalshopWriteReview from '../themes/theme-localshop/pages/WriteReview.jsx';
 import LocalshopOffers from '../themes/theme-localshop/pages/Offers.jsx';
 
+// Import theme-clothbrand components
+import ClothbrandHome from '../themes/theme-clothbrand/pages/Home.jsx';
+import ClothbrandCategory from '../themes/theme-clothbrand/pages/Category.jsx';
+import ClothbrandCategories from '../themes/theme-clothbrand/pages/Categories.jsx';
+import ClothbrandPolicy from '../themes/theme-clothbrand/pages/Policy.jsx';
+import ClothbrandTrackOrder from '../themes/theme-clothbrand/pages/TrackOrder.jsx';
+import ClothbrandCheckout from '../themes/theme-clothbrand/pages/Checkout.jsx';
+import ClothbrandCart from '../themes/theme-clothbrand/pages/Cart.jsx';
+import ClothbrandProductDetails from '../themes/theme-clothbrand/pages/ProductDetails.jsx';
+import ClothbrandWriteReview from '../themes/theme-clothbrand/pages/WriteReview.jsx';
+import ClothbrandOffers from '../themes/theme-clothbrand/pages/Offers.jsx';
+
 const themesMap = {
   'theme-free': { Home: FreeHome, Category: FreeCategory, Categories: FreeCategories, Policy: FreePolicy, TrackOrder: FreeTrackOrder, Checkout: FreeCheckout, WriteReview: FreeWriteReview, ProductDetails: FreeProductDetails, Offers: FreeHome },
   'theme-modern': { Home: ModernHome, Category: ModernCategory, Categories: ModernCategories, Policy: ModernPolicy, TrackOrder: ModernTrackOrder, Checkout: ModernCheckout, WriteReview: ModernWriteReview, ProductDetails: ModernProductDetails, Offers: ModernOffers },
@@ -102,6 +114,9 @@ const themesMap = {
   'theme-giftshop': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails, Offers: GiftshopOffers },
   'theme-giftstore': { Home: GiftshopHome, Category: GiftshopCategory, Categories: GiftshopCategories, Policy: GiftshopPolicy, TrackOrder: GiftshopTrackOrder, Checkout: GiftshopCheckout, WriteReview: FreeWriteReview, ProductDetails: GiftshopProductDetails, Offers: GiftshopOffers },
   'theme-localshop': { Home: LocalshopHome, Category: LocalshopCategory, Categories: LocalshopCategories, Policy: LocalshopPolicy, TrackOrder: LocalshopTrackOrder, Checkout: LocalshopCheckout, WriteReview: LocalshopWriteReview, ProductDetails: LocalshopProductDetails, Offers: LocalshopOffers },
+  'theme-clothbrand': { Home: ClothbrandHome, Category: ClothbrandCategory, Categories: ClothbrandCategories, Policy: ClothbrandPolicy, TrackOrder: ClothbrandTrackOrder, Checkout: ClothbrandCheckout, Cart: ClothbrandCart, WriteReview: ClothbrandWriteReview, ProductDetails: ClothbrandProductDetails, Offers: ClothbrandOffers },
+  'theme-cloth': { Home: ClothbrandHome, Category: ClothbrandCategory, Categories: ClothbrandCategories, Policy: ClothbrandPolicy, TrackOrder: ClothbrandTrackOrder, Checkout: ClothbrandCheckout, Cart: ClothbrandCart, WriteReview: ClothbrandWriteReview, ProductDetails: ClothbrandProductDetails, Offers: ClothbrandOffers },
+  'clothbrand': { Home: ClothbrandHome, Category: ClothbrandCategory, Categories: ClothbrandCategories, Policy: ClothbrandPolicy, TrackOrder: ClothbrandTrackOrder, Checkout: ClothbrandCheckout, Cart: ClothbrandCart, WriteReview: ClothbrandWriteReview, ProductDetails: ClothbrandProductDetails, Offers: ClothbrandOffers },
 };
 
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2} from 'lucide-react';
 
-const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemoveFromCart, cartTotal, primaryColor = '#76b900', store, deliverySettings: passedSettings }) => {
+const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemoveFromCart, cartTotal, primaryColor = '#e85d04', store, deliverySettings: passedSettings }) => {
   const navigate = useNavigate();
   const [deliverySettings, setDeliverySettings] = React.useState(passedSettings || null);
 
@@ -105,10 +105,14 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
 
   const freeLimit = deliverySettings?.freeShippingThreshold || 0;
   const baseCharge = deliverySettings?.baseCharge || 0;
+  const minOrderLimit = Number(deliverySettings?.minimumOrderLimitThreshold || 0);
+  const isBelowMinOrder = minOrderLimit > 0 && cartTotal < minOrderLimit;
+  const amountNeededForMinOrder = Math.max(0, minOrderLimit - cartTotal);
+  const minOrderProgress = minOrderLimit > 0 ? Math.min(100, Math.round((cartTotal / minOrderLimit) * 100)) : 100;
 
   const isShippingFree = freeLimit > 0 && discountedTotal >= freeLimit;
   const shippingCharge = isShippingFree ? 0 : baseCharge;
-  const estimatedTotal = discountedTotal + shippingCharge;
+  const estimatedTotal = discountedTotal;
   const amountNeededForFreeDelivery = freeLimit - discountedTotal;
 
   return (
@@ -120,9 +124,9 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
       ></div>
       
       {/* Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col z-[100] transform transition-transform duration-300 ease-in-out ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <h2 className="text-2xl font-bold text-gray-800">Your Cart</h2>
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-[#fffdf9] shadow-2xl flex flex-col z-[100] transform transition-transform duration-300 ease-in-out ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-5 border-b border-orange-100 flex justify-between items-center bg-[#fff5e8]">
+          <h2 className="text-2xl font-black text-stone-800">Your Cart</h2>
           <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-red-500 font-bold text-3xl leading-none">
             &times;
           </button>
@@ -137,7 +141,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
           ) : (
             <div className="space-y-4">
               {cart.map((item) => (
-                <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <div key={item._id} className="flex justify-between items-center p-4 bg-white border border-orange-100 rounded-2xl shadow-[0_4px_14px_rgba(91,45,19,0.06)]">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100 relative">
                       {(item.customImageBase64 || (item.images?.length > 0 ? item.images[0] : item.image)) ? (
@@ -151,14 +155,14 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                     </div>
                     <div>
                       <p className="font-bold text-gray-800 line-clamp-1">{item.name}</p>
-                      <p className="text-green-600 font-semibold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty} {item.unitType || ''}</span></p>
+                      <p className="text-[#c94710] font-extrabold">₹{item.price} <span className="text-gray-400 text-sm ml-1">x {item.qty} {item.unitType || ''}</span></p>
                       {item.customText && (
                         <p className="text-xs text-gray-500 mt-0.5"><span className="font-semibold text-gray-700">Text:</span> {item.customText}</p>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center bg-orange-50 rounded-lg border border-orange-100">
                       <button type="button" onClick={() => onUpdateQuantity(item._id, -1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">-</button>
                       <span className="px-2 font-semibold text-sm">{item.qty}</span>
                       <button type="button" onClick={() => onUpdateQuantity(item._id, 1)} className="px-2 py-1 text-gray-600 hover:text-black font-bold">+</button>
@@ -178,7 +182,39 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
         </div>
         
         {cart.length > 0 && (
-          <div className="p-5 border-t border-gray-100 bg-white">
+          <div className="p-5 border-t border-orange-100 bg-[#fffdf9]">
+            {/* Minimum Order Limit Alert Banner */}
+            {minOrderLimit > 0 && (
+              <div className={`p-3.5 rounded-xl text-xs font-bold mb-3 ${isBelowMinOrder ? 'bg-amber-50 text-amber-900 border border-amber-200 shadow-sm' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                {isBelowMinOrder ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="flex items-center gap-1.5 font-black text-amber-900">
+                        <span>⚠️</span> Minimum Order: ₹{minOrderLimit}
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                        ₹{cartTotal} / ₹{minOrderLimit}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-semibold text-amber-800 leading-snug">
+                      Please add <span className="font-black text-amber-950 underline decoration-amber-500 underline-offset-2">₹{amountNeededForMinOrder}</span> more worth of products to your cart to checkout.
+                    </p>
+                    <div className="w-full bg-amber-200/70 h-2 rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="bg-amber-600 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${minOrderProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-emerald-700">
+                    <span>✓</span>
+                    <span>Minimum order requirement of ₹{minOrderLimit} satisfied!</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Free Delivery Promo Message */}
             {freeLimit > 0 && (
               <div className={`p-3 rounded-xl text-xs font-bold mb-4 text-center ${isShippingFree ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
@@ -200,19 +236,30 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, cart, onUpdateQuantity, onRemo
                 <span className="font-bold">-₹{offerDiscount}</span>
               </div>
             )}
-            <div className="flex justify-between items-center text-sm mb-2 text-gray-500">
-              <span>Shipping Charges:</span>
-              <span className={`font-bold ${shippingCharge === 0 ? 'text-green-600' : 'text-gray-800'}`}>
-                {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
-              </span>
-            </div>
+
             <div className="flex justify-between items-center font-bold text-xl mb-6 text-gray-800 border-t border-dashed border-gray-200 pt-3">
               <span>Estimated Total:</span>
-              <span className="text-green-600">₹{estimatedTotal}</span>
+              <span className="text-[#9f2d19]">₹{estimatedTotal}</span>
             </div>
-            <button type="button" onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} className="w-full text-white font-bold py-4 rounded-xl transition text-lg shadow-lg hover:opacity-90" style={{ backgroundColor: primaryColor }}>
-              Proceed to Checkout
-            </button>
+            {isBelowMinOrder ? (
+              <button 
+                type="button" 
+                disabled={true}
+                className="w-full bg-slate-200 text-slate-500 font-extrabold py-3.5 rounded-xl transition text-base shadow-none cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
+              >
+                <span>Add ₹{amountNeededForMinOrder} More to Checkout</span>
+                <span className="text-[11px] font-medium text-slate-400">Minimum Order Required: ₹{minOrderLimit}</span>
+              </button>
+            ) : (
+              <button 
+                type="button" 
+                onClick={() => { setIsCartOpen(false); navigate('/checkout'); }} 
+                className="w-full text-white font-extrabold py-4 rounded-xl transition text-lg shadow-lg hover:opacity-90" 
+                style={{ backgroundColor: primaryColor }}
+              >
+                Proceed to Checkout
+              </button>
+            )}
           </div>
         )}
       </div>
