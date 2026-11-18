@@ -185,12 +185,12 @@ export const getStoreReceiptUrl = (order, store = {}) => {
   const storeUrl = getStoreOwnerUrl(resolvedStore);
   const orderId = order?._id || '';
   if (storeUrl) {
-    return `${storeUrl}/track/receipt/${orderId}`;
+    return `${storeUrl}/receipt/${orderId}`;
   }
   if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('api.galibrand.cloud')) {
-    return `${window.location.origin}/track/receipt/${orderId}`;
+    return `${window.location.origin}/receipt/${orderId}`;
   }
-  return `https://galibrand.cloud/track/receipt/${orderId}`;
+  return `https://galibrand.cloud/receipt/${orderId}`;
 };
 
 /**

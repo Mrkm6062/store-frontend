@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DynamicRouteLoader from './DynamicRouteLoader.jsx';
+import ReceiptPage from '../pages/ReceiptPage.jsx';
 
 // Import theme-free components
 export const isLightColor = (color) => {
@@ -480,6 +481,8 @@ const ThemeRenderer = () => {
             <Route path="/track/:orderId" element={<ActiveTheme.TrackOrder />} />
             <Route path="/track/receipt" element={<ActiveTheme.TrackOrder />} />
             <Route path="/track/receipt/:orderId" element={<ActiveTheme.TrackOrder />} />
+            <Route path="/receipt" element={<ReceiptPage />} />
+            <Route path="/receipt/:orderId" element={<ReceiptPage />} />
             <Route path="/cart" element={<DynamicRouteLoader ActiveTheme={ActiveTheme} componentName="Cart" />} />
             <Route path="/checkout" element={<ActiveTheme.Checkout />} />
             <Route path="/review/:orderId/:productId" element={<ActiveTheme.WriteReview />} />

@@ -274,7 +274,7 @@ const TrackOrder = () => {
                           <p className="text-xl font-extrabold" style={{ color: primaryColor }}>₹{selectedOrder.totalAmount}</p>
                         </div>
                         <a
-                          href={`${API_BASE_URL}/api/orders/receipt/${selectedOrder._id}`}
+                          href={`/receipt/${selectedOrder._id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:opacity-90 active:scale-95"
